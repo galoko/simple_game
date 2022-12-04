@@ -173,6 +173,10 @@ class Object {
         return this.mirror ? -1 : 1
     }
 
+    get mirrorVec() {
+        return vec2.fromValues(this.mirror ? -1 : 1, 1)
+    }
+
     get scaleVec() {
         const scale = (this.graphics?.scale ?? 1) * this.scale
         return vec2.fromValues(scale * this.mirrorMul, scale)
@@ -187,8 +191,10 @@ class Object {
         mat2d.identity(m)
 
         if (this.graphics?.attachPoint) {
-            const { m: attachmentMatrix } = getAttachmentMatrix(this.parent, this.graphics.attachPoint, this.graphics.attachT)
-            mat2d.mul(m, m, attachmentMatrix)
+            const attachmentInfo = getAttachmentMatrix(this.parent, this.graphics.attachPoint, this.graphics.attachT)
+            if (attachmentInfo) {
+                mat2d.mul(m, m, attachmentInfo.m)
+            }
         }
 
         if (this.angleIsWorldAngle && parentWorldMatrix) {       
@@ -325,13 +331,16 @@ let player, idle_torso, idle_arms, aiming_arms, blaster;
 
 const debugPoint = vec2.create()
 const debugPoint1 = vec2.create()
-let isDebugLine = false
 const debugMatrix = mat2d.create()
 
-const debugPoint2 = vec2.create()
-const debugPoint3 = vec2.create()
-let isDebugLine2 = false
-const debugMatrix2 = mat2d.create()
+function recalcWorldTransforms(obj) {
+    obj.calcWorldMatrix()
+
+    for (const slot in obj.attachments) {
+        const attachment = obj.attachments[slot]
+        recalcWorldTransforms(attachment)
+    }
+}
 
 function playerControls() {
     player.attach(TORSO_SLOT, idle_torso)
@@ -359,6 +368,8 @@ function playerControls() {
         // player.play(undefined, aiming_arms)
     }
 
+    recalcWorldTransforms(player)
+
     const shouldersPivotPointWorldSpace = getWorldPivotPoint(aiming_arms)
     const barrelAttachment = getAttachmentMatrix(player, 'barrel', 1)
 
@@ -378,8 +389,9 @@ function playerControls() {
         const barrelLocalSpace = vec2.fromValues(0, 0);
         vec2.transformMat2d(barrelLocalSpace, barrelLocalSpace, barrelMatrix)
         vec2.sub(barrelLocalSpace, barrelLocalSpace, shouldersPivotPointWorldSpace)
+        vec2.mul(barrelLocalSpace, barrelLocalSpace, player.mirrorVec)
 
-        const offsetHeight = dot(rotate(barrelLocalSpace, -barrelAngle), UP)
+        const offsetHeight = dot(rotate(barrelLocalSpace, -barrelAngle), UP) * player.mirrorMul
         const offsetUp = vec2.create()
         vec2.scale(offsetUp, UP, offsetHeight)
 
@@ -405,6 +417,8 @@ function playerControls() {
         const deltaMouseAndPointOnCircle = vec2.create()
         vec2.sub(deltaMouseAndPointOnCircle, mouseWorldSpace, pointOnCircleWorldSpace)
 
+        vec2.mul(deltaMouseAndPointOnCircle, deltaMouseAndPointOnCircle, player.mirrorVec)
+
         aiming_arms.angle = getAngleFromVector(deltaMouseAndPointOnCircle) - barrelAngle
         aiming_arms.angleIsWorldAngle = true
 
@@ -417,32 +431,7 @@ function playerControls() {
         mat2d.mul(debugMatrix, debugMatrix, attachmentMatrix)
         vec2.set(debugPoint, 0, 0)
         vec2.set(debugPoint1, 1500, 0)
-        isDebugLine = true
-
-        /*
-        mat2d.copy(debugMatrix2, cameraMatrix)
-        mat2d.mul(debugMatrix2, debugMatrix2, aiming_arms.getWorldMatrix())
-        mat2d.mul(debugMatrix2, debugMatrix2, aiming_arms.graphics.invPivotMatrix)
-        mat2d.mul(debugMatrix2, debugMatrix2, barrelMatrix)
-        vec2.set(debugPoint2, 0, 0)
-        isDebugLine2 = false;
-        */
-        /*
-        const v = rotate(vec2.fromValues(100, 0), barrelAngle)
-        mat2d.copy(debugMatrix2, cameraMatrix)
-        vec2.copy(debugPoint2, shouldersPivotPointWorldSpace)
-        vec2.set(debugPoint3, shouldersPivotPointWorldSpace[0] + v[0], shouldersPivotPointWorldSpace[1] + v[1])
-        isDebugLine2 = true;
-        */
-
-        const v = barrelLocalSpace
-        const w = getWorldPivotPoint(aiming_arms)
-        mat2d.copy(debugMatrix2, cameraMatrix)
-        vec2.set(debugPoint2, w[0] + v[0], w[1] + v[1])
-        isDebugLine2 = false;
     }
-
-    // player.angle = -0.3
 }
 
 const cameraMatrix = mat2d.create()
@@ -518,13 +507,6 @@ function tick(time) {
     for (const {mvpMatrix, lastFrame} of objectsToDraw) {
         ctx.setTransform(...mvpMatrix)
         ctx.drawImage(lastFrame, 0, 0)
-
-        /*
-        ctx.globalAlpha = 0.1
-        ctx.fillStyle = 'red'
-        ctx.fillRect(0, 0, lastFrame.width, lastFrame.height)
-        ctx.globalAlpha = 1
-        */
     }
 
     for (const obj of scene) {
@@ -547,39 +529,27 @@ function tick(time) {
     }
 
     ctx.setTransform(...debugMatrix)
-    if (!isDebugLine) {
-        ctx.fillStyle = 'red'
-        ctx.beginPath()
-        ctx.arc(...debugPoint, 0.03, 0, 9)
-        ctx.fill()
-    } else {
-        ctx.globalAlpha = 0.1
-        ctx.lineWidth = 0.03
-        ctx.strokeStyle = 'red'
-        ctx.beginPath()
-        ctx.moveTo(...debugPoint)
-        ctx.lineTo(...debugPoint1)
-        ctx.stroke()
-        ctx.globalAlpha = 1
-    }
-
+    
+    ctx.globalAlpha = 0.1
+    ctx.lineWidth = 0.03
+    ctx.strokeStyle = 'red'
+    ctx.beginPath()
+    ctx.moveTo(...debugPoint)
+    ctx.lineTo(...debugPoint1)
+    ctx.stroke()
+    ctx.globalAlpha = 1
     /*
-    ctx.setTransform(...debugMatrix2)
-    if (!isDebugLine2) {
-        ctx.fillStyle = 'green'
-        ctx.beginPath()
-        ctx.arc(...debugPoint2, 0.01, 0, 9)
-        ctx.fill()
-    } else {
-        ctx.lineWidth = 0.01
-        // ctx.lineCap = 'butt'
-        ctx.strokeStyle = 'green'
-        ctx.beginPath()
-        ctx.moveTo(...debugPoint2)
-        ctx.lineTo(...debugPoint3)
-        ctx.stroke()
-    }
+    ctx.fillStyle = 'red'
+    ctx.beginPath()
+    ctx.arc(...debugPoint, 0.05, 0, 9)
+    ctx.fill()
     */
+
+    ctx.resetTransform()
+    ctx.fillStyle = 'red'
+    ctx.beginPath()
+    ctx.arc(...mouse, 5, 0, 9)
+    ctx.fill()
 
     requestAnimationFrame(tick)
 }
@@ -606,7 +576,7 @@ async function main() {
     player = new Object(null)
     player.scale = 2
     player.x = 2
-    player.angle = -0.4
+    player.mirror = true
 
     const head = new Object(await createGraphics('oleg'))
     head.angle = 1.57
@@ -614,7 +584,7 @@ async function main() {
     player.attach(HEAD_SLOT, head)
 
     blaster = new Object(await createGraphics('blaster'))
-    blaster.z = 0.15
+    blaster.z = -0.05
     player.attach(WEAPON_SLOT, blaster)
     
     scene.push(player)
