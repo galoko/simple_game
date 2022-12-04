@@ -1,0 +1,21 @@
+{
+    "pivot": [
+        10,
+        10
+    ],
+	"frames": 1,
+	"duration": 500,
+	"attachPoint": "shoulders",
+	"attachT": 0.5,
+    "scale": 0.4,
+    "points": [
+		{
+			"right_hand": [
+				206,
+				24,
+				220,
+				1
+			]
+		}
+    ]
+}

@@ -1,0 +1,17 @@
+{
+	"scale": 0.34,
+    "pivot": [
+        22,
+        58
+    ],
+	"attachPoint": "right_hand",
+	"attachT": 0.5,
+	"points": [
+		{
+			"barrel": [
+				101, 28,
+				118, 28
+			]
+		}
+	]
+}
