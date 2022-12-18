@@ -1,7 +1,7 @@
 import { mat2d, vec2 } from "gl-matrix"
 import { screenToWorld, setFocusPoint } from "./camera"
 import { ARMS_SLOT, HEAD_SLOT, SHOOT_LINE_SLOT, TORSO_SLOT, WEAPON_SLOT } from "./character"
-import { createGraphics } from "./graphics"
+import { createDummyGraphics, createGraphics, PhysicsType } from "./graphics"
 import { keys, mouse } from "./input-handler"
 import { cross, dot, getAngleFromMatrix, getAngleFromVector, rotate } from "./math-utils"
 import { GraphicsObject } from "./object"
@@ -20,6 +20,8 @@ const shootLine = new GraphicsObject()
 const UP = vec2.fromValues(0, -1)
 
 export async function createPlayer(): Promise<void> {
+    // animations
+
     run_torso.graphics = await createGraphics("run", "torso_legs")
     // const run_arms = await createGraphics('run', 'arms')
 
@@ -29,9 +31,25 @@ export async function createPlayer(): Promise<void> {
     aiming_arms.graphics = await createGraphics("aiming", "arms")
     aiming_arms.z = 0.2
 
+    // player
+
+    const playerGraphics = createDummyGraphics()
+    playerGraphics.physicsType = PhysicsType.DYNAMIC
+    playerGraphics.physicsPoints = [
+        vec2.fromValues(0, 0),
+        vec2.fromValues(0.2, 0),
+        vec2.fromValues(0.2, 1),
+        vec2.fromValues(0, 1),
+    ]
+    playerGraphics.physicsPivot = vec2.fromValues(-0.1, -1)
+
+    player.graphics = playerGraphics
     player.scale = 2
     player.x = 0
+    // player.y = -5
     // player.mirror = true
+
+    // attachments
 
     const head = new GraphicsObject()
     head.graphics = await createGraphics("oleg")

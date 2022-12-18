@@ -53,7 +53,7 @@ export class GraphicsObject {
     }
 
     get scaleVec() {
-        const scale = (this.graphics?.scale ?? 1) * this.scale
+        const scale = this.graphics.scale * this.scale
         return vec2.fromValues(scale, scale)
     }
 
@@ -61,20 +61,11 @@ export class GraphicsObject {
         return vec2.fromValues(this.x, this.y)
     }
 
-    get pivot() {
-        const pivot = vec2.fromValues(0, 0)
-
-        vec2.transformMat2d(pivot, pivot, this.graphics.pivotMatrix)
-        vec2.mul(pivot, pivot, this.scaleVec)
-
-        return pivot
-    }
-
     calcLocalMatrix(parentWorldMatrix?: mat2d) {
         const m = this.mat
         mat2d.identity(m)
 
-        if (this.graphics?.attachPoint) {
+        if (this.graphics.attachPoint) {
             if (!this.parent) {
                 throw new Error("Attachment without a parent.")
             }
@@ -102,7 +93,7 @@ export class GraphicsObject {
         mat2d.scale(m, m, this.mirrorVec)
 
         if (this.graphics) {
-            mat2d.mul(m, m, this.graphics.pivotMatrix)
+            mat2d.translate(m, m, this.graphics.pivot)
         }
 
         return m

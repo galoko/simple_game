@@ -8327,6 +8327,7 @@ async function loadImage(src) {
 }
 var GraphicsType;
 (function (GraphicsType) {
+    GraphicsType["NONE"] = "none";
     GraphicsType["IMG"] = "img";
     GraphicsType["LINE"] = "line";
 })(GraphicsType || (GraphicsType = {}));
@@ -8343,8 +8344,7 @@ class Graphics {
     frames = [];
     unitMatrix = create$7();
     invUnitMatrix = create$7();
-    pivotMatrix = create$7();
-    invPivotMatrix = create$7();
+    pivot = create();
     width = 1;
     height = 1;
     scale = 1;
@@ -8352,13 +8352,14 @@ class Graphics {
     attachT = 0;
     points = [];
     duration = 1000;
-    type = GraphicsType.IMG;
+    type = GraphicsType.NONE;
     path = undefined;
     color = undefined;
     alpha = 1;
     stroke = true;
     physicsType = PhysicsType.NONE;
     physicsPoints = undefined;
+    physicsPivot = undefined;
     constructor(name, prefix) {
         this.name = name;
         this.prefix = prefix;
@@ -8369,7 +8370,7 @@ class Graphics {
             : `assets/${this.name}.json`;
         const response = await fetch(dataUrl);
         const data = response.ok ? await response.json() : {};
-        this.type = data.type || this.type;
+        this.type = data.type || GraphicsType.IMG;
         if (this.type === GraphicsType.IMG) {
             const promises = [];
             if (data.frames !== undefined) {
@@ -8421,11 +8422,9 @@ class Graphics {
                 this.physicsPoints.push(p);
             }
         }
-        const normalizedPivot = fromValues(pivot[0], pivot[1]);
-        negate(normalizedPivot, normalizedPivot);
-        transformMat2d(normalizedPivot, normalizedPivot, this.unitMatrix);
-        translate$3(this.pivotMatrix, this.pivotMatrix, normalizedPivot);
-        invert$4(this.invPivotMatrix, this.pivotMatrix);
+        set(this.pivot, pivot[0], pivot[1]);
+        negate(this.pivot, this.pivot);
+        transformMat2d(this.pivot, this.pivot, this.unitMatrix);
         // IN UNITS
         this.scale = data.scale || this.scale;
         this.attachPoint = data.attachPoint;
@@ -8451,6 +8450,11 @@ class Graphics {
 async function createGraphics(name, prefix) {
     const graphics = new Graphics(name, prefix);
     await graphics.load();
+    return graphics;
+}
+function createDummyGraphics() {
+    const graphics = new Graphics("dummy");
+    graphics.type = GraphicsType.NONE;
     return graphics;
 }
 
@@ -8483,8 +8487,8 @@ async function initPhysics() {
     const gravity = new Box2D.b2Vec2(0.0, 9.8 * PHYSICS_SCALE);
     world = new Box2D.b2World(gravity);
 }
-function addToPhysics(obj) {
-    if (!obj.graphics || obj.graphics.physicsType == PhysicsType.NONE) {
+function initPhysicsForObject(obj) {
+    if (obj.body || obj.graphics.physicsType == PhysicsType.NONE) {
         return;
     }
     const shape = new Box2D.b2PolygonShape();
@@ -8494,8 +8498,11 @@ function addToPhysics(obj) {
     let offset = 0;
     for (let i = 0; i < physicsPoints.length; i++) {
         const p = fromValues(physicsPoints[i][0], physicsPoints[i][1]);
+        add(p, p, obj.graphics.pivot);
+        if (obj.graphics.physicsPivot) {
+            add(p, p, obj.graphics.physicsPivot);
+        }
         mul(p, p, scale$1);
-        add(p, p, obj.pivot);
         scale(p, p, PHYSICS_SCALE);
         Box2D.HEAPF32[(buffer + offset) >> 2] = p[0];
         Box2D.HEAPF32[(buffer + offset + 4) >> 2] = p[1];
@@ -8526,6 +8533,12 @@ function addToPhysics(obj) {
     body.CreateFixture(shape, 5.0);
     // body.SetAngularVelocity(-5)
     obj.body = body;
+}
+function addToPhysics(obj) {
+    initPhysicsForObject(obj);
+    if (!obj.body) {
+        return;
+    }
     syncPhysicsWithObj(obj);
 }
 function syncPhysicsWithObj(obj) {
@@ -8677,7 +8690,7 @@ function getWorldPoint(obj) {
 function getWorldPivotPoint(obj) {
     const p = fromValues(0, 0);
     const m = obj.getWorldMatrix();
-    transformMat2d(p, p, obj.graphics.invPivotMatrix);
+    sub(p, p, obj.graphics.pivot);
     transformMat2d(p, p, m);
     return p;
 }
@@ -8739,22 +8752,16 @@ class GraphicsObject {
         return fromValues(this.mirror ? -1 : 1, 1);
     }
     get scaleVec() {
-        const scale = (this.graphics?.scale ?? 1) * this.scale;
+        const scale = this.graphics.scale * this.scale;
         return fromValues(scale, scale);
     }
     get positionVec() {
         return fromValues(this.x, this.y);
     }
-    get pivot() {
-        const pivot = fromValues(0, 0);
-        transformMat2d(pivot, pivot, this.graphics.pivotMatrix);
-        mul(pivot, pivot, this.scaleVec);
-        return pivot;
-    }
     calcLocalMatrix(parentWorldMatrix) {
         const m = this.mat;
         identity$4(m);
-        if (this.graphics?.attachPoint) {
+        if (this.graphics.attachPoint) {
             if (!this.parent) {
                 throw new Error("Attachment without a parent.");
             }
@@ -8774,7 +8781,7 @@ class GraphicsObject {
         scale$7(m, m, this.scaleVec);
         scale$7(m, m, this.mirrorVec);
         if (this.graphics) {
-            mul$7(m, m, this.graphics.pivotMatrix);
+            translate$3(m, m, this.graphics.pivot);
         }
         return m;
     }
@@ -8836,8 +8843,8 @@ function drawScene() {
     objectsToDraw.sort((a, b) => a.worldZ - b.worldZ);
     for (const obj of objectsToDraw) {
         const { mvpMatrix, lastIndex } = obj;
-        const type = obj.graphics?.type;
-        if (type !== undefined && lastIndex !== undefined) {
+        const type = obj.graphics.type;
+        if (type !== GraphicsType.NONE && lastIndex !== undefined) {
             ctx.setTransform(mvpMatrix[0], mvpMatrix[1], mvpMatrix[2], mvpMatrix[3], mvpMatrix[4], mvpMatrix[5]);
             switch (type) {
                 case GraphicsType.IMG: {
@@ -8899,11 +8906,17 @@ function drawScene() {
         const scale = obj.scaleVec;
         const { mvpMatrix } = obj;
         ctx.setTransform(mvpMatrix[0], mvpMatrix[1], mvpMatrix[2], mvpMatrix[3], mvpMatrix[4], mvpMatrix[5]);
+        const lineWidth = fromValues(0.01, 0);
+        transformMat2d(lineWidth, lineWidth, obj.graphics.invUnitMatrix);
+        div(lineWidth, lineWidth, scale);
         ctx.strokeStyle = "deeppink";
-        ctx.lineWidth = 10 / scale[0];
+        ctx.lineWidth = lineWidth[0];
         ctx.beginPath();
         for (let i = 0; i < physicsPoints.length; i++) {
             const p = fromValues(physicsPoints[i][0], physicsPoints[i][1]);
+            if (obj.graphics.physicsPivot) {
+                add(p, p, obj.graphics.physicsPivot);
+            }
             transformMat2d(p, p, obj.graphics.invUnitMatrix);
             if (i === 0) {
                 ctx.moveTo(p[0], p[1]);
@@ -8930,15 +8943,29 @@ const blaster = new GraphicsObject();
 const shootLine = new GraphicsObject();
 const UP = fromValues(0, -1);
 async function createPlayer() {
+    // animations
     run_torso.graphics = await createGraphics("run", "torso_legs");
     // const run_arms = await createGraphics('run', 'arms')
     idle_torso.graphics = await createGraphics("idle", "torso_legs");
     idle_arms.graphics = await createGraphics("idle", "arms");
     aiming_arms.graphics = await createGraphics("aiming", "arms");
     aiming_arms.z = 0.2;
+    // player
+    const playerGraphics = createDummyGraphics();
+    playerGraphics.physicsType = PhysicsType.DYNAMIC;
+    playerGraphics.physicsPoints = [
+        fromValues(0, 0),
+        fromValues(0.2, 0),
+        fromValues(0.2, 1),
+        fromValues(0, 1),
+    ];
+    playerGraphics.physicsPivot = fromValues(-0.1, -1);
+    player.graphics = playerGraphics;
     player.scale = 2;
     player.x = 0;
+    // player.y = -5
     // player.mirror = true
+    // attachments
     const head = new GraphicsObject();
     head.graphics = await createGraphics("oleg");
     head.angle = 1.57;

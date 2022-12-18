@@ -15,6 +15,7 @@ export type AttachmentPoints = {
 }
 
 export enum GraphicsType {
+    NONE = "none",
     IMG = "img",
     LINE = "line",
 }
@@ -30,8 +31,7 @@ export class Graphics {
     public frames: HTMLImageElement[] = []
     public unitMatrix = mat2d.create()
     public invUnitMatrix = mat2d.create()
-    public pivotMatrix = mat2d.create()
-    public invPivotMatrix = mat2d.create()
+    public pivot = vec2.create()
     public width = 1
     public height = 1
     public scale = 1
@@ -39,7 +39,7 @@ export class Graphics {
     public attachT = 0
     public points: AttachmentPoints[] = []
     public duration = 1000
-    public type = GraphicsType.IMG
+    public type = GraphicsType.NONE
 
     public path: Path2D = undefined!
     public color: string = undefined!
@@ -48,6 +48,7 @@ export class Graphics {
 
     public physicsType = PhysicsType.NONE
     public physicsPoints: vec2[] = undefined!
+    public physicsPivot: vec2 | undefined = undefined
 
     constructor(public name: string, public prefix?: string) {}
 
@@ -58,7 +59,7 @@ export class Graphics {
         const response = await fetch(dataUrl)
         const data = response.ok ? await response.json() : {}
 
-        this.type = data.type || this.type
+        this.type = data.type || GraphicsType.IMG
 
         if (this.type === GraphicsType.IMG) {
             const promises: Promise<HTMLImageElement>[] = []
@@ -120,11 +121,9 @@ export class Graphics {
             }
         }
 
-        const normalizedPivot = vec2.fromValues(pivot[0], pivot[1])
-        vec2.negate(normalizedPivot, normalizedPivot)
-        vec2.transformMat2d(normalizedPivot, normalizedPivot, this.unitMatrix)
-        mat2d.translate(this.pivotMatrix, this.pivotMatrix, normalizedPivot)
-        mat2d.invert(this.invPivotMatrix, this.pivotMatrix)
+        vec2.set(this.pivot, pivot[0], pivot[1])
+        vec2.negate(this.pivot, this.pivot)
+        vec2.transformMat2d(this.pivot, this.pivot, this.unitMatrix)
 
         // IN UNITS
         this.scale = data.scale || this.scale
@@ -162,5 +161,11 @@ export class Graphics {
 export async function createGraphics(name: string, prefix?: string): Promise<Graphics> {
     const graphics = new Graphics(name, prefix)
     await graphics.load()
+    return graphics
+}
+
+export function createDummyGraphics() {
+    const graphics = new Graphics("dummy")
+    graphics.type = GraphicsType.NONE
     return graphics
 }

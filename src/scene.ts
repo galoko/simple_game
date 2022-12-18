@@ -64,9 +64,9 @@ export function drawScene() {
 
     for (const obj of objectsToDraw) {
         const { mvpMatrix, lastIndex } = obj
-        const type = obj.graphics?.type
+        const type = obj.graphics.type
 
-        if (type !== undefined && lastIndex !== undefined) {
+        if (type !== GraphicsType.NONE && lastIndex !== undefined) {
             ctx.setTransform(
                 mvpMatrix[0],
                 mvpMatrix[1],
@@ -151,11 +151,18 @@ export function drawScene() {
             mvpMatrix[5]
         )
 
+        const lineWidth = vec2.fromValues(0.01, 0)
+        vec2.transformMat2d(lineWidth, lineWidth, obj.graphics.invUnitMatrix)
+        vec2.div(lineWidth, lineWidth, scale)
+
         ctx.strokeStyle = "deeppink"
-        ctx.lineWidth = 10 / scale[0]
+        ctx.lineWidth = lineWidth[0]
         ctx.beginPath()
         for (let i = 0; i < physicsPoints.length; i++) {
             const p = vec2.fromValues(physicsPoints[i][0], physicsPoints[i][1])
+            if (obj.graphics.physicsPivot) {
+                vec2.add(p, p, obj.graphics.physicsPivot)
+            }
             vec2.transformMat2d(p, p, obj.graphics.invUnitMatrix)
             if (i === 0) {
                 ctx.moveTo(p[0], p[1])

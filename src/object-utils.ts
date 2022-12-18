@@ -69,7 +69,7 @@ export function getWorldPivotPoint(obj: GraphicsObject) {
     const p = vec2.fromValues(0, 0)
     const m = obj.getWorldMatrix()
 
-    vec2.transformMat2d(p, p, obj.graphics.invPivotMatrix)
+    vec2.sub(p, p, obj.graphics.pivot)
     vec2.transformMat2d(p, p, m)
 
     return p

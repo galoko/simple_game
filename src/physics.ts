@@ -31,8 +31,8 @@ export async function initPhysics(): Promise<void> {
     world = new Box2D.b2World(gravity)
 }
 
-export function addToPhysics(obj: GraphicsObject): void {
-    if (!obj.graphics || obj.graphics.physicsType == PhysicsType.NONE) {
+function initPhysicsForObject(obj: GraphicsObject): void {
+    if (obj.body || obj.graphics.physicsType == PhysicsType.NONE) {
         return
     }
 
@@ -42,10 +42,14 @@ export function addToPhysics(obj: GraphicsObject): void {
     const scale = obj.scaleVec
     const buffer = Box2D._malloc(physicsPoints.length * 8)
     let offset = 0
+
     for (let i = 0; i < physicsPoints.length; i++) {
         const p = vec2.fromValues(physicsPoints[i][0], physicsPoints[i][1])
+        vec2.add(p, p, obj.graphics.pivot)
+        if (obj.graphics.physicsPivot) {
+            vec2.add(p, p, obj.graphics.physicsPivot)
+        }
         vec2.mul(p, p, scale)
-        vec2.add(p, p, obj.pivot)
         vec2.scale(p, p, PHYSICS_SCALE)
 
         Box2D.HEAPF32[(buffer + offset) >> 2] = p[0]
@@ -82,6 +86,14 @@ export function addToPhysics(obj: GraphicsObject): void {
     // body.SetAngularVelocity(-5)
 
     obj.body = body
+}
+
+export function addToPhysics(obj: GraphicsObject): void {
+    initPhysicsForObject(obj)
+
+    if (!obj.body) {
+        return
+    }
 
     syncPhysicsWithObj(obj)
 }
