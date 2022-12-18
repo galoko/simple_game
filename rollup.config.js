@@ -26,8 +26,9 @@ export default {
             include: ["node_modules/**"],
         }),
         serve({
+            port: 5000,
             contentBase: ".",
         }),
-        livereload({ watch: "build", delay: 2000 }),
+        livereload({ watch: "build" }),
     ],
 }

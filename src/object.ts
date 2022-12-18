@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { mat2d, vec2 } from "gl-matrix"
 import { Graphics } from "./graphics"
 import { getAngleFromMatrix } from "./math-utils"
@@ -26,7 +27,10 @@ export class GraphicsObject {
     public worldZ = 0
 
     public mvpMatrix = mat2d.create()
-    public lastFrame: HTMLImageElement | undefined = undefined
+    public lastIndex: number | undefined = undefined
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public body: any = undefined
 
     attach(slot: number, attachment: GraphicsObject) {
         if (this.attachments[slot] !== attachment) {
@@ -50,11 +54,20 @@ export class GraphicsObject {
 
     get scaleVec() {
         const scale = (this.graphics?.scale ?? 1) * this.scale
-        return vec2.fromValues(scale * this.mirrorMul, scale)
+        return vec2.fromValues(scale, scale)
     }
 
     get positionVec() {
         return vec2.fromValues(this.x, this.y)
+    }
+
+    get pivot() {
+        const pivot = vec2.fromValues(0, 0)
+
+        vec2.transformMat2d(pivot, pivot, this.graphics.pivotMatrix)
+        vec2.mul(pivot, pivot, this.scaleVec)
+
+        return pivot
     }
 
     calcLocalMatrix(parentWorldMatrix?: mat2d) {
@@ -86,6 +99,7 @@ export class GraphicsObject {
         mat2d.translate(m, m, this.positionVec)
         mat2d.rotate(m, m, this.angle)
         mat2d.scale(m, m, this.scaleVec)
+        mat2d.scale(m, m, this.mirrorVec)
 
         if (this.graphics) {
             mat2d.mul(m, m, this.graphics.pivotMatrix)

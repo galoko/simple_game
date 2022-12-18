@@ -1,0 +1,12 @@
+{
+	"scale": 0.02,
+	"attachPoint": "barrel",
+	"attachT": 1,
+	"type": "line",
+	"line": [
+		0, 0,
+		10000, 0
+	],
+	"color": "red",
+	"alpha": 0.1
+}

@@ -1,6 +1,5 @@
 import { mat2d, vec2 } from "gl-matrix"
 import { ctx } from "./init"
-import { player } from "./player"
 
 export const camera = {
     x: 0,
@@ -17,14 +16,16 @@ export function screenToWorld(p: vec2): vec2 {
     )
 }
 
-const SCREEN_HEIGHT_IN_METERS = 7
+const focusPoint = vec2.create()
+
+const SCREEN_HEIGHT_IN_METERS = 3
 
 export function setupCamera(): void {
     camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS)
     const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale
 
-    camera.x = player.x + SCREEN_WIDTH_IN_METERS * 0.5
-    camera.y = player.y - SCREEN_HEIGHT_IN_METERS * 0.74
+    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.5
+    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.74
 
     mat2d.identity(camera.m)
     mat2d.translate(
@@ -34,4 +35,9 @@ export function setupCamera(): void {
     )
     mat2d.scale(camera.m, camera.m, vec2.fromValues(camera.scale, camera.scale))
     mat2d.translate(camera.m, camera.m, vec2.fromValues(-camera.x, -camera.y))
+}
+
+export function setFocusPoint(x: number, y: number): void {
+    vec2.set(focusPoint, x, y)
+    setupCamera()
 }

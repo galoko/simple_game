@@ -1,5 +1,9 @@
 {
 	"scale": 0.17,
 	"attachPoint": "head",
-	"attachT": 0
+	"attachT": 0,
+	"pivot": [
+		74,
+		248
+	]
 }

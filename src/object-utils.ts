@@ -80,8 +80,9 @@ export function recalcWorldTransforms(obj: GraphicsObject) {
 
     if (obj.graphics) {
         const time = now() - obj.startTime
-        const [, points] = obj.graphics.getFrameAndPoints(time)
+        const index = obj.graphics.timeToIndex(time)
 
+        const points = obj.graphics.getPoints(index)
         if (points) {
             if (!obj.parent) {
                 throw new Error("Attachment without a parent.")

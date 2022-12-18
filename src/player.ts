@@ -1,7 +1,6 @@
 import { mat2d, vec2 } from "gl-matrix"
-import { camera, screenToWorld, setupCamera } from "./camera"
-import { ARMS_SLOT, HEAD_SLOT, TORSO_SLOT, WEAPON_SLOT } from "./character"
-import { debugMatrix, debugPoint, debugPoint1 } from "./debug"
+import { screenToWorld, setFocusPoint } from "./camera"
+import { ARMS_SLOT, HEAD_SLOT, SHOOT_LINE_SLOT, TORSO_SLOT, WEAPON_SLOT } from "./character"
 import { createGraphics } from "./graphics"
 import { keys, mouse } from "./input-handler"
 import { cross, dot, getAngleFromMatrix, getAngleFromVector, rotate } from "./math-utils"
@@ -13,13 +12,45 @@ import { getDT } from "./time"
 export const player = new GraphicsObject()
 const idle_torso = new GraphicsObject()
 const idle_arms = new GraphicsObject()
+const run_torso = new GraphicsObject()
 const aiming_arms = new GraphicsObject()
 const blaster = new GraphicsObject()
+const shootLine = new GraphicsObject()
 
 const UP = vec2.fromValues(0, -1)
 
+export async function createPlayer(): Promise<void> {
+    run_torso.graphics = await createGraphics("run", "torso_legs")
+    // const run_arms = await createGraphics('run', 'arms')
+
+    idle_torso.graphics = await createGraphics("idle", "torso_legs")
+    idle_arms.graphics = await createGraphics("idle", "arms")
+
+    aiming_arms.graphics = await createGraphics("aiming", "arms")
+    aiming_arms.z = 0.2
+
+    player.scale = 2
+    player.x = 0
+    // player.mirror = true
+
+    const head = new GraphicsObject()
+    head.graphics = await createGraphics("oleg")
+    head.angle = 1.57
+    head.z = 0.1
+    player.attach(HEAD_SLOT, head)
+
+    blaster.graphics = await createGraphics("blaster")
+    blaster.z = -0.05
+    player.attach(WEAPON_SLOT, blaster)
+
+    shootLine.graphics = await createGraphics("shoot-line")
+    shootLine.z = -0.01
+    player.attach(SHOOT_LINE_SLOT, shootLine)
+
+    addToScene(player)
+}
+
 export function playerControls() {
-    player.attach(TORSO_SLOT, idle_torso)
     player.attach(ARMS_SLOT, aiming_arms)
 
     const dt = getDT()
@@ -27,23 +58,24 @@ export function playerControls() {
     const isAiming = true
 
     if (keys.get("KeyD")) {
-        // player.play(run_torso, run_arms)
-        player.x += dt * 12
+        player.attach(TORSO_SLOT, run_torso)
+        player.x += dt * 7
         player.mirror = false
     } else if (keys.get("KeyA")) {
-        // player.play(run_torso, run_arms)
-        player.x += dt * -12
+        player.attach(TORSO_SLOT, run_torso)
+        player.x += dt * -7
         player.mirror = true
     } else {
-        // player.play(idle_torso, idle_arms)
+        player.attach(TORSO_SLOT, idle_torso)
     }
 
     if (isAiming) {
         // player.play(undefined, aiming_arms)
     }
 
-    setupCamera()
     recalcWorldTransforms(player)
+
+    setFocusPoint(player.x, player.y)
 
     // TODO redo this into generic aiming method
 
@@ -108,42 +140,5 @@ export function playerControls() {
         aiming_arms.angleIsWorldAngle = true
 
         aiming_arms.calcWorldMatrix()
-
-        // TODO remove all recalculations, all camera setup, IMPLEMENT laser line as a primitive
-        // debug
-        setupCamera()
-
-        mat2d.copy(debugMatrix, camera.m)
-        mat2d.mul(debugMatrix, debugMatrix, barrelObj.calcWorldMatrix())
-        mat2d.mul(debugMatrix, debugMatrix, attachmentMatrix)
-        vec2.set(debugPoint, 0, 0)
-        vec2.set(debugPoint1, 1500, 0)
     }
-}
-
-export async function createPlayer(): Promise<void> {
-    // const run_torso = await createGraphics('run', 'torso_legs')
-    // const run_arms = await createGraphics('run', 'arms')
-
-    idle_torso.graphics = await createGraphics("idle", "torso_legs")
-    idle_arms.graphics = await createGraphics("idle", "arms")
-
-    aiming_arms.graphics = await createGraphics("aiming", "arms")
-    aiming_arms.z = 0.2
-
-    player.scale = 2
-    player.x = 2
-    // player.mirror = true
-
-    const head = new GraphicsObject()
-    head.graphics = await createGraphics("oleg")
-    head.angle = 1.57
-    head.z = 0.1
-    player.attach(HEAD_SLOT, head)
-
-    blaster.graphics = await createGraphics("blaster")
-    blaster.z = -0.05
-    player.attach(WEAPON_SLOT, blaster)
-
-    addToScene(player)
 }

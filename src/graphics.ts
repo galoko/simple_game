@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { vec2, mat2d } from "gl-matrix"
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
@@ -13,16 +14,40 @@ export type AttachmentPoints = {
     [key: string]: number[]
 }
 
+export enum GraphicsType {
+    IMG = "img",
+    LINE = "line",
+}
+
+export enum PhysicsType {
+    STATIC = "static",
+    DYNAMIC = "dynamic",
+    KINEMATIC = "kinematic",
+    NONE = "none",
+}
+
 export class Graphics {
     public frames: HTMLImageElement[] = []
     public unitMatrix = mat2d.create()
+    public invUnitMatrix = mat2d.create()
     public pivotMatrix = mat2d.create()
     public invPivotMatrix = mat2d.create()
+    public width = 1
+    public height = 1
     public scale = 1
     public attachPoint: string | undefined = undefined
     public attachT = 0
     public points: AttachmentPoints[] = []
     public duration = 1000
+    public type = GraphicsType.IMG
+
+    public path: Path2D = undefined!
+    public color: string = undefined!
+    public alpha = 1
+    public stroke = true
+
+    public physicsType = PhysicsType.NONE
+    public physicsPoints: vec2[] = undefined!
 
     constructor(public name: string, public prefix?: string) {}
 
@@ -33,28 +58,72 @@ export class Graphics {
         const response = await fetch(dataUrl)
         const data = response.ok ? await response.json() : {}
 
-        const promises: Promise<HTMLImageElement>[] = []
-        if (data.frames !== undefined) {
-            for (let i = 1; i <= data.frames; i++) {
-                promises.push(loadImage(`assets/${this.name}/${this.prefix}_${i}.png`))
+        this.type = data.type || this.type
+
+        if (this.type === GraphicsType.IMG) {
+            const promises: Promise<HTMLImageElement>[] = []
+            if (data.frames !== undefined) {
+                for (let i = 1; i <= data.frames; i++) {
+                    promises.push(loadImage(`assets/${this.name}/${this.prefix}_${i}.png`))
+                }
+            } else {
+                promises.push(loadImage(`assets/${this.name}.png`))
             }
+            this.frames = await Promise.all(promises)
         } else {
-            promises.push(loadImage(`assets/${this.name}.png`))
+            const line = data.line
+            this.path = new Path2D()
+            this.path.moveTo(line[0], line[1])
+            this.path.lineTo(line[2], line[3])
+            this.color = data.color
+            this.alpha = data.alpha || this.alpha
+            this.stroke = this.type === GraphicsType.LINE
         }
-        this.frames = await Promise.all(promises)
 
         // IN PIXELS
         const firstFrame = this.frames[0]
-        const pixelSize = firstFrame.width
-        mat2d.fromScaling(this.unitMatrix, vec2.fromValues(1 / pixelSize, 1 / pixelSize))
+        const pixelWidth = firstFrame?.width || 1
+        const pixelHeight = firstFrame?.height || 1
+        mat2d.fromScaling(this.unitMatrix, vec2.fromValues(1 / pixelWidth, 1 / pixelWidth))
+        mat2d.invert(this.invUnitMatrix, this.unitMatrix)
+
+        this.width = pixelWidth / pixelWidth
+        this.height = pixelHeight / pixelWidth
 
         // default is [center, bottom]
-        const pivot = data.pivot || [firstFrame.width / 2, firstFrame.height]
+        const pivot =
+            data.pivot || (firstFrame ? [firstFrame.width / 2, firstFrame.height] : [0, 0])
 
-        const v = vec2.create()
-        vec2.negate(v, pivot)
-        vec2.transformMat2d(v, v, this.unitMatrix)
-        mat2d.translate(this.pivotMatrix, this.pivotMatrix, v)
+        // physics
+        this.physicsType = data.physics || this.physicsType
+
+        if (this.physicsType !== PhysicsType.NONE) {
+            const physicsPoints: number[] = data.physicsPoints || [
+                0,
+                0,
+
+                pixelWidth,
+                0,
+
+                pixelWidth,
+                pixelHeight,
+
+                0,
+                pixelHeight,
+            ]
+
+            this.physicsPoints = []
+            for (let i = 0; i < physicsPoints.length; i += 2) {
+                const p = vec2.fromValues(physicsPoints[i + 0], physicsPoints[i + 1])
+                vec2.transformMat2d(p, p, this.unitMatrix)
+                this.physicsPoints.push(p)
+            }
+        }
+
+        const normalizedPivot = vec2.fromValues(pivot[0], pivot[1])
+        vec2.negate(normalizedPivot, normalizedPivot)
+        vec2.transformMat2d(normalizedPivot, normalizedPivot, this.unitMatrix)
+        mat2d.translate(this.pivotMatrix, this.pivotMatrix, normalizedPivot)
         mat2d.invert(this.invPivotMatrix, this.pivotMatrix)
 
         // IN UNITS
@@ -65,7 +134,7 @@ export class Graphics {
         this.duration = data.duration || this.duration
     }
 
-    getFrameAndPoints(time: number): [HTMLImageElement, AttachmentPoints] {
+    timeToIndex(time: number): number {
         const index = Math.max(
             0,
             Math.min(
@@ -73,7 +142,20 @@ export class Graphics {
                 this.frames.length - 1
             )
         )
-        return [this.frames[index], this.points[index]]
+        return index
+    }
+
+    getPoints(index: number): AttachmentPoints {
+        return this.points[index]
+    }
+
+    getFrame(index: number): HTMLImageElement {
+        return this.frames[index]
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getPath(_index: number): Path2D {
+        return this.path
     }
 }
 

@@ -1,3 +1,4 @@
 {
-	"pivot": [288, 0]
+	"pivot": [288, 0],
+	"physics": "static"
 }
