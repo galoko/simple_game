@@ -1,15 +1,17 @@
 import { mat2d, vec2 } from "gl-matrix"
-import { camera, setupCamera } from "./camera"
-import { GraphicsType } from "./graphics"
+import { camera, setFocusPoint } from "./camera"
+import { GraphicsType, PhysicsType } from "./graphics"
 import { ctx } from "./init"
 import { mouse } from "./input-handler"
-import { GraphicsObject } from "./object"
+import { getWorldScale, GraphicsObject } from "./object"
 import { getAttachmentMatrix, getParentWorldZ } from "./object-utils"
-import { addToPhysics, syncObjWithPhysics } from "./physics"
+import { addToPhysics, getWorldPointsAndNormalFromContact, syncObjWithPhysics } from "./physics"
+import { footSensor, player } from "./player"
 import { now } from "./time"
 
 const scene: GraphicsObject[] = []
 const objectsToDraw: GraphicsObject[] = []
+const objectsByID = new Map<number, GraphicsObject>()
 
 function drawObj(obj: GraphicsObject): void {
     obj.worldZ = getParentWorldZ(obj) + obj.z
@@ -45,21 +47,21 @@ function drawObj(obj: GraphicsObject): void {
     }
 }
 
-export function drawScene() {
-    setupCamera()
+export function syncPhysics() {
+    for (const obj of scene) {
+        syncObjWithPhysics(obj)
+    }
+    setFocusPoint(player.x, player.y)
+}
 
-    // clear
+export function drawScene() {
     ctx.resetTransform()
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-    // draw
-
     objectsToDraw.length = 0
     for (const obj of scene) {
-        syncObjWithPhysics(obj)
         drawObj(obj)
     }
-
     objectsToDraw.sort((a, b) => a.worldZ - b.worldZ)
 
     for (const obj of objectsToDraw) {
@@ -133,13 +135,13 @@ export function drawScene() {
 
     // DEBUG PHYSICS DRAW
 
-    for (const obj of objectsToDraw) {
-        if (!obj.body) {
-            continue
+    function drawCollisionModel(obj: GraphicsObject) {
+        if (obj.graphics.physicsType === PhysicsType.NONE) {
+            return
         }
 
         const physicsPoints = obj.graphics.physicsPoints
-        const scale = obj.scaleVec
+        const scale = getWorldScale(obj)
 
         const { mvpMatrix } = obj
         ctx.setTransform(
@@ -153,7 +155,7 @@ export function drawScene() {
 
         const lineWidth = vec2.fromValues(0.01, 0)
         vec2.transformMat2d(lineWidth, lineWidth, obj.graphics.invUnitMatrix)
-        vec2.div(lineWidth, lineWidth, scale)
+        vec2.scale(lineWidth, lineWidth, 1 / scale)
 
         ctx.strokeStyle = "deeppink"
         ctx.lineWidth = lineWidth[0]
@@ -174,10 +176,46 @@ export function drawScene() {
 
         ctx.stroke()
     }
+
+    for (const obj of objectsToDraw) {
+        if (obj.graphics.name !== "dummy") {
+            continue
+        }
+        drawCollisionModel(obj)
+        for (const slot in obj.attachments) {
+            drawCollisionModel(obj.attachments[slot])
+        }
+    }
+
+    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
+    ctx.fillStyle = "rgb(0, 255, 0)"
+    for (const contact of footSensor.contacts.values()) {
+        const points = getWorldPointsAndNormalFromContact(contact)
+        for (let i = 1; i < points.length; i++) {
+            const p = points[i]
+            ctx.beginPath()
+            ctx.arc(p[0], p[1], 0.01, 0, 9)
+            ctx.fill()
+        }
+    }
 }
 
 export function addToScene(obj: GraphicsObject): void {
     scene.push(obj)
 
+    objectsByID.set(obj.id, obj)
+    for (const slot in obj.attachments) {
+        const attachment = obj.attachments[slot]
+        objectsByID.set(attachment.id, attachment)
+    }
+
     addToPhysics(obj)
+}
+
+export function getObjectByID(id: number): GraphicsObject {
+    const obj = objectsByID.get(id)
+    if (!obj) {
+        throw new Error("Can't find object by id")
+    }
+    return obj
 }

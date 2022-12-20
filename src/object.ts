@@ -2,10 +2,23 @@
 import { mat2d, vec2 } from "gl-matrix"
 import { Graphics } from "./graphics"
 import { getAngleFromMatrix } from "./math-utils"
-import { getAttachmentMatrix, getParentWorldMatrix } from "./object-utils"
+import { getAttachmentMatrix, getParent, getParentWorldMatrix } from "./object-utils"
+import { Box2D } from "./physics"
 import { now } from "./time"
 
+export function getWorldScale(obj: GraphicsObject): number {
+    const parent = getParent(obj)
+    const parentWorldScale = parent ? getWorldScale(parent) : 1
+    return parentWorldScale * obj.scaleVec[0]
+}
+
+type ContactCallback = (contact: any) => void
+
 export class GraphicsObject {
+    private static NEXT_OBJ_ID = 0
+
+    public readonly id = GraphicsObject.NEXT_OBJ_ID++
+
     public graphics: Graphics = undefined!
 
     public x = 0
@@ -31,6 +44,28 @@ export class GraphicsObject {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public body: any = undefined
+    public contacts = new Map<number, any>()
+
+    public onContactStart: ContactCallback | undefined = undefined
+    public onContactPresolve: ContactCallback | undefined = undefined
+    public onContactEnded: ContactCallback | undefined = undefined
+
+    contactStarted(contactPtr: number): void {
+        const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact)
+        this.contacts.set(contactPtr, contact)
+        this.onContactStart?.(contact)
+    }
+
+    contactPresolve(contactPtr: number): void {
+        const contact = this.contacts.get(contactPtr)
+        this.onContactPresolve?.(contact)
+    }
+
+    contactEnded(contactPtr: number): void {
+        const contact = this.contacts.get(contactPtr)
+        this.contacts.delete(contactPtr)
+        this.onContactEnded?.(contact)
+    }
 
     attach(slot: number, attachment: GraphicsObject) {
         if (this.attachments[slot] !== attachment) {

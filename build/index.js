@@ -8360,6 +8360,11 @@ class Graphics {
     physicsType = PhysicsType.NONE;
     physicsPoints = undefined;
     physicsPivot = undefined;
+    fixedRotation = false;
+    density = 5;
+    friction = 1;
+    restitution = 0;
+    isSensor = false;
     constructor(name, prefix) {
         this.name = name;
         this.prefix = prefix;
@@ -8458,167 +8463,6 @@ function createDummyGraphics() {
     return graphics;
 }
 
-let nowValue = performance.now();
-let dtValue = 0;
-function now() {
-    return nowValue;
-}
-function setNow(time) {
-    dtValue = (time - nowValue) / 1000;
-    nowValue = time;
-}
-function getDT() {
-    return dtValue;
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-let Box2D;
-let world;
-let ZERO;
-let temp;
-const PHYSICS_STEP = 1 / 60;
-const MAX_STEPS_PER_STEP = 5;
-let currentTime = now() / 1000;
-const PHYSICS_SCALE = 15;
-async function initPhysics() {
-    Box2D = await Box2D$1();
-    ZERO = new Box2D.b2Vec2(0.0, 0.0);
-    temp = new Box2D.b2Vec2(0.0, 0.0);
-    const gravity = new Box2D.b2Vec2(0.0, 9.8 * PHYSICS_SCALE);
-    world = new Box2D.b2World(gravity);
-}
-function initPhysicsForObject(obj) {
-    if (obj.body || obj.graphics.physicsType == PhysicsType.NONE) {
-        return;
-    }
-    const shape = new Box2D.b2PolygonShape();
-    const physicsPoints = obj.graphics.physicsPoints;
-    const scale$1 = obj.scaleVec;
-    const buffer = Box2D._malloc(physicsPoints.length * 8);
-    let offset = 0;
-    for (let i = 0; i < physicsPoints.length; i++) {
-        const p = fromValues(physicsPoints[i][0], physicsPoints[i][1]);
-        add(p, p, obj.graphics.pivot);
-        if (obj.graphics.physicsPivot) {
-            add(p, p, obj.graphics.physicsPivot);
-        }
-        mul(p, p, scale$1);
-        scale(p, p, PHYSICS_SCALE);
-        Box2D.HEAPF32[(buffer + offset) >> 2] = p[0];
-        Box2D.HEAPF32[(buffer + offset + 4) >> 2] = p[1];
-        offset += 8;
-    }
-    const ptr_wrapped = Box2D.wrapPointer(buffer, Box2D.b2Vec2);
-    shape.Set(ptr_wrapped, physicsPoints.length);
-    Box2D._free(buffer);
-    let type;
-    switch (obj.graphics.physicsType) {
-        case PhysicsType.DYNAMIC: {
-            type = Box2D.b2_dynamicBody;
-            break;
-        }
-        case PhysicsType.KINEMATIC: {
-            type = Box2D.b2_kinematicBody;
-            break;
-        }
-        case PhysicsType.STATIC: {
-            type = Box2D.b2_staticBody;
-            break;
-        }
-    }
-    const bd = new Box2D.b2BodyDef();
-    bd.set_type(type);
-    bd.set_position(ZERO);
-    const body = world.CreateBody(bd);
-    body.CreateFixture(shape, 5.0);
-    // body.SetAngularVelocity(-5)
-    obj.body = body;
-}
-function addToPhysics(obj) {
-    initPhysicsForObject(obj);
-    if (!obj.body) {
-        return;
-    }
-    syncPhysicsWithObj(obj);
-}
-function syncPhysicsWithObj(obj) {
-    const body = obj.body;
-    temp.Set(obj.x * PHYSICS_SCALE, obj.y * PHYSICS_SCALE);
-    body.SetTransform(temp, obj.angle);
-    body.SetLinearVelocity(ZERO);
-    body.SetAwake(1);
-    body.SetActive(1);
-}
-function syncObjWithPhysics(obj) {
-    // return
-    const body = obj.body;
-    if (body
-    /*
-    obj.graphics.physicsType === PhysicsType.DYNAMIC ||
-    obj.graphics.physicsType === PhysicsType.KINEMATIC
-    */
-    ) {
-        const bpos = body.GetPosition();
-        obj.x = bpos.get_x() / PHYSICS_SCALE;
-        obj.y = bpos.get_y() / PHYSICS_SCALE;
-        obj.angle = body.GetAngle();
-    }
-}
-function physicsStep() {
-    const time = now() / 1000;
-    const stepCount = (time - currentTime) / PHYSICS_STEP;
-    const stepsToSimulate = Math.min(stepCount, MAX_STEPS_PER_STEP);
-    currentTime += stepCount * PHYSICS_STEP;
-    for (let i = 0; i < stepsToSimulate; i++) {
-        world.Step(PHYSICS_STEP, 2, 2);
-    }
-}
-
-const camera = {
-    x: 0,
-    y: 0,
-    scale: 150,
-    m: create$7(),
-};
-function screenToWorld(p) {
-    const [x, y] = p;
-    return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
-}
-const focusPoint = create();
-const SCREEN_HEIGHT_IN_METERS = 3;
-function setupCamera() {
-    camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
-    const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
-    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.5;
-    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.74;
-    identity$4(camera.m);
-    translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
-    scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
-    translate$3(camera.m, camera.m, fromValues(-camera.x, -camera.y));
-}
-function setFocusPoint(x, y) {
-    set(focusPoint, x, y);
-    setupCamera();
-}
-
-const TORSO_SLOT = 0;
-const ARMS_SLOT = 1;
-const HEAD_SLOT = 2;
-const WEAPON_SLOT = 3;
-const SHOOT_LINE_SLOT = 4;
-
-const keys = new Map();
-const mouse = create();
-document.body.onkeydown = e => {
-    keys.set(e.code, true);
-};
-document.body.onkeyup = e => {
-    keys.set(e.code, false);
-};
-ctx.canvas.onmousemove = e => {
-    set(mouse, e.clientX * screen$1.dpr, e.clientY * screen$1.dpr);
-};
-
 function lerp(v0, v1, t) {
     return v0 * (1 - t) + v1 * t;
 }
@@ -8645,6 +8489,19 @@ function rotate(v, angle) {
     const c = Math.cos(angle);
     const s = Math.sin(angle);
     return fromValues(x * c - y * s, x * s + y * c);
+}
+
+let nowValue = performance.now();
+let dtValue = 0;
+function now() {
+    return nowValue;
+}
+function setNow(time) {
+    dtValue = (time - nowValue) / 1000;
+    nowValue = time / 10;
+}
+function getDT() {
+    return dtValue;
 }
 
 function getParent(obj) {
@@ -8715,7 +8572,14 @@ function recalcWorldTransforms(obj) {
 }
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+function getWorldScale(obj) {
+    const parent = getParent(obj);
+    const parentWorldScale = parent ? getWorldScale(parent) : 1;
+    return parentWorldScale * obj.scaleVec[0];
+}
 class GraphicsObject {
+    static NEXT_OBJ_ID = 0;
+    id = GraphicsObject.NEXT_OBJ_ID++;
     graphics = undefined;
     x = 0;
     y = 0;
@@ -8735,6 +8599,24 @@ class GraphicsObject {
     lastIndex = undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body = undefined;
+    contacts = new Map();
+    onContactStart = undefined;
+    onContactPresolve = undefined;
+    onContactEnded = undefined;
+    contactStarted(contactPtr) {
+        const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
+        this.contacts.set(contactPtr, contact);
+        this.onContactStart?.(contact);
+    }
+    contactPresolve(contactPtr) {
+        const contact = this.contacts.get(contactPtr);
+        this.onContactPresolve?.(contact);
+    }
+    contactEnded(contactPtr) {
+        const contact = this.contacts.get(contactPtr);
+        this.contacts.delete(contactPtr);
+        this.onContactEnded?.(contact);
+    }
     attach(slot, attachment) {
         if (this.attachments[slot] !== attachment) {
             attachment.reset();
@@ -8801,8 +8683,189 @@ class GraphicsObject {
     }
 }
 
+const camera = {
+    x: 0,
+    y: 0,
+    scale: 150,
+    m: create$7(),
+};
+function screenToWorld(p) {
+    const [x, y] = p;
+    return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
+}
+const focusPoint = create();
+const SCREEN_HEIGHT_IN_METERS = 3;
+function setupCamera() {
+    camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
+    const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
+    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.5;
+    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.3;
+    identity$4(camera.m);
+    translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
+    scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
+    translate$3(camera.m, camera.m, fromValues(-camera.x, -camera.y));
+}
+function setFocusPoint(x, y) {
+    set(focusPoint, x, y);
+    setupCamera();
+}
+
+const keys = new Map();
+const mouse = create();
+document.body.onkeydown = e => {
+    keys.set(e.code, true);
+};
+document.body.onkeyup = e => {
+    keys.set(e.code, false);
+};
+ctx.canvas.onmousemove = e => {
+    set(mouse, e.clientX * screen$1.dpr, e.clientY * screen$1.dpr);
+};
+
+const TORSO_SLOT = 0;
+const ARMS_SLOT = 1;
+const HEAD_SLOT = 2;
+const WEAPON_SLOT = 3;
+const SHOOT_LINE_SLOT = 4;
+const FOOT_SENSOR_SLOT = 5;
+
+const player = new GraphicsObject();
+const idle_torso = new GraphicsObject();
+const idle_arms = new GraphicsObject();
+const run_torso = new GraphicsObject();
+const aiming_arms = new GraphicsObject();
+const blaster = new GraphicsObject();
+const shootLine = new GraphicsObject();
+const footSensor = new GraphicsObject();
+const UP = fromValues(0, -1);
+async function createPlayer() {
+    // animations
+    run_torso.graphics = await createGraphics("run", "torso_legs");
+    // const run_arms = await createGraphics('run', 'arms')
+    idle_torso.graphics = await createGraphics("idle", "torso_legs");
+    idle_arms.graphics = await createGraphics("idle", "arms");
+    aiming_arms.graphics = await createGraphics("aiming", "arms");
+    aiming_arms.z = 0.2;
+    // player
+    const playerGraphics = createDummyGraphics();
+    playerGraphics.physicsType = PhysicsType.DYNAMIC;
+    playerGraphics.fixedRotation = true;
+    const WIDTH = 0.2;
+    playerGraphics.physicsPoints = [
+        fromValues(-WIDTH / 8, 0),
+        fromValues(-WIDTH / 2, 0.5),
+        fromValues(-WIDTH / 8, 1),
+        fromValues(WIDTH / 8, 1),
+        fromValues(WIDTH / 2, 0.5),
+        fromValues(WIDTH / 8, 0),
+    ];
+    playerGraphics.physicsPivot = fromValues(0, -1);
+    player.graphics = playerGraphics;
+    player.scale = 2;
+    player.x = 0;
+    player.y = -1;
+    // player.mirror = true
+    // attachments
+    const footSensorGraphics = createDummyGraphics();
+    footSensorGraphics.physicsType = PhysicsType.DYNAMIC;
+    const W = 0.2;
+    footSensorGraphics.physicsPoints = [
+        fromValues(-W / 8, 0),
+        fromValues(-W / 8, W * 1),
+        fromValues(W / 8, W * 1),
+        fromValues(W / 8, 0),
+    ];
+    footSensorGraphics.physicsPivot = fromValues(0, 0);
+    footSensor.graphics = footSensorGraphics;
+    player.attach(FOOT_SENSOR_SLOT, footSensor);
+    footSensor.onContactPresolve = contact => {
+        contact.SetEnabled(false);
+    };
+    const head = new GraphicsObject();
+    head.graphics = await createGraphics("oleg");
+    head.angle = 1.57;
+    head.z = 0.1;
+    player.attach(HEAD_SLOT, head);
+    blaster.graphics = await createGraphics("blaster");
+    blaster.z = -0.05;
+    player.attach(WEAPON_SLOT, blaster);
+    shootLine.graphics = await createGraphics("shoot-line");
+    shootLine.z = -0.01;
+    player.attach(SHOOT_LINE_SLOT, shootLine);
+    addToScene(player);
+}
+function playerControls() {
+    player.attach(ARMS_SLOT, aiming_arms);
+    const isAiming = true;
+    const isInControl = true;
+    const body = player.body;
+    const vel = body.GetLinearVelocity();
+    if (keys.get("KeyD")) {
+        player.attach(TORSO_SLOT, run_torso);
+        vel.set_x(3 / PHYSICS_STEP);
+        player.mirror = false;
+    }
+    else if (keys.get("KeyA")) {
+        player.attach(TORSO_SLOT, run_torso);
+        vel.set_x(-3 / PHYSICS_STEP);
+        player.mirror = true;
+    }
+    else {
+        player.attach(TORSO_SLOT, idle_torso);
+        vel.set_x(0);
+    }
+    body.SetLinearVelocity(vel);
+    if (isAiming) {
+        // player.play(undefined, aiming_arms)
+    }
+    recalcWorldTransforms(player);
+    // TODO redo this into generic aiming method
+    const shouldersPivotPointWorldSpace = getWorldPivotPoint(aiming_arms);
+    const barrelAttachment = getAttachmentMatrix(player, "barrel", 1);
+    if (isAiming && shouldersPivotPointWorldSpace && barrelAttachment) {
+        const mouseWorldSpace = screenToWorld(mouse);
+        aiming_arms.angle = 0;
+        const { parentObj: barrelObj, m: attachmentMatrix } = barrelAttachment;
+        const barrelMatrix = create$7();
+        mul$7(barrelMatrix, barrelMatrix, aiming_arms.calcWorldMatrix());
+        mul$7(barrelMatrix, barrelMatrix, barrelObj.calcLocalMatrix());
+        mul$7(barrelMatrix, barrelMatrix, attachmentMatrix);
+        const barrelAngle = getAngleFromMatrix(barrelMatrix);
+        const barrelLocalSpace = fromValues(0, 0);
+        transformMat2d(barrelLocalSpace, barrelLocalSpace, barrelMatrix);
+        sub(barrelLocalSpace, barrelLocalSpace, shouldersPivotPointWorldSpace);
+        mul(barrelLocalSpace, barrelLocalSpace, player.mirrorVec);
+        const offsetHeight = dot(rotate(barrelLocalSpace, -barrelAngle), UP) * player.mirrorMul;
+        const offsetUp = create();
+        scale(offsetUp, UP, offsetHeight);
+        const mousePointShouldersLocalSpace = create();
+        add(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, mouseWorldSpace);
+        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, shouldersPivotPointWorldSpace);
+        const mouseAngle = getAngleFromVector(mousePointShouldersLocalSpace);
+        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, rotate(offsetUp, mouseAngle));
+        // normalized delta
+        const tangent = create();
+        normalize(tangent, mousePointShouldersLocalSpace);
+        const normal = cross(tangent);
+        const pointOnCircle = create();
+        scale(pointOnCircle, normal, offsetHeight);
+        const pointOnCircleWorldSpace = create();
+        add(pointOnCircleWorldSpace, shouldersPivotPointWorldSpace, pointOnCircle);
+        const deltaMouseAndPointOnCircle = create();
+        sub(deltaMouseAndPointOnCircle, mouseWorldSpace, pointOnCircleWorldSpace);
+        mul(deltaMouseAndPointOnCircle, deltaMouseAndPointOnCircle, player.mirrorVec);
+        aiming_arms.angle = getAngleFromVector(deltaMouseAndPointOnCircle) - barrelAngle;
+        aiming_arms.angleIsWorldAngle = true;
+        aiming_arms.calcWorldMatrix();
+    }
+}
+function playerControlsPostPhysics() {
+    //
+}
+
 const scene = [];
 const objectsToDraw = [];
+const objectsByID = new Map();
 function drawObj(obj) {
     obj.worldZ = getParentWorldZ(obj) + obj.z;
     const worldMat = obj.calcWorldMatrix();
@@ -8829,15 +8892,17 @@ function drawObj(obj) {
         drawObj(obj.attachments[slot]);
     }
 }
-function drawScene() {
-    setupCamera();
-    // clear
-    ctx.resetTransform();
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    // draw
-    objectsToDraw.length = 0;
+function syncPhysics() {
     for (const obj of scene) {
         syncObjWithPhysics(obj);
+    }
+    setFocusPoint(player.x, player.y);
+}
+function drawScene() {
+    ctx.resetTransform();
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    objectsToDraw.length = 0;
+    for (const obj of scene) {
         drawObj(obj);
     }
     objectsToDraw.sort((a, b) => a.worldZ - b.worldZ);
@@ -8898,17 +8963,17 @@ function drawScene() {
     ctx.arc(mouse[0], mouse[1], 5, 0, 9);
     ctx.fill();
     // DEBUG PHYSICS DRAW
-    for (const obj of objectsToDraw) {
-        if (!obj.body) {
-            continue;
+    function drawCollisionModel(obj) {
+        if (obj.graphics.physicsType === PhysicsType.NONE) {
+            return;
         }
         const physicsPoints = obj.graphics.physicsPoints;
-        const scale = obj.scaleVec;
+        const scale$1 = getWorldScale(obj);
         const { mvpMatrix } = obj;
         ctx.setTransform(mvpMatrix[0], mvpMatrix[1], mvpMatrix[2], mvpMatrix[3], mvpMatrix[4], mvpMatrix[5]);
         const lineWidth = fromValues(0.01, 0);
         transformMat2d(lineWidth, lineWidth, obj.graphics.invUnitMatrix);
-        div(lineWidth, lineWidth, scale);
+        scale(lineWidth, lineWidth, 1 / scale$1);
         ctx.strokeStyle = "deeppink";
         ctx.lineWidth = lineWidth[0];
         ctx.beginPath();
@@ -8928,117 +8993,223 @@ function drawScene() {
         ctx.closePath();
         ctx.stroke();
     }
+    for (const obj of objectsToDraw) {
+        if (obj.graphics.name !== "dummy") {
+            continue;
+        }
+        drawCollisionModel(obj);
+        for (const slot in obj.attachments) {
+            drawCollisionModel(obj.attachments[slot]);
+        }
+    }
+    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5]);
+    ctx.fillStyle = "rgb(0, 255, 0)";
+    for (const contact of footSensor.contacts.values()) {
+        const points = getWorldPointsAndNormalFromContact(contact);
+        for (let i = 1; i < points.length; i++) {
+            const p = points[i];
+            ctx.beginPath();
+            ctx.arc(p[0], p[1], 0.01, 0, 9);
+            ctx.fill();
+        }
+    }
 }
 function addToScene(obj) {
     scene.push(obj);
+    objectsByID.set(obj.id, obj);
+    for (const slot in obj.attachments) {
+        const attachment = obj.attachments[slot];
+        objectsByID.set(attachment.id, attachment);
+    }
     addToPhysics(obj);
 }
-
-const player = new GraphicsObject();
-const idle_torso = new GraphicsObject();
-const idle_arms = new GraphicsObject();
-const run_torso = new GraphicsObject();
-const aiming_arms = new GraphicsObject();
-const blaster = new GraphicsObject();
-const shootLine = new GraphicsObject();
-const UP = fromValues(0, -1);
-async function createPlayer() {
-    // animations
-    run_torso.graphics = await createGraphics("run", "torso_legs");
-    // const run_arms = await createGraphics('run', 'arms')
-    idle_torso.graphics = await createGraphics("idle", "torso_legs");
-    idle_arms.graphics = await createGraphics("idle", "arms");
-    aiming_arms.graphics = await createGraphics("aiming", "arms");
-    aiming_arms.z = 0.2;
-    // player
-    const playerGraphics = createDummyGraphics();
-    playerGraphics.physicsType = PhysicsType.DYNAMIC;
-    playerGraphics.physicsPoints = [
-        fromValues(0, 0),
-        fromValues(0.2, 0),
-        fromValues(0.2, 1),
-        fromValues(0, 1),
-    ];
-    playerGraphics.physicsPivot = fromValues(-0.1, -1);
-    player.graphics = playerGraphics;
-    player.scale = 2;
-    player.x = 0;
-    // player.y = -5
-    // player.mirror = true
-    // attachments
-    const head = new GraphicsObject();
-    head.graphics = await createGraphics("oleg");
-    head.angle = 1.57;
-    head.z = 0.1;
-    player.attach(HEAD_SLOT, head);
-    blaster.graphics = await createGraphics("blaster");
-    blaster.z = -0.05;
-    player.attach(WEAPON_SLOT, blaster);
-    shootLine.graphics = await createGraphics("shoot-line");
-    shootLine.z = -0.01;
-    player.attach(SHOOT_LINE_SLOT, shootLine);
-    addToScene(player);
+function getObjectByID(id) {
+    const obj = objectsByID.get(id);
+    if (!obj) {
+        throw new Error("Can't find object by id");
+    }
+    return obj;
 }
-function playerControls() {
-    player.attach(ARMS_SLOT, aiming_arms);
-    const dt = getDT();
-    const isAiming = true;
-    if (keys.get("KeyD")) {
-        player.attach(TORSO_SLOT, run_torso);
-        player.x += dt * 7;
-        player.mirror = false;
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+let Box2D;
+let world;
+let ZERO;
+let temp;
+const PHYSICS_STEP = 1 / 60;
+const MAX_STEPS_PER_STEP = 5;
+let currentTime = now() / 1000;
+const PHYSICS_SCALE = 15;
+const INV_PHYSICS_SCALE = 1 / PHYSICS_SCALE;
+let worldManifold;
+const contantPoint0 = create();
+const contantPoint1 = create();
+const normal = create();
+function getWorldPointsAndNormalFromContact(contact) {
+    contact.GetWorldManifold(worldManifold);
+    const manifold = contact.GetManifold();
+    const pointCount = manifold.get_pointCount();
+    const b2_normal = worldManifold.get_normal();
+    const b2_points_ptr = Box2D.getPointer(worldManifold.get_points());
+    const b2_point0 = Box2D.wrapPointer(b2_points_ptr, Box2D.b2Vec2);
+    const b2_point1 = Box2D.wrapPointer(b2_points_ptr + 8, Box2D.b2Vec2);
+    set(normal, b2_normal.get_x(), b2_normal.get_y());
+    const result = [normal];
+    if (pointCount > 0) {
+        set(contantPoint0, b2_point0.get_x() * INV_PHYSICS_SCALE, b2_point0.get_y() * INV_PHYSICS_SCALE);
+        result.push(contantPoint0);
     }
-    else if (keys.get("KeyA")) {
-        player.attach(TORSO_SLOT, run_torso);
-        player.x += dt * -7;
-        player.mirror = true;
+    if (pointCount > 1) {
+        set(contantPoint1, b2_point1.get_x() * INV_PHYSICS_SCALE, b2_point1.get_y() * INV_PHYSICS_SCALE);
+        result.push(contantPoint1);
     }
-    else {
-        player.attach(TORSO_SLOT, idle_torso);
+    return result;
+}
+async function initPhysics() {
+    Box2D = await Box2D$1();
+    ZERO = new Box2D.b2Vec2(0.0, 0.0);
+    temp = new Box2D.b2Vec2(0.0, 0.0);
+    const gravity = new Box2D.b2Vec2(0.0, 9.8 * PHYSICS_SCALE);
+    world = new Box2D.b2World(gravity);
+    worldManifold = new Box2D.b2WorldManifold();
+    const listener = new Box2D.JSContactListener();
+    listener.BeginContact = (contactPtr) => {
+        const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
+        const fixtureA = contact.GetFixtureA();
+        const fixtureB = contact.GetFixtureB();
+        const objA = getObjectByID(fixtureA.GetUserData());
+        objA.contactStarted(contactPtr);
+        const objB = getObjectByID(fixtureB.GetUserData());
+        objB.contactStarted(contactPtr);
+    };
+    listener.EndContact = (contactPtr) => {
+        const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
+        const fixtureA = contact.GetFixtureA();
+        const fixtureB = contact.GetFixtureB();
+        const objA = getObjectByID(fixtureA.GetUserData());
+        objA.contactEnded(contactPtr);
+        const objB = getObjectByID(fixtureB.GetUserData());
+        objB.contactEnded(contactPtr);
+    };
+    listener.PreSolve = (contactPtr) => {
+        const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
+        const fixtureA = contact.GetFixtureA();
+        const fixtureB = contact.GetFixtureB();
+        const objA = getObjectByID(fixtureA.GetUserData());
+        objA.contactPresolve(contactPtr);
+        const objB = getObjectByID(fixtureB.GetUserData());
+        objB.contactPresolve(contactPtr);
+    };
+    listener.PostSolve = () => {
+        //
+    };
+    world.SetContactListener(listener);
+}
+function createShape(obj) {
+    const shape = new Box2D.b2PolygonShape();
+    const physicsPoints = obj.graphics.physicsPoints;
+    const scale$1 = getWorldScale(obj);
+    const buffer = Box2D._malloc(physicsPoints.length * 8);
+    let offset = 0;
+    for (let i = 0; i < physicsPoints.length; i++) {
+        const p = fromValues(physicsPoints[i][0], physicsPoints[i][1]);
+        add(p, p, obj.graphics.pivot);
+        if (obj.graphics.physicsPivot) {
+            add(p, p, obj.graphics.physicsPivot);
+        }
+        scale(p, p, scale$1);
+        scale(p, p, PHYSICS_SCALE);
+        Box2D.HEAPF32[(buffer + offset) >> 2] = p[0];
+        Box2D.HEAPF32[(buffer + offset + 4) >> 2] = p[1];
+        offset += 8;
     }
-    if (isAiming) {
-        // player.play(undefined, aiming_arms)
+    const ptr_wrapped = Box2D.wrapPointer(buffer, Box2D.b2Vec2);
+    shape.Set(ptr_wrapped, physicsPoints.length);
+    Box2D._free(buffer);
+    return shape;
+}
+function physicsTypeToBox2D(physicsType) {
+    let type = PhysicsType.NONE;
+    switch (physicsType) {
+        case PhysicsType.DYNAMIC: {
+            type = Box2D.b2_dynamicBody;
+            break;
+        }
+        case PhysicsType.KINEMATIC: {
+            type = Box2D.b2_kinematicBody;
+            break;
+        }
+        case PhysicsType.STATIC: {
+            type = Box2D.b2_staticBody;
+            break;
+        }
     }
-    recalcWorldTransforms(player);
-    setFocusPoint(player.x, player.y);
-    // TODO redo this into generic aiming method
-    const shouldersPivotPointWorldSpace = getWorldPivotPoint(aiming_arms);
-    const barrelAttachment = getAttachmentMatrix(player, "barrel", 1);
-    if (shouldersPivotPointWorldSpace && barrelAttachment) {
-        const mouseWorldSpace = screenToWorld(mouse);
-        aiming_arms.angle = 0;
-        const { parentObj: barrelObj, m: attachmentMatrix } = barrelAttachment;
-        const barrelMatrix = create$7();
-        mul$7(barrelMatrix, barrelMatrix, aiming_arms.calcWorldMatrix());
-        mul$7(barrelMatrix, barrelMatrix, barrelObj.calcLocalMatrix());
-        mul$7(barrelMatrix, barrelMatrix, attachmentMatrix);
-        const barrelAngle = getAngleFromMatrix(barrelMatrix);
-        const barrelLocalSpace = fromValues(0, 0);
-        transformMat2d(barrelLocalSpace, barrelLocalSpace, barrelMatrix);
-        sub(barrelLocalSpace, barrelLocalSpace, shouldersPivotPointWorldSpace);
-        mul(barrelLocalSpace, barrelLocalSpace, player.mirrorVec);
-        const offsetHeight = dot(rotate(barrelLocalSpace, -barrelAngle), UP) * player.mirrorMul;
-        const offsetUp = create();
-        scale(offsetUp, UP, offsetHeight);
-        const mousePointShouldersLocalSpace = create();
-        add(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, mouseWorldSpace);
-        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, shouldersPivotPointWorldSpace);
-        const mouseAngle = getAngleFromVector(mousePointShouldersLocalSpace);
-        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, rotate(offsetUp, mouseAngle));
-        // normalized delta
-        const tangent = create();
-        normalize(tangent, mousePointShouldersLocalSpace);
-        const normal = cross(tangent);
-        const pointOnCircle = create();
-        scale(pointOnCircle, normal, offsetHeight);
-        const pointOnCircleWorldSpace = create();
-        add(pointOnCircleWorldSpace, shouldersPivotPointWorldSpace, pointOnCircle);
-        const deltaMouseAndPointOnCircle = create();
-        sub(deltaMouseAndPointOnCircle, mouseWorldSpace, pointOnCircleWorldSpace);
-        mul(deltaMouseAndPointOnCircle, deltaMouseAndPointOnCircle, player.mirrorVec);
-        aiming_arms.angle = getAngleFromVector(deltaMouseAndPointOnCircle) - barrelAngle;
-        aiming_arms.angleIsWorldAngle = true;
-        aiming_arms.calcWorldMatrix();
+    return type;
+}
+function createFixture(obj, body) {
+    if (obj.graphics.physicsType === PhysicsType.NONE) {
+        return;
+    }
+    const shape = createShape(obj);
+    const fixtureDef = new Box2D.b2FixtureDef();
+    fixtureDef.set_shape(shape);
+    fixtureDef.set_density(obj.graphics.density);
+    fixtureDef.set_restitution(obj.graphics.restitution);
+    fixtureDef.set_friction(obj.graphics.friction);
+    fixtureDef.set_isSensor(obj.graphics.isSensor);
+    const fixture = body.CreateFixture(fixtureDef);
+    fixture.SetUserData(obj.id);
+}
+function initPhysicsForObject(obj) {
+    if (obj.body || obj.graphics.physicsType == PhysicsType.NONE) {
+        return;
+    }
+    const physicsType = physicsTypeToBox2D(obj.graphics.physicsType);
+    const bd = new Box2D.b2BodyDef();
+    bd.set_type(physicsType);
+    bd.set_fixedRotation(obj.graphics.fixedRotation);
+    const body = world.CreateBody(bd);
+    // body.SetAngularVelocity(-5)
+    createFixture(obj, body);
+    for (const slot in obj.attachments) {
+        createFixture(obj.attachments[slot], body);
+    }
+    obj.body = body;
+}
+function addToPhysics(obj) {
+    initPhysicsForObject(obj);
+    const body = obj.body;
+    if (!body) {
+        return;
+    }
+    body.SetAwake(1);
+    body.SetActive(1);
+    syncPhysicsWithObj(obj);
+}
+function syncPhysicsWithObj(obj) {
+    const body = obj.body;
+    temp.Set(obj.x * PHYSICS_SCALE, obj.y * PHYSICS_SCALE);
+    body.SetTransform(temp, obj.angle);
+    body.SetLinearVelocity(ZERO);
+}
+function syncObjWithPhysics(obj) {
+    const body = obj.body;
+    if (body ||
+        obj.graphics.physicsType === PhysicsType.DYNAMIC ||
+        obj.graphics.physicsType === PhysicsType.KINEMATIC) {
+        const bpos = body.GetPosition();
+        obj.x = bpos.get_x() * INV_PHYSICS_SCALE;
+        obj.y = bpos.get_y() * INV_PHYSICS_SCALE;
+        obj.angle = body.GetAngle();
+    }
+}
+function physicsStep() {
+    const time = now() / 1000;
+    const stepCount = Math.trunc((time - currentTime) / PHYSICS_STEP);
+    const stepsToSimulate = Math.min(stepCount, MAX_STEPS_PER_STEP);
+    currentTime += stepCount * PHYSICS_STEP;
+    for (let i = 0; i < stepsToSimulate; i++) {
+        world.Step(PHYSICS_STEP, 2, 2);
     }
 }
 
@@ -9051,22 +9222,27 @@ async function initScene() {
     box.z = -1;
     box.angle = 0.5;
     addToScene(box);
+    const angle = 0;
     for (let i = -10; i < 20; i++) {
+        const l = 10 * i;
         const dirt = new GraphicsObject();
         dirt.graphics = await createGraphics("dirt");
         dirt.scale = 10;
-        dirt.x = 10 * i;
-        dirt.y = 0;
+        dirt.x = Math.cos(angle) * l;
+        dirt.y = Math.sin(angle) * l;
         dirt.z = 1;
+        dirt.angle = angle;
         addToScene(dirt);
     }
 }
 
 function tick(time) {
     setNow(time);
-    playerControls();
     handleResize();
+    playerControls();
     physicsStep();
+    syncPhysics();
+    playerControlsPostPhysics();
     drawScene();
     requestAnimationFrame(tick);
 }

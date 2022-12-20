@@ -1,13 +1,20 @@
 import { mat2d, vec2 } from "gl-matrix"
-import { screenToWorld, setFocusPoint } from "./camera"
-import { ARMS_SLOT, HEAD_SLOT, SHOOT_LINE_SLOT, TORSO_SLOT, WEAPON_SLOT } from "./character"
+import { screenToWorld } from "./camera"
+import {
+    ARMS_SLOT,
+    FOOT_SENSOR_SLOT,
+    HEAD_SLOT,
+    SHOOT_LINE_SLOT,
+    TORSO_SLOT,
+    WEAPON_SLOT,
+} from "./character"
 import { createDummyGraphics, createGraphics, PhysicsType } from "./graphics"
 import { keys, mouse } from "./input-handler"
 import { cross, dot, getAngleFromMatrix, getAngleFromVector, rotate } from "./math-utils"
 import { GraphicsObject } from "./object"
 import { getAttachmentMatrix, getWorldPivotPoint, recalcWorldTransforms } from "./object-utils"
+import { PHYSICS_STEP } from "./physics"
 import { addToScene } from "./scene"
-import { getDT } from "./time"
 
 export const player = new GraphicsObject()
 const idle_torso = new GraphicsObject()
@@ -16,6 +23,7 @@ const run_torso = new GraphicsObject()
 const aiming_arms = new GraphicsObject()
 const blaster = new GraphicsObject()
 const shootLine = new GraphicsObject()
+export const footSensor = new GraphicsObject()
 
 const UP = vec2.fromValues(0, -1)
 
@@ -35,21 +43,44 @@ export async function createPlayer(): Promise<void> {
 
     const playerGraphics = createDummyGraphics()
     playerGraphics.physicsType = PhysicsType.DYNAMIC
+    playerGraphics.fixedRotation = true
+
+    const WIDTH = 0.2
     playerGraphics.physicsPoints = [
-        vec2.fromValues(0, 0),
-        vec2.fromValues(0.2, 0),
-        vec2.fromValues(0.2, 1),
-        vec2.fromValues(0, 1),
+        vec2.fromValues(-WIDTH / 8, 0),
+        vec2.fromValues(-WIDTH / 2, 0.5),
+        vec2.fromValues(-WIDTH / 8, 1),
+        vec2.fromValues(WIDTH / 8, 1),
+        vec2.fromValues(WIDTH / 2, 0.5),
+        vec2.fromValues(WIDTH / 8, 0),
     ]
-    playerGraphics.physicsPivot = vec2.fromValues(-0.1, -1)
+    playerGraphics.physicsPivot = vec2.fromValues(0, -1)
 
     player.graphics = playerGraphics
     player.scale = 2
     player.x = 0
-    // player.y = -5
+    player.y = -1
     // player.mirror = true
 
     // attachments
+
+    const footSensorGraphics = createDummyGraphics()
+    footSensorGraphics.physicsType = PhysicsType.DYNAMIC
+    const W = 0.2
+    footSensorGraphics.physicsPoints = [
+        vec2.fromValues(-W / 8, 0),
+        vec2.fromValues(-W / 8, W * 1),
+        vec2.fromValues(W / 8, W * 1),
+        vec2.fromValues(W / 8, 0),
+    ]
+    footSensorGraphics.physicsPivot = vec2.fromValues(0, 0)
+
+    footSensor.graphics = footSensorGraphics
+    player.attach(FOOT_SENSOR_SLOT, footSensor)
+
+    footSensor.onContactPresolve = contact => {
+        contact.SetEnabled(false)
+    }
 
     const head = new GraphicsObject()
     head.graphics = await createGraphics("oleg")
@@ -71,21 +102,25 @@ export async function createPlayer(): Promise<void> {
 export function playerControls() {
     player.attach(ARMS_SLOT, aiming_arms)
 
-    const dt = getDT()
-
     const isAiming = true
+    const isInControl = true
+
+    const body = player.body
+    const vel = body.GetLinearVelocity()
 
     if (keys.get("KeyD")) {
         player.attach(TORSO_SLOT, run_torso)
-        player.x += dt * 7
+        vel.set_x(3 / PHYSICS_STEP)
         player.mirror = false
     } else if (keys.get("KeyA")) {
         player.attach(TORSO_SLOT, run_torso)
-        player.x += dt * -7
+        vel.set_x(-3 / PHYSICS_STEP)
         player.mirror = true
     } else {
         player.attach(TORSO_SLOT, idle_torso)
+        vel.set_x(0)
     }
+    body.SetLinearVelocity(vel)
 
     if (isAiming) {
         // player.play(undefined, aiming_arms)
@@ -93,14 +128,12 @@ export function playerControls() {
 
     recalcWorldTransforms(player)
 
-    setFocusPoint(player.x, player.y)
-
     // TODO redo this into generic aiming method
 
     const shouldersPivotPointWorldSpace = getWorldPivotPoint(aiming_arms)
     const barrelAttachment = getAttachmentMatrix(player, "barrel", 1)
 
-    if (shouldersPivotPointWorldSpace && barrelAttachment) {
+    if (isAiming && shouldersPivotPointWorldSpace && barrelAttachment) {
         const mouseWorldSpace = screenToWorld(mouse)
 
         aiming_arms.angle = 0
@@ -159,4 +192,8 @@ export function playerControls() {
 
         aiming_arms.calcWorldMatrix()
     }
+}
+
+export function playerControlsPostPhysics() {
+    //
 }

@@ -49,6 +49,11 @@ export class Graphics {
     public physicsType = PhysicsType.NONE
     public physicsPoints: vec2[] = undefined!
     public physicsPivot: vec2 | undefined = undefined
+    public fixedRotation = false
+    public density = 5
+    public friction = 1
+    public restitution = 0
+    public isSensor = false
 
     constructor(public name: string, public prefix?: string) {}
 
