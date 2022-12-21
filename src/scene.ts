@@ -1,11 +1,13 @@
 import { mat2d, vec2 } from "gl-matrix"
 import { camera } from "./camera"
+import { FOOT_FULL_HEIGHT, FOOT_HEIGHT, FOOT_START } from "./character"
 import { GraphicsType, PhysicsType } from "./graphics"
 import { ctx } from "./init"
 import { mouse } from "./input-handler"
 import { getWorldScale, GraphicsObject } from "./object"
-import { getAttachmentMatrix, getParentWorldZ } from "./object-utils"
+import { getAttachmentInfo, getParentWorldZ } from "./object-utils"
 import { addToPhysics, syncObjWithPhysics } from "./physics"
+import { player } from "./player"
 import { now } from "./time"
 
 const scene: GraphicsObject[] = []
@@ -104,7 +106,7 @@ export function drawScene() {
         for (const [pointName] of obj.points) {
             if (pointName === "") {
                 for (const t of [0, 1]) {
-                    const attachmentInfo = getAttachmentMatrix(obj, pointName, t)
+                    const attachmentInfo = getAttachmentInfo(obj, pointName, t)
                     if (!attachmentInfo) {
                         continue
                     }
@@ -176,9 +178,11 @@ export function drawScene() {
     }
 
     for (const obj of objectsToDraw) {
+        /*
         if (obj.graphics.name !== "dummy") {
             continue
         }
+        */
         drawCollisionModel(obj)
         for (const slot in obj.attachments) {
             drawCollisionModel(obj.attachments[slot])
@@ -193,6 +197,15 @@ export function drawScene() {
     ctx.arc(p[0], p[1], 0.01, 0, 9)
     ctx.fill()
     */
+
+    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
+    ctx.strokeStyle = "green"
+    ctx.lineWidth = 0.01
+    ctx.beginPath()
+    const footY = player.obj.y - FOOT_HEIGHT * player.obj.scale
+    ctx.moveTo(player.obj.x, footY - FOOT_START * player.obj.scale)
+    ctx.lineTo(player.obj.x, footY + FOOT_FULL_HEIGHT * player.obj.scale)
+    ctx.stroke()
 }
 
 export function addToScene(obj: GraphicsObject): void {

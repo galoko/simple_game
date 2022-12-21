@@ -7665,53 +7665,303 @@ var vec2 = /*#__PURE__*/Object.freeze({
   forEach: forEach
 });
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-const canvas = document.body.querySelector("canvas");
-const ctx = canvas.getContext("2d", { desynchronized: true });
-const screen$1 = {
-    width: 0,
-    height: 0,
-    dpr: 1,
-};
-function handleResize() {
-    screen$1.dpr = devicePixelRatio;
-    screen$1.width = document.body.clientWidth * screen$1.dpr;
-    screen$1.height = document.body.clientHeight * screen$1.dpr;
-    if (canvas.width == screen$1.width && canvas.height == screen$1.height) {
+function lerp(v0, v1, t) {
+    return v0 * (1 - t) + v1 * t;
+}
+function getAngleFromPoint(x, y) {
+    return Math.atan2(y, x);
+}
+function getAngleFromVector(v) {
+    const [x, y] = v;
+    return Math.atan2(y, x);
+}
+function getAngleFromMatrix(m) {
+    return Math.atan2(m[1], m[3]);
+}
+function dot(v1, v2) {
+    const [x0, y0] = v1;
+    const [x1, y1] = v2;
+    return x0 * x1 + y0 * y1;
+}
+function cross(v) {
+    return fromValues(v[1], -v[0]);
+}
+function rotate(v, angle) {
+    const [x, y] = v;
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    return fromValues(x * c - y * s, x * s + y * c);
+}
+
+let nowValue = performance.now();
+let dtValue = 0;
+function now() {
+    return nowValue;
+}
+function setNow(time) {
+    dtValue = (time - nowValue) / 1000;
+    nowValue = time;
+}
+function getDT() {
+    return dtValue;
+}
+
+function getParent(obj) {
+    let parent = obj.parent;
+    if (parent && obj.graphics.attachPoint) {
+        const p = parent.points.get(obj.graphics.attachPoint);
+        if (p) {
+            parent = p.obj;
+        }
+    }
+    return parent;
+}
+const IDENTITY = create$7();
+function getParentWorldMatrix(obj) {
+    const parent = getParent(obj);
+    return parent ? parent.getWorldMatrix() : IDENTITY;
+}
+function getParentWorldZ(obj) {
+    const parent = getParent(obj);
+    return parent ? parent.worldZ : 0;
+}
+function getAttachmentInfo(obj, pointName, t) {
+    const p = obj.points.get(pointName);
+    if (!p) {
+        return undefined;
+    }
+    const { point, obj: parentObj } = p;
+    const [x0, y0, x1, y1] = point;
+    const angle = getAngleFromPoint(x1 - x0, y1 - y0);
+    const offset = fromValues(lerp(x0, x1, t), lerp(y0, y1, t));
+    transformMat2d(offset, offset, parentObj.graphics.unitMatrix);
+    const m = create$7();
+    translate$3(m, m, offset);
+    rotate$4(m, m, angle);
+    return { m, parentObj };
+}
+function getWorldPoint(obj) {
+    const p = fromValues(0, 0);
+    const m = obj.getWorldMatrix();
+    transformMat2d(p, p, m);
+    return p;
+}
+function getWorldPivotPoint(obj) {
+    const p = fromValues(0, 0);
+    const m = obj.getWorldMatrix();
+    sub(p, p, obj.graphics.pivot);
+    transformMat2d(p, p, m);
+    return p;
+}
+function recalcWorldTransforms(obj) {
+    obj.calcWorldMatrix();
+    if (obj.graphics) {
+        const time = now() - obj.startTime;
+        const index = obj.graphics.timeToIndex(time);
+        const points = obj.graphics.getPoints(index);
+        if (points) {
+            if (!obj.parent) {
+                throw new Error("Attachment without a parent.");
+            }
+            for (const pointName in points) {
+                obj.parent.setPoint(pointName, points[pointName], obj);
+            }
+        }
+    }
+    for (const slot in obj.attachments) {
+        recalcWorldTransforms(obj.attachments[slot]);
+    }
+}
+
+const UP = fromValues(0, -1);
+function aimAt(p, objectToRotate, attachmentName) {
+    const parent = objectToRotate.parent;
+    if (!parent) {
         return;
     }
-    canvas.width = screen$1.width;
-    canvas.height = screen$1.height;
-    canvas.style.width = document.body.clientWidth + "px";
-    canvas.style.height = document.body.clientHeight + "px";
+    recalcWorldTransforms(parent);
+    const rotationCenter = getWorldPivotPoint(objectToRotate);
+    const attachmentInfo = getAttachmentInfo(parent, attachmentName, 1);
+    if (rotationCenter && attachmentInfo) {
+        objectToRotate.angle = 0;
+        objectToRotate.calcWorldMatrix();
+        const { parentObj: attachmentObj, m: attachmentMatrix } = attachmentInfo;
+        const attachmentWorldMatrix = create$7();
+        mul$7(attachmentWorldMatrix, attachmentWorldMatrix, attachmentObj.calcWorldMatrix());
+        mul$7(attachmentWorldMatrix, attachmentWorldMatrix, attachmentMatrix);
+        const attachmentAngle = getAngleFromMatrix(attachmentWorldMatrix);
+        const attachmentLocalSpace = fromValues(0, 0);
+        transformMat2d(attachmentLocalSpace, attachmentLocalSpace, attachmentWorldMatrix);
+        sub(attachmentLocalSpace, attachmentLocalSpace, rotationCenter);
+        mul(attachmentLocalSpace, attachmentLocalSpace, parent.mirrorVec);
+        const offsetHeight = dot(rotate(attachmentLocalSpace, -attachmentAngle), UP) * parent.mirrorMul;
+        const offsetUp = create();
+        scale(offsetUp, UP, offsetHeight);
+        const delta = create();
+        add(delta, delta, p);
+        sub(delta, delta, rotationCenter);
+        const mouseAngle = getAngleFromVector(delta);
+        sub(delta, delta, rotate(offsetUp, mouseAngle));
+        // normalized delta
+        const tangent = create();
+        normalize(tangent, delta);
+        const normal = cross(tangent);
+        const pointOnCircle = create();
+        scale(pointOnCircle, normal, offsetHeight);
+        const pointOnCircleWorldSpace = create();
+        add(pointOnCircleWorldSpace, rotationCenter, pointOnCircle);
+        const deltaPointAndPointOnCircle = create();
+        sub(deltaPointAndPointOnCircle, p, pointOnCircleWorldSpace);
+        mul(deltaPointAndPointOnCircle, deltaPointAndPointOnCircle, parent.mirrorVec);
+        objectToRotate.angle = getAngleFromVector(deltaPointAndPointOnCircle) - attachmentAngle;
+        objectToRotate.angleIsWorldAngle = true;
+        objectToRotate.calcWorldMatrix();
+    }
 }
-handleResize();
 
-const camera = {
-    x: 0,
-    y: 0,
-    scale: 150,
-    m: create$7(),
-};
-function screenToWorld(p) {
-    const [x, y] = p;
-    return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+async function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
 }
-const focusPoint = create();
-const SCREEN_HEIGHT_IN_METERS = 3;
-function setupCamera() {
-    camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
-    const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
-    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.5;
-    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.3;
-    identity$4(camera.m);
-    translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
-    scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
-    translate$3(camera.m, camera.m, fromValues(-camera.x, -camera.y));
+var GraphicsType;
+(function (GraphicsType) {
+    GraphicsType["NONE"] = "none";
+    GraphicsType["IMG"] = "img";
+    GraphicsType["LINE"] = "line";
+})(GraphicsType || (GraphicsType = {}));
+var PhysicsType;
+(function (PhysicsType) {
+    PhysicsType["STATIC"] = "static";
+    PhysicsType["DYNAMIC"] = "dynamic";
+    PhysicsType["KINEMATIC"] = "kinematic";
+    PhysicsType["NONE"] = "none";
+})(PhysicsType || (PhysicsType = {}));
+class Graphics {
+    name;
+    prefix;
+    frames = [];
+    unitMatrix = create$7();
+    invUnitMatrix = create$7();
+    pivot = create();
+    width = 1;
+    height = 1;
+    scale = 1;
+    attachPoint = undefined;
+    attachT = 0;
+    points = [];
+    duration = 1000;
+    type = GraphicsType.NONE;
+    path = undefined;
+    color = undefined;
+    alpha = 1;
+    stroke = true;
+    physicsType = PhysicsType.NONE;
+    physicsPoints = undefined;
+    physicsPivot = undefined;
+    fixedRotation = false;
+    density = 5;
+    friction = 1;
+    restitution = 0;
+    isSensor = false;
+    constructor(name, prefix) {
+        this.name = name;
+        this.prefix = prefix;
+    }
+    async load() {
+        const dataUrl = this.prefix
+            ? `assets/${this.name}/${this.prefix}.json`
+            : `assets/${this.name}.json`;
+        const response = await fetch(dataUrl);
+        const data = response.ok ? await response.json() : {};
+        this.type = data.type || GraphicsType.IMG;
+        if (this.type === GraphicsType.IMG) {
+            const promises = [];
+            if (data.frames !== undefined) {
+                for (let i = 1; i <= data.frames; i++) {
+                    promises.push(loadImage(`assets/${this.name}/${this.prefix}_${i}.png`));
+                }
+            }
+            else {
+                promises.push(loadImage(`assets/${this.name}.png`));
+            }
+            this.frames = await Promise.all(promises);
+        }
+        else {
+            const line = data.line;
+            this.path = new Path2D();
+            this.path.moveTo(line[0], line[1]);
+            this.path.lineTo(line[2], line[3]);
+            this.color = data.color;
+            this.alpha = data.alpha || this.alpha;
+            this.stroke = this.type === GraphicsType.LINE;
+        }
+        // IN PIXELS
+        const firstFrame = this.frames[0];
+        const pixelWidth = firstFrame?.width || 1;
+        const pixelHeight = firstFrame?.height || 1;
+        fromScaling$2(this.unitMatrix, fromValues(1 / pixelWidth, 1 / pixelWidth));
+        invert$4(this.invUnitMatrix, this.unitMatrix);
+        this.width = pixelWidth / pixelWidth;
+        this.height = pixelHeight / pixelWidth;
+        // default is [center, bottom]
+        const pivot = data.pivot || (firstFrame ? [firstFrame.width / 2, firstFrame.height] : [0, 0]);
+        // physics
+        this.physicsType = data.physics || this.physicsType;
+        if (this.physicsType !== PhysicsType.NONE) {
+            const physicsPoints = data.physicsPoints || [
+                0,
+                0,
+                pixelWidth,
+                0,
+                pixelWidth,
+                pixelHeight,
+                0,
+                pixelHeight,
+            ];
+            this.physicsPoints = [];
+            for (let i = 0; i < physicsPoints.length; i += 2) {
+                const p = fromValues(physicsPoints[i + 0], physicsPoints[i + 1]);
+                transformMat2d(p, p, this.unitMatrix);
+                this.physicsPoints.push(p);
+            }
+        }
+        set(this.pivot, pivot[0], pivot[1]);
+        negate(this.pivot, this.pivot);
+        transformMat2d(this.pivot, this.pivot, this.unitMatrix);
+        // IN UNITS
+        this.scale = data.scale || this.scale;
+        this.attachPoint = data.attachPoint;
+        this.attachT = data.attachT || this.attachT;
+        this.points = data.points || this.points;
+        this.duration = data.duration || this.duration;
+    }
+    timeToIndex(time) {
+        const index = Math.max(0, Math.min(Math.trunc(((time / this.duration) % 1) * this.frames.length), this.frames.length - 1));
+        return index;
+    }
+    getPoints(index) {
+        return this.points[index];
+    }
+    getFrame(index) {
+        return this.frames[index];
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getPath(_index) {
+        return this.path;
+    }
 }
-function setFocusPoint(x, y) {
-    set(focusPoint, x, y);
-    setupCamera();
+async function createGraphics(name, prefix) {
+    const graphics = new Graphics(name, prefix);
+    await graphics.load();
+    return graphics;
+}
+function createDummyGraphics() {
+    return new Graphics("dummy");
 }
 
 var Box2D$1 = (function() {
@@ -8344,371 +8594,52 @@ if (typeof exports === 'object' && typeof module === 'object')
       exports["Box2D"] = Box2D$1;
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-async function loadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-    });
+const canvas = document.body.querySelector("canvas");
+const ctx = canvas.getContext("2d", { desynchronized: true });
+const screen$1 = {
+    width: 0,
+    height: 0,
+    dpr: 1,
+};
+function handleResize() {
+    screen$1.dpr = devicePixelRatio;
+    screen$1.width = document.body.clientWidth * screen$1.dpr;
+    screen$1.height = document.body.clientHeight * screen$1.dpr;
+    if (canvas.width == screen$1.width && canvas.height == screen$1.height) {
+        return;
+    }
+    canvas.width = screen$1.width;
+    canvas.height = screen$1.height;
+    canvas.style.width = document.body.clientWidth + "px";
+    canvas.style.height = document.body.clientHeight + "px";
 }
-var GraphicsType;
-(function (GraphicsType) {
-    GraphicsType["NONE"] = "none";
-    GraphicsType["IMG"] = "img";
-    GraphicsType["LINE"] = "line";
-})(GraphicsType || (GraphicsType = {}));
-var PhysicsType;
-(function (PhysicsType) {
-    PhysicsType["STATIC"] = "static";
-    PhysicsType["DYNAMIC"] = "dynamic";
-    PhysicsType["KINEMATIC"] = "kinematic";
-    PhysicsType["NONE"] = "none";
-})(PhysicsType || (PhysicsType = {}));
-class Graphics {
-    name;
-    prefix;
-    frames = [];
-    unitMatrix = create$7();
-    invUnitMatrix = create$7();
-    pivot = create();
-    width = 1;
-    height = 1;
-    scale = 1;
-    attachPoint = undefined;
-    attachT = 0;
-    points = [];
-    duration = 1000;
-    type = GraphicsType.NONE;
-    path = undefined;
-    color = undefined;
-    alpha = 1;
-    stroke = true;
-    physicsType = PhysicsType.NONE;
-    physicsPoints = undefined;
-    physicsPivot = undefined;
-    fixedRotation = false;
-    density = 5;
-    friction = 1;
-    restitution = 0;
-    isSensor = false;
-    constructor(name, prefix) {
-        this.name = name;
-        this.prefix = prefix;
-    }
-    async load() {
-        const dataUrl = this.prefix
-            ? `assets/${this.name}/${this.prefix}.json`
-            : `assets/${this.name}.json`;
-        const response = await fetch(dataUrl);
-        const data = response.ok ? await response.json() : {};
-        this.type = data.type || GraphicsType.IMG;
-        if (this.type === GraphicsType.IMG) {
-            const promises = [];
-            if (data.frames !== undefined) {
-                for (let i = 1; i <= data.frames; i++) {
-                    promises.push(loadImage(`assets/${this.name}/${this.prefix}_${i}.png`));
-                }
-            }
-            else {
-                promises.push(loadImage(`assets/${this.name}.png`));
-            }
-            this.frames = await Promise.all(promises);
-        }
-        else {
-            const line = data.line;
-            this.path = new Path2D();
-            this.path.moveTo(line[0], line[1]);
-            this.path.lineTo(line[2], line[3]);
-            this.color = data.color;
-            this.alpha = data.alpha || this.alpha;
-            this.stroke = this.type === GraphicsType.LINE;
-        }
-        // IN PIXELS
-        const firstFrame = this.frames[0];
-        const pixelWidth = firstFrame?.width || 1;
-        const pixelHeight = firstFrame?.height || 1;
-        fromScaling$2(this.unitMatrix, fromValues(1 / pixelWidth, 1 / pixelWidth));
-        invert$4(this.invUnitMatrix, this.unitMatrix);
-        this.width = pixelWidth / pixelWidth;
-        this.height = pixelHeight / pixelWidth;
-        // default is [center, bottom]
-        const pivot = data.pivot || (firstFrame ? [firstFrame.width / 2, firstFrame.height] : [0, 0]);
-        // physics
-        this.physicsType = data.physics || this.physicsType;
-        if (this.physicsType !== PhysicsType.NONE) {
-            const physicsPoints = data.physicsPoints || [
-                0,
-                0,
-                pixelWidth,
-                0,
-                pixelWidth,
-                pixelHeight,
-                0,
-                pixelHeight,
-            ];
-            this.physicsPoints = [];
-            for (let i = 0; i < physicsPoints.length; i += 2) {
-                const p = fromValues(physicsPoints[i + 0], physicsPoints[i + 1]);
-                transformMat2d(p, p, this.unitMatrix);
-                this.physicsPoints.push(p);
-            }
-        }
-        set(this.pivot, pivot[0], pivot[1]);
-        negate(this.pivot, this.pivot);
-        transformMat2d(this.pivot, this.pivot, this.unitMatrix);
-        // IN UNITS
-        this.scale = data.scale || this.scale;
-        this.attachPoint = data.attachPoint;
-        this.attachT = data.attachT || this.attachT;
-        this.points = data.points || this.points;
-        this.duration = data.duration || this.duration;
-    }
-    timeToIndex(time) {
-        const index = Math.max(0, Math.min(Math.trunc(((time / this.duration) % 1) * this.frames.length), this.frames.length - 1));
-        return index;
-    }
-    getPoints(index) {
-        return this.points[index];
-    }
-    getFrame(index) {
-        return this.frames[index];
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getPath(_index) {
-        return this.path;
-    }
-}
-async function createGraphics(name, prefix) {
-    const graphics = new Graphics(name, prefix);
-    await graphics.load();
-    return graphics;
-}
-function createDummyGraphics() {
-    const graphics = new Graphics("dummy");
-    graphics.type = GraphicsType.NONE;
-    return graphics;
-}
+handleResize();
 
-function lerp(v0, v1, t) {
-    return v0 * (1 - t) + v1 * t;
+const camera = {
+    x: 0,
+    y: 0,
+    scale: 150,
+    m: create$7(),
+};
+function screenToWorld(p) {
+    const [x, y] = p;
+    return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
 }
-function getAngleFromPoint(x, y) {
-    return Math.atan2(y, x);
+const focusPoint = create();
+const SCREEN_HEIGHT_IN_METERS = 3;
+function setupCamera() {
+    camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
+    const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
+    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.5;
+    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.3;
+    identity$4(camera.m);
+    translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
+    scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
+    translate$3(camera.m, camera.m, fromValues(-camera.x, -camera.y));
 }
-function getAngleFromVector(v) {
-    const [x, y] = v;
-    return Math.atan2(y, x);
-}
-function getAngleFromMatrix(m) {
-    return Math.atan2(m[1], m[3]);
-}
-function dot(v1, v2) {
-    const [x0, y0] = v1;
-    const [x1, y1] = v2;
-    return x0 * x1 + y0 * y1;
-}
-function cross(v) {
-    return fromValues(v[1], -v[0]);
-}
-function rotate(v, angle) {
-    const [x, y] = v;
-    const c = Math.cos(angle);
-    const s = Math.sin(angle);
-    return fromValues(x * c - y * s, x * s + y * c);
-}
-
-let nowValue = performance.now();
-let dtValue = 0;
-function now() {
-    return nowValue;
-}
-function setNow(time) {
-    dtValue = (time - nowValue) / 1000;
-    nowValue = time;
-}
-function getDT() {
-    return dtValue;
-}
-
-function getParent(obj) {
-    let parent = obj.parent;
-    if (parent && obj.graphics.attachPoint) {
-        const p = parent.points.get(obj.graphics.attachPoint);
-        if (p) {
-            parent = p.obj;
-        }
-    }
-    return parent;
-}
-const IDENTITY = create$7();
-function getParentWorldMatrix(obj) {
-    const parent = getParent(obj);
-    return parent ? parent.getWorldMatrix() : IDENTITY;
-}
-function getParentWorldZ(obj) {
-    const parent = getParent(obj);
-    return parent ? parent.worldZ : 0;
-}
-function getAttachmentMatrix(obj, pointName, t) {
-    const p = obj.points.get(pointName);
-    if (!p) {
-        return undefined;
-    }
-    const { point, obj: parentObj } = p;
-    const [x0, y0, x1, y1] = point;
-    const angle = getAngleFromPoint(x1 - x0, y1 - y0);
-    const offset = fromValues(lerp(x0, x1, t), lerp(y0, y1, t));
-    transformMat2d(offset, offset, parentObj.graphics.unitMatrix);
-    const m = create$7();
-    translate$3(m, m, offset);
-    rotate$4(m, m, angle);
-    return { m, parentObj };
-}
-function getWorldPoint(obj) {
-    const p = fromValues(0, 0);
-    const m = obj.getWorldMatrix();
-    transformMat2d(p, p, m);
-    return p;
-}
-function getWorldPivotPoint(obj) {
-    const p = fromValues(0, 0);
-    const m = obj.getWorldMatrix();
-    sub(p, p, obj.graphics.pivot);
-    transformMat2d(p, p, m);
-    return p;
-}
-function recalcWorldTransforms(obj) {
-    obj.calcWorldMatrix();
-    if (obj.graphics) {
-        const time = now() - obj.startTime;
-        const index = obj.graphics.timeToIndex(time);
-        const points = obj.graphics.getPoints(index);
-        if (points) {
-            if (!obj.parent) {
-                throw new Error("Attachment without a parent.");
-            }
-            for (const pointName in points) {
-                obj.parent.setPoint(pointName, points[pointName], obj);
-            }
-        }
-    }
-    for (const slot in obj.attachments) {
-        recalcWorldTransforms(obj.attachments[slot]);
-    }
-}
-
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-function getWorldScale(obj) {
-    const parent = getParent(obj);
-    const parentWorldScale = parent ? getWorldScale(parent) : 1;
-    return parentWorldScale * obj.scaleVec[0];
-}
-class GraphicsObject {
-    static NEXT_OBJ_ID = 0;
-    id = GraphicsObject.NEXT_OBJ_ID++;
-    graphics = undefined;
-    x = 0;
-    y = 0;
-    angle = 0;
-    scale = 1;
-    z = 0;
-    mirror = false;
-    angleIsWorldAngle = false;
-    mat = create$7();
-    startTime = 0;
-    points = new Map();
-    attachments = [];
-    parent = undefined;
-    worldMat = create$7();
-    worldZ = 0;
-    mvpMatrix = create$7();
-    lastIndex = undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    body = undefined;
-    fixture = undefined;
-    contacts = new Map();
-    onContactStart = undefined;
-    onContactPresolve = undefined;
-    onContactEnded = undefined;
-    contactStarted(contactPtr) {
-        const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
-        this.contacts.set(contactPtr, contact);
-        this.onContactStart?.(contact);
-    }
-    contactPresolve(contactPtr) {
-        const contact = this.contacts.get(contactPtr);
-        this.onContactPresolve?.(contact);
-    }
-    contactEnded(contactPtr) {
-        const contact = this.contacts.get(contactPtr);
-        this.contacts.delete(contactPtr);
-        this.onContactEnded?.(contact);
-    }
-    attach(slot, attachment) {
-        if (this.attachments[slot] !== attachment) {
-            attachment.reset();
-            attachment.parent = this;
-            this.attachments[slot] = attachment;
-        }
-    }
-    reset() {
-        this.startTime = now();
-    }
-    get mirrorMul() {
-        return this.mirror ? -1 : 1;
-    }
-    get mirrorVec() {
-        return fromValues(this.mirror ? -1 : 1, 1);
-    }
-    get scaleVec() {
-        const scale = this.graphics.scale * this.scale;
-        return fromValues(scale, scale);
-    }
-    get positionVec() {
-        return fromValues(this.x, this.y);
-    }
-    calcLocalMatrix(parentWorldMatrix) {
-        const m = this.mat;
-        identity$4(m);
-        if (this.graphics.attachPoint) {
-            if (!this.parent) {
-                throw new Error("Attachment without a parent.");
-            }
-            const attachmentInfo = getAttachmentMatrix(this.parent, this.graphics.attachPoint, this.graphics.attachT);
-            if (attachmentInfo) {
-                mul$7(m, m, attachmentInfo.m);
-            }
-        }
-        if (this.angleIsWorldAngle && parentWorldMatrix) {
-            const parentAngle = getAngleFromMatrix(parentWorldMatrix);
-            const currentAngle = getAngleFromMatrix(m);
-            rotate$4(m, m, -parentAngle);
-            rotate$4(m, m, -currentAngle);
-        }
-        translate$3(m, m, this.positionVec);
-        rotate$4(m, m, this.angle);
-        scale$7(m, m, this.scaleVec);
-        scale$7(m, m, this.mirrorVec);
-        if (this.graphics) {
-            translate$3(m, m, this.graphics.pivot);
-        }
-        return m;
-    }
-    calcWorldMatrix() {
-        const parentWorldMatrix = getParentWorldMatrix(this);
-        mul$7(this.worldMat, parentWorldMatrix, this.calcLocalMatrix(parentWorldMatrix));
-        return this.worldMat;
-    }
-    getWorldMatrix() {
-        return this.worldMat;
-    }
-    setPoint(pointName, point, obj) {
-        this.points.set(pointName, {
-            point,
-            obj,
-        });
-    }
+function setFocusPoint(x, y) {
+    set(focusPoint, x, y);
+    setupCamera();
 }
 
 const keys = new Map();
@@ -8722,6 +8653,31 @@ document.body.onkeyup = e => {
 ctx.canvas.onmousemove = e => {
     set(mouse, e.clientX * screen$1.dpr, e.clientY * screen$1.dpr);
 };
+
+let player;
+function playerControls() {
+    if (keys.get("KeyD")) {
+        player.setSpeed(7);
+        player.obj.mirror = false;
+    }
+    else if (keys.get("KeyA")) {
+        player.setSpeed(-7);
+        player.obj.mirror = true;
+    }
+    else {
+        player.setSpeed(0);
+    }
+}
+function playerControlsPostPhysics() {
+    setFocusPoint(player.obj.x, player.obj.y);
+    const mouseWorldSpace = screenToWorld(mouse);
+    player.aimAt(mouseWorldSpace);
+}
+function createPlayer() {
+    player = new Character("player");
+    player.onBeforePhysics = playerControls;
+    player.onAfterPhysics = playerControlsPostPhysics;
+}
 
 const scene = [];
 const objectsToDraw = [];
@@ -8798,7 +8754,7 @@ function drawScene() {
         for (const [pointName] of obj.points) {
             if (pointName === "") {
                 for (const t of [0, 1]) {
-                    const attachmentInfo = getAttachmentMatrix(obj, pointName, t);
+                    const attachmentInfo = getAttachmentInfo(obj, pointName, t);
                     if (!attachmentInfo) {
                         continue;
                     }
@@ -8853,9 +8809,11 @@ function drawScene() {
         ctx.stroke();
     }
     for (const obj of objectsToDraw) {
+        /*
         if (obj.graphics.name !== "dummy") {
-            continue;
+            continue
         }
+        */
         drawCollisionModel(obj);
         for (const slot in obj.attachments) {
             drawCollisionModel(obj.attachments[slot]);
@@ -8869,6 +8827,14 @@ function drawScene() {
     ctx.arc(p[0], p[1], 0.01, 0, 9)
     ctx.fill()
     */
+    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5]);
+    ctx.strokeStyle = "green";
+    ctx.lineWidth = 0.01;
+    ctx.beginPath();
+    const footY = player.obj.y - FOOT_HEIGHT * player.obj.scale;
+    ctx.moveTo(player.obj.x, footY - FOOT_START * player.obj.scale);
+    ctx.lineTo(player.obj.x, footY + FOOT_FULL_HEIGHT * player.obj.scale);
+    ctx.stroke();
 }
 function addToScene(obj) {
     scene.push(obj);
@@ -8932,6 +8898,26 @@ function raycast(x0, y0, x1, y1, fixtureToIgnore) {
     world.RayCast(rayCastCallback, temp, temp2);
     return !isNaN(rayCastResult[0]) ? rayCastResult : undefined;
 }
+function setVelocity(body, x, y) {
+    const vel = body.GetLinearVelocity();
+    if (x !== undefined) {
+        vel.set_x(x * PHYSICS_SCALE);
+    }
+    if (y !== undefined) {
+        vel.set_y(y * PHYSICS_SCALE);
+    }
+    body.SetLinearVelocity(vel);
+}
+function mulVelocity(body, x, y) {
+    const vel = body.GetLinearVelocity();
+    if (x !== undefined) {
+        vel.set_x(vel.get_x() * x);
+    }
+    if (y !== undefined) {
+        vel.set_y(vel.get_y() * y);
+    }
+    body.SetLinearVelocity(vel);
+}
 async function initPhysics() {
     Box2D = await Box2D$1();
     temp = new Box2D.b2Vec2(0.0, 0.0);
@@ -8940,7 +8926,7 @@ async function initPhysics() {
     world = new Box2D.b2World(gravity);
     worldManifold = new Box2D.b2WorldManifold();
     rayCastCallback = new Box2D.JSRayCastCallback();
-    rayCastCallback.ReportFixture = (fixturePtr, point, normal, fraction) => {
+    rayCastCallback.ReportFixture = (fixturePtr, point, _normal, fraction) => {
         if (fixturePtr === raycastFixtureToIgnorePtr) {
             return 1;
         }
@@ -9085,7 +9071,123 @@ function physicsStep() {
     const stepsToSimulate = Math.min(stepCount, MAX_STEPS_PER_STEP);
     currentTime += stepCount * PHYSICS_STEP;
     for (let i = 0; i < stepsToSimulate; i++) {
-        world.Step(PHYSICS_STEP, 2, 2);
+        world.Step(PHYSICS_STEP, 20, 20);
+    }
+}
+
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+function getWorldScale(obj) {
+    const parent = getParent(obj);
+    const parentWorldScale = parent ? getWorldScale(parent) : 1;
+    return parentWorldScale * obj.scaleVec[0];
+}
+class GraphicsObject {
+    graphics;
+    static NEXT_OBJ_ID = 0;
+    id = GraphicsObject.NEXT_OBJ_ID++;
+    x = 0;
+    y = 0;
+    angle = 0;
+    scale = 1;
+    z = 0;
+    mirror = false;
+    angleIsWorldAngle = false;
+    mat = create$7();
+    startTime = 0;
+    points = new Map();
+    attachments = [];
+    parent = undefined;
+    worldMat = create$7();
+    worldZ = 0;
+    mvpMatrix = create$7();
+    lastIndex = undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    body = undefined;
+    fixture = undefined;
+    contacts = new Map();
+    onContactStart = undefined;
+    onContactPresolve = undefined;
+    onContactEnded = undefined;
+    constructor(graphics) {
+        this.graphics = graphics;
+    }
+    contactStarted(contactPtr) {
+        const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
+        this.contacts.set(contactPtr, contact);
+        this.onContactStart?.(contact);
+    }
+    contactPresolve(contactPtr) {
+        const contact = this.contacts.get(contactPtr);
+        this.onContactPresolve?.(contact);
+    }
+    contactEnded(contactPtr) {
+        const contact = this.contacts.get(contactPtr);
+        this.contacts.delete(contactPtr);
+        this.onContactEnded?.(contact);
+    }
+    attach(slot, attachment) {
+        if (this.attachments[slot] !== attachment) {
+            attachment.reset();
+            attachment.parent = this;
+            this.attachments[slot] = attachment;
+        }
+    }
+    reset() {
+        this.startTime = now();
+    }
+    get mirrorMul() {
+        return this.mirror ? -1 : 1;
+    }
+    get mirrorVec() {
+        return fromValues(this.mirror ? -1 : 1, 1);
+    }
+    get scaleVec() {
+        const scale = this.graphics.scale * this.scale;
+        return fromValues(scale, scale);
+    }
+    get positionVec() {
+        return fromValues(this.x, this.y);
+    }
+    calcLocalMatrix(parentWorldMatrix) {
+        const m = this.mat;
+        identity$4(m);
+        if (this.graphics.attachPoint) {
+            if (!this.parent) {
+                throw new Error("Attachment without a parent.");
+            }
+            const attachmentInfo = getAttachmentInfo(this.parent, this.graphics.attachPoint, this.graphics.attachT);
+            if (attachmentInfo) {
+                mul$7(m, m, attachmentInfo.m);
+            }
+        }
+        if (this.angleIsWorldAngle && parentWorldMatrix) {
+            const parentAngle = getAngleFromMatrix(parentWorldMatrix);
+            const currentAngle = getAngleFromMatrix(m);
+            rotate$4(m, m, -parentAngle);
+            rotate$4(m, m, -currentAngle);
+        }
+        translate$3(m, m, this.positionVec);
+        rotate$4(m, m, this.angle);
+        scale$7(m, m, this.scaleVec);
+        scale$7(m, m, this.mirrorVec);
+        if (this.graphics) {
+            translate$3(m, m, this.graphics.pivot);
+        }
+        return m;
+    }
+    calcWorldMatrix() {
+        const parentWorldMatrix = getParentWorldMatrix(this);
+        mul$7(this.worldMat, parentWorldMatrix, this.calcLocalMatrix(parentWorldMatrix));
+        return this.worldMat;
+    }
+    getWorldMatrix() {
+        return this.worldMat;
+    }
+    setPoint(pointName, point, obj) {
+        this.points.set(pointName, {
+            point,
+            obj,
+        });
     }
 }
 
@@ -9094,154 +9196,146 @@ const ARMS_SLOT = 1;
 const HEAD_SLOT = 2;
 const WEAPON_SLOT = 3;
 const SHOOT_LINE_SLOT = 4;
-const FOOT_SENSOR_SLOT = 5;
-
-const player = new GraphicsObject();
-const idle_torso = new GraphicsObject();
-const idle_arms = new GraphicsObject();
-const run_torso = new GraphicsObject();
-const aiming_arms = new GraphicsObject();
-const blaster = new GraphicsObject();
-const shootLine = new GraphicsObject();
-const UP = fromValues(0, -1);
-const PLAYER_FOOT_HEIGHT = 0.1;
-const PLAYER_FOOT_HEIGHT_PADDING = 0.1;
-const PLAYER_FOOT_FULL_HEIGHT = PLAYER_FOOT_HEIGHT + PLAYER_FOOT_HEIGHT_PADDING;
-async function createPlayer() {
-    // animations
-    run_torso.graphics = await createGraphics("run", "torso_legs");
-    // const run_arms = await createGraphics('run', 'arms')
-    idle_torso.graphics = await createGraphics("idle", "torso_legs");
-    idle_arms.graphics = await createGraphics("idle", "arms");
-    aiming_arms.graphics = await createGraphics("aiming", "arms");
-    aiming_arms.z = 0.2;
-    // player
-    const playerGraphics = createDummyGraphics();
-    playerGraphics.physicsType = PhysicsType.DYNAMIC;
-    playerGraphics.fixedRotation = true;
-    const WIDTH = 0.2;
-    playerGraphics.physicsPoints = [
-        fromValues(-WIDTH / 2, 0),
-        fromValues(-WIDTH / 2, 0.5),
-        fromValues(0, 1 - PLAYER_FOOT_HEIGHT),
-        fromValues(WIDTH / 2, 0.5),
-        fromValues(WIDTH / 2, 0),
-    ];
-    playerGraphics.physicsPivot = fromValues(0, -1);
-    player.graphics = playerGraphics;
-    player.scale = 2;
-    player.x = 0;
-    player.y = -1;
-    // player.mirror = true
-    // attachments
-    const head = new GraphicsObject();
-    head.graphics = await createGraphics("oleg");
-    head.angle = 1.57;
-    head.z = 0.1;
-    player.attach(HEAD_SLOT, head);
-    blaster.graphics = await createGraphics("blaster");
-    blaster.z = -0.05;
-    player.attach(WEAPON_SLOT, blaster);
-    shootLine.graphics = await createGraphics("shoot-line");
-    shootLine.z = -0.01;
-    player.attach(SHOOT_LINE_SLOT, shootLine);
-    addToScene(player);
+const EYE_LINE_SLOT = 5;
+const idle_torso_graphics = new Graphics("idle", "torso_legs");
+const idle_arms_graphics = new Graphics("idle", "arms");
+const run_torso_graphics = new Graphics("run", "torso_legs");
+const aiming_arms_graphics = new Graphics("aiming", "arms");
+const oleg_graphics = new Graphics("oleg");
+const blaster_graphics = new Graphics("blaster");
+const shoot_line_graphics = new Graphics("shoot-line");
+const eye_line_graphics = new Graphics("eye-line");
+const FOOT_START = 0.0;
+const FOOT_HEIGHT = 0.27;
+const FOOT_HEIGHT_PADDING = 0.1;
+const FOOT_FULL_HEIGHT = FOOT_HEIGHT + FOOT_HEIGHT_PADDING;
+async function loadCharacterAnimations() {
+    await idle_torso_graphics.load();
+    await idle_arms_graphics.load();
+    await run_torso_graphics.load();
+    await aiming_arms_graphics.load();
+    await oleg_graphics.load();
+    await blaster_graphics.load();
+    await shoot_line_graphics.load();
+    await eye_line_graphics.load();
 }
-function playerControls() {
-    player.attach(ARMS_SLOT, aiming_arms);
-    const isAiming = true;
-    const isInControl = true;
-    const body = player.body;
-    const vel = body.GetLinearVelocity();
-    if (keys.get("KeyD")) {
-        player.attach(TORSO_SLOT, run_torso);
-        vel.set_x(3 / PHYSICS_STEP);
-        player.mirror = false;
+const characters = [];
+class Character {
+    name;
+    idle_torso = new GraphicsObject(idle_torso_graphics);
+    // private readonly idle_arms = new GraphicsObject(idle_arms_graphics)
+    run_torso = new GraphicsObject(run_torso_graphics);
+    aiming_arms = new GraphicsObject(aiming_arms_graphics);
+    head = new GraphicsObject(oleg_graphics);
+    blaster = new GraphicsObject(blaster_graphics);
+    shootLine = new GraphicsObject(shoot_line_graphics);
+    eyeline = new GraphicsObject(eye_line_graphics);
+    objGraphics = createDummyGraphics();
+    obj = new GraphicsObject(this.objGraphics);
+    onBeforePhysics;
+    onAfterPhysics;
+    constructor(name) {
+        this.name = name;
+        this.objGraphics.physicsType = PhysicsType.DYNAMIC;
+        this.objGraphics.fixedRotation = true;
+        const WIDTH = 0.2;
+        this.objGraphics.physicsPoints = [
+            fromValues(-WIDTH / 2, 0),
+            fromValues(-WIDTH / 2, 0.5),
+            fromValues(0, 1 - FOOT_HEIGHT),
+            fromValues(WIDTH / 2, 0.5),
+            fromValues(WIDTH / 2, 0),
+        ];
+        this.objGraphics.physicsPivot = fromValues(0, -1);
+        this.obj.attach(TORSO_SLOT, this.idle_torso);
+        this.aiming_arms.z = 0.2;
+        this.head.angle = 1.57;
+        this.head.z = 0.1;
+        this.obj.attach(HEAD_SLOT, this.head);
+        this.blaster.z = -0.05;
+        this.obj.attach(WEAPON_SLOT, this.blaster);
+        this.shootLine.z = -0.01;
+        this.obj.attach(SHOOT_LINE_SLOT, this.shootLine);
+        this.eyeline.z = -0.01;
+        this.obj.attach(EYE_LINE_SLOT, this.eyeline);
+        this.obj.attach(ARMS_SLOT, this.aiming_arms);
+        //
+        this.obj.scale = 2;
+        this.obj.y = -1;
     }
-    else if (keys.get("KeyA")) {
-        player.attach(TORSO_SLOT, run_torso);
-        vel.set_x(-3 / PHYSICS_STEP);
-        player.mirror = true;
+    setSpeed(speed) {
+        setVelocity(this.obj.body, speed, undefined);
+        if (speed === 0) {
+            this.obj.attach(TORSO_SLOT, this.idle_torso);
+        }
+        else {
+            this.obj.attach(TORSO_SLOT, this.run_torso);
+        }
     }
-    else {
-        player.attach(TORSO_SLOT, idle_torso);
-        vel.set_x(0);
+    aimAt(p) {
+        this.obj.attach(ARMS_SLOT, this.aiming_arms);
+        aimAt(p, this.aiming_arms, "barrel");
+        const oldHeadAngle = this.head.angle;
+        aimAt(p, this.head, "eyeline");
+        if (this.head.angle < -1.1 || this.head.angle > 1.2) {
+            this.head.angle = oldHeadAngle;
+        }
     }
-    body.SetLinearVelocity(vel);
-    if (isAiming) {
-        // player.play(undefined, aiming_arms)
+    attachToGround() {
+        const footStart = FOOT_START * this.obj.scale;
+        const footHeight = FOOT_FULL_HEIGHT * this.obj.scale;
+        const footY = this.obj.y - FOOT_HEIGHT * this.obj.scale;
+        const p = raycast(this.obj.x, footY - footStart, this.obj.x, footY + footHeight, this.obj.fixture);
+        if (p) {
+            this.obj.y = p[1];
+            syncPhysicsWithObj(this.obj);
+            mulVelocity(this.obj.body, 0.9, 0);
+        }
     }
-    recalcWorldTransforms(player);
-    // TODO redo this into generic aiming method
-    const shouldersPivotPointWorldSpace = getWorldPivotPoint(aiming_arms);
-    const barrelAttachment = getAttachmentMatrix(player, "barrel", 1);
-    if (isAiming && shouldersPivotPointWorldSpace && barrelAttachment) {
-        const mouseWorldSpace = screenToWorld(mouse);
-        aiming_arms.angle = 0;
-        const { parentObj: barrelObj, m: attachmentMatrix } = barrelAttachment;
-        const barrelMatrix = create$7();
-        mul$7(barrelMatrix, barrelMatrix, aiming_arms.calcWorldMatrix());
-        mul$7(barrelMatrix, barrelMatrix, barrelObj.calcLocalMatrix());
-        mul$7(barrelMatrix, barrelMatrix, attachmentMatrix);
-        const barrelAngle = getAngleFromMatrix(barrelMatrix);
-        const barrelLocalSpace = fromValues(0, 0);
-        transformMat2d(barrelLocalSpace, barrelLocalSpace, barrelMatrix);
-        sub(barrelLocalSpace, barrelLocalSpace, shouldersPivotPointWorldSpace);
-        mul(barrelLocalSpace, barrelLocalSpace, player.mirrorVec);
-        const offsetHeight = dot(rotate(barrelLocalSpace, -barrelAngle), UP) * player.mirrorMul;
-        const offsetUp = create();
-        scale(offsetUp, UP, offsetHeight);
-        const mousePointShouldersLocalSpace = create();
-        add(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, mouseWorldSpace);
-        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, shouldersPivotPointWorldSpace);
-        const mouseAngle = getAngleFromVector(mousePointShouldersLocalSpace);
-        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, rotate(offsetUp, mouseAngle));
-        // normalized delta
-        const tangent = create();
-        normalize(tangent, mousePointShouldersLocalSpace);
-        const normal = cross(tangent);
-        const pointOnCircle = create();
-        scale(pointOnCircle, normal, offsetHeight);
-        const pointOnCircleWorldSpace = create();
-        add(pointOnCircleWorldSpace, shouldersPivotPointWorldSpace, pointOnCircle);
-        const deltaMouseAndPointOnCircle = create();
-        sub(deltaMouseAndPointOnCircle, mouseWorldSpace, pointOnCircleWorldSpace);
-        mul(deltaMouseAndPointOnCircle, deltaMouseAndPointOnCircle, player.mirrorVec);
-        aiming_arms.angle = getAngleFromVector(deltaMouseAndPointOnCircle) - barrelAngle;
-        aiming_arms.angleIsWorldAngle = true;
-        aiming_arms.calcWorldMatrix();
+    beforePhysics() {
+        this.onBeforePhysics?.();
+    }
+    afterPhysics() {
+        this.attachToGround();
+        this.onAfterPhysics?.();
     }
 }
-function playerControlsPostPhysics() {
-    const footHeight = PLAYER_FOOT_FULL_HEIGHT;
-    const p = raycast(player.x, player.y - 0.5, player.x, player.y + footHeight, player.fixture);
-    if (p) {
-        player.y = p[1] - PLAYER_FOOT_HEIGHT;
-        syncPhysicsWithObj(player);
-        const vel = player.body.GetLinearVelocity();
-        vel.set_y(0);
-        player.body.SetLinearVelocity(vel);
+function addCharacter(character) {
+    addToScene(character.obj);
+    characters.push(character);
+}
+function charactersBeforePhysics() {
+    for (const char of characters) {
+        char.beforePhysics();
+    }
+}
+function charactersAfterPhysics() {
+    for (const char of characters) {
+        char.afterPhysics();
     }
 }
 
 async function initScene() {
-    await createPlayer();
-    const box = new GraphicsObject();
-    box.graphics = await createGraphics("box");
+    await loadCharacterAnimations();
+    createPlayer();
+    addCharacter(player);
+    addCharacter(new Character("eblo"));
+    const box = new GraphicsObject(await createGraphics("box"));
     box.x = 4;
-    box.y = -2;
+    box.y = -0.25;
     box.z = -1;
-    box.angle = 0.5;
+    box.angle = 0;
+    box.graphics.physicsType = PhysicsType.STATIC;
     addToScene(box);
     const COUNT = 3;
-    const angle = 0.5;
+    const dirt_graphics = await createGraphics("dirt");
+    const angle = 0;
     for (let i = -COUNT / 2; i < COUNT; i++) {
         const l = 10 * i;
-        const dirt = new GraphicsObject();
-        dirt.graphics = await createGraphics("dirt");
+        const dirt = new GraphicsObject(dirt_graphics);
         dirt.scale = 10;
         dirt.x = Math.cos(angle) * l;
-        dirt.y = Math.sin(angle) * l + 0.01;
+        dirt.y = Math.sin(angle) * l;
         dirt.z = 1;
         dirt.angle = angle;
         addToScene(dirt);
@@ -9251,11 +9345,10 @@ async function initScene() {
 function tick(time) {
     setNow(time);
     handleResize();
-    playerControls();
+    charactersBeforePhysics();
     physicsStep();
     syncPhysics();
-    playerControlsPostPhysics();
-    setFocusPoint(player.x, player.y);
+    charactersAfterPhysics();
     drawScene();
     requestAnimationFrame(tick);
 }

@@ -82,6 +82,28 @@ export function raycast(
     return !isNaN(rayCastResult[0]) ? rayCastResult : undefined
 }
 
+export function setVelocity(body: any, x: number | undefined, y: number | undefined) {
+    const vel = body.GetLinearVelocity()
+    if (x !== undefined) {
+        vel.set_x(x * PHYSICS_SCALE)
+    }
+    if (y !== undefined) {
+        vel.set_y(y * PHYSICS_SCALE)
+    }
+    body.SetLinearVelocity(vel)
+}
+
+export function mulVelocity(body: any, x: number | undefined, y: number | undefined) {
+    const vel = body.GetLinearVelocity()
+    if (x !== undefined) {
+        vel.set_x(vel.get_x() * x)
+    }
+    if (y !== undefined) {
+        vel.set_y(vel.get_y() * y)
+    }
+    body.SetLinearVelocity(vel)
+}
+
 export async function initPhysics(): Promise<void> {
     Box2D = await Box2DInit()
 
@@ -97,7 +119,7 @@ export async function initPhysics(): Promise<void> {
     rayCastCallback.ReportFixture = (
         fixturePtr: any,
         point: any,
-        normal: any,
+        _normal: any,
         fraction: number
     ) => {
         if (fixturePtr === raycastFixtureToIgnorePtr) {
@@ -285,6 +307,6 @@ export function physicsStep() {
     currentTime += stepCount * PHYSICS_STEP
 
     for (let i = 0; i < stepsToSimulate; i++) {
-        world.Step(PHYSICS_STEP, 2, 2)
+        world.Step(PHYSICS_STEP, 20, 20)
     }
 }

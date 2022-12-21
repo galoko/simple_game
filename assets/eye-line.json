@@ -1,0 +1,12 @@
+{
+	"scale": 0.02,
+	"attachPoint": "eyeline",
+	"attachT": 1,
+	"type": "line",
+	"line": [
+		0, 0,
+		10000, 0
+	],
+	"color": "green",
+	"alpha": 0.1
+}

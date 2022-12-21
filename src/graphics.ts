@@ -170,7 +170,5 @@ export async function createGraphics(name: string, prefix?: string): Promise<Gra
 }
 
 export function createDummyGraphics() {
-    const graphics = new Graphics("dummy")
-    graphics.type = GraphicsType.NONE
-    return graphics
+    return new Graphics("dummy")
 }

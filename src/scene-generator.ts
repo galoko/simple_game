@@ -1,29 +1,36 @@
-import { createGraphics } from "./graphics"
+import { addCharacter, Character, loadCharacterAnimations } from "./character"
+import { createGraphics, PhysicsType } from "./graphics"
 import { GraphicsObject } from "./object"
-import { createPlayer } from "./player"
+import { createPlayer, player } from "./player"
 import { addToScene } from "./scene"
 
 export async function initScene(): Promise<void> {
-    await createPlayer()
+    await loadCharacterAnimations()
 
-    const box = new GraphicsObject()
-    box.graphics = await createGraphics("box")
+    createPlayer()
+    addCharacter(player)
+
+    addCharacter(new Character("eblo"))
+
+    const box = new GraphicsObject(await createGraphics("box"))
     box.x = 4
-    box.y = -2
+    box.y = -0.25
     box.z = -1
-    box.angle = 0.5
+    box.angle = 0
+    box.graphics.physicsType = PhysicsType.STATIC
     addToScene(box)
 
     const COUNT = 3
 
-    const angle = 0.5
+    const dirt_graphics = await createGraphics("dirt")
+
+    const angle = 0
     for (let i = -COUNT / 2; i < COUNT; i++) {
         const l = 10 * i
-        const dirt = new GraphicsObject()
-        dirt.graphics = await createGraphics("dirt")
+        const dirt = new GraphicsObject(dirt_graphics)
         dirt.scale = 10
         dirt.x = Math.cos(angle) * l
-        dirt.y = Math.sin(angle) * l + 0.01
+        dirt.y = Math.sin(angle) * l
         dirt.z = 1
         dirt.angle = angle
         addToScene(dirt)

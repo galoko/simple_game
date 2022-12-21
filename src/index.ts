@@ -1,7 +1,6 @@
-import { setFocusPoint } from "./camera"
+import { charactersAfterPhysics, charactersBeforePhysics } from "./character"
 import { handleResize } from "./init"
 import { initPhysics, physicsStep } from "./physics"
-import { player, playerControls, playerControlsPostPhysics } from "./player"
 import { drawScene, syncPhysics } from "./scene"
 import { initScene } from "./scene-generator"
 import { setNow } from "./time"
@@ -11,11 +10,10 @@ function tick(time: number) {
 
     handleResize()
 
-    playerControls()
+    charactersBeforePhysics()
     physicsStep()
     syncPhysics()
-    playerControlsPostPhysics()
-    setFocusPoint(player.x, player.y)
+    charactersAfterPhysics()
     drawScene()
 
     requestAnimationFrame(tick)

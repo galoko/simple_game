@@ -2,7 +2,7 @@
 import { mat2d, vec2 } from "gl-matrix"
 import { Graphics } from "./graphics"
 import { getAngleFromMatrix } from "./math-utils"
-import { getAttachmentMatrix, getParent, getParentWorldMatrix } from "./object-utils"
+import { getAttachmentInfo, getParent, getParentWorldMatrix } from "./object-utils"
 import { Box2D } from "./physics"
 import { now } from "./time"
 
@@ -18,8 +18,6 @@ export class GraphicsObject {
     private static NEXT_OBJ_ID = 0
 
     public readonly id = GraphicsObject.NEXT_OBJ_ID++
-
-    public graphics: Graphics = undefined!
 
     public x = 0
     public y = 0
@@ -50,6 +48,8 @@ export class GraphicsObject {
     public onContactStart: ContactCallback | undefined = undefined
     public onContactPresolve: ContactCallback | undefined = undefined
     public onContactEnded: ContactCallback | undefined = undefined
+
+    constructor(public graphics: Graphics) {}
 
     contactStarted(contactPtr: number): void {
         const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact)
@@ -106,7 +106,7 @@ export class GraphicsObject {
                 throw new Error("Attachment without a parent.")
             }
 
-            const attachmentInfo = getAttachmentMatrix(
+            const attachmentInfo = getAttachmentInfo(
                 this.parent,
                 this.graphics.attachPoint,
                 this.graphics.attachT

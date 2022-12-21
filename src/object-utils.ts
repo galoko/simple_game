@@ -28,7 +28,7 @@ export function getParentWorldZ(obj: GraphicsObject): number {
     return parent ? parent.worldZ : 0
 }
 
-export function getAttachmentMatrix(
+export function getAttachmentInfo(
     obj: GraphicsObject,
     pointName: string,
     t: number
