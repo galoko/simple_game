@@ -44,6 +44,7 @@ export class GraphicsObject {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public body: any = undefined
+    public fixture: any = undefined
     public contacts = new Map<number, any>()
 
     public onContactStart: ContactCallback | undefined = undefined

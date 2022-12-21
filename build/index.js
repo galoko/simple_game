@@ -2,28 +2,6 @@
 (function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-const canvas = document.body.querySelector("canvas");
-const ctx = canvas.getContext("2d", { desynchronized: true });
-const screen$1 = {
-    width: 0,
-    height: 0,
-    dpr: 1,
-};
-function handleResize() {
-    screen$1.dpr = devicePixelRatio;
-    screen$1.width = document.body.clientWidth * screen$1.dpr;
-    screen$1.height = document.body.clientHeight * screen$1.dpr;
-    if (canvas.width == screen$1.width && canvas.height == screen$1.height) {
-        return;
-    }
-    canvas.width = screen$1.width;
-    canvas.height = screen$1.height;
-    canvas.style.width = document.body.clientWidth + "px";
-    canvas.style.height = document.body.clientHeight + "px";
-}
-handleResize();
-
 /**
  * Common utilities
  * @module glMatrix
@@ -76,13 +54,13 @@ if (!Math.hypot) Math.hypot = function () {
 };
 
 var common = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    EPSILON: EPSILON,
-    get ARRAY_TYPE () { return ARRAY_TYPE; },
-    RANDOM: RANDOM,
-    setMatrixArrayType: setMatrixArrayType,
-    toRadian: toRadian,
-    equals: equals$9
+  __proto__: null,
+  EPSILON: EPSILON,
+  get ARRAY_TYPE () { return ARRAY_TYPE; },
+  RANDOM: RANDOM,
+  setMatrixArrayType: setMatrixArrayType,
+  toRadian: toRadian,
+  equals: equals$9
 });
 
 /**
@@ -518,33 +496,33 @@ var mul$8 = multiply$8;
 var sub$6 = subtract$6;
 
 var mat2 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create$8,
-    clone: clone$8,
-    copy: copy$8,
-    identity: identity$5,
-    fromValues: fromValues$8,
-    set: set$8,
-    transpose: transpose$2,
-    invert: invert$5,
-    adjoint: adjoint$2,
-    determinant: determinant$3,
-    multiply: multiply$8,
-    rotate: rotate$5,
-    scale: scale$8,
-    fromRotation: fromRotation$4,
-    fromScaling: fromScaling$3,
-    str: str$8,
-    frob: frob$3,
-    LDU: LDU,
-    add: add$8,
-    subtract: subtract$6,
-    exactEquals: exactEquals$8,
-    equals: equals$8,
-    multiplyScalar: multiplyScalar$3,
-    multiplyScalarAndAdd: multiplyScalarAndAdd$3,
-    mul: mul$8,
-    sub: sub$6
+  __proto__: null,
+  create: create$8,
+  clone: clone$8,
+  copy: copy$8,
+  identity: identity$5,
+  fromValues: fromValues$8,
+  set: set$8,
+  transpose: transpose$2,
+  invert: invert$5,
+  adjoint: adjoint$2,
+  determinant: determinant$3,
+  multiply: multiply$8,
+  rotate: rotate$5,
+  scale: scale$8,
+  fromRotation: fromRotation$4,
+  fromScaling: fromScaling$3,
+  str: str$8,
+  frob: frob$3,
+  LDU: LDU,
+  add: add$8,
+  subtract: subtract$6,
+  exactEquals: exactEquals$8,
+  equals: equals$8,
+  multiplyScalar: multiplyScalar$3,
+  multiplyScalarAndAdd: multiplyScalarAndAdd$3,
+  mul: mul$8,
+  sub: sub$6
 });
 
 /**
@@ -1034,32 +1012,32 @@ var mul$7 = multiply$7;
 var sub$5 = subtract$5;
 
 var mat2d = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create$7,
-    clone: clone$7,
-    copy: copy$7,
-    identity: identity$4,
-    fromValues: fromValues$7,
-    set: set$7,
-    invert: invert$4,
-    determinant: determinant$2,
-    multiply: multiply$7,
-    rotate: rotate$4,
-    scale: scale$7,
-    translate: translate$3,
-    fromRotation: fromRotation$3,
-    fromScaling: fromScaling$2,
-    fromTranslation: fromTranslation$3,
-    str: str$7,
-    frob: frob$2,
-    add: add$7,
-    subtract: subtract$5,
-    multiplyScalar: multiplyScalar$2,
-    multiplyScalarAndAdd: multiplyScalarAndAdd$2,
-    exactEquals: exactEquals$7,
-    equals: equals$7,
-    mul: mul$7,
-    sub: sub$5
+  __proto__: null,
+  create: create$7,
+  clone: clone$7,
+  copy: copy$7,
+  identity: identity$4,
+  fromValues: fromValues$7,
+  set: set$7,
+  invert: invert$4,
+  determinant: determinant$2,
+  multiply: multiply$7,
+  rotate: rotate$4,
+  scale: scale$7,
+  translate: translate$3,
+  fromRotation: fromRotation$3,
+  fromScaling: fromScaling$2,
+  fromTranslation: fromTranslation$3,
+  str: str$7,
+  frob: frob$2,
+  add: add$7,
+  subtract: subtract$5,
+  multiplyScalar: multiplyScalar$2,
+  multiplyScalarAndAdd: multiplyScalarAndAdd$2,
+  exactEquals: exactEquals$7,
+  equals: equals$7,
+  mul: mul$7,
+  sub: sub$5
 });
 
 /**
@@ -1841,39 +1819,39 @@ var mul$6 = multiply$6;
 var sub$4 = subtract$4;
 
 var mat3 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create$6,
-    fromMat4: fromMat4$1,
-    clone: clone$6,
-    copy: copy$6,
-    fromValues: fromValues$6,
-    set: set$6,
-    identity: identity$3,
-    transpose: transpose$1,
-    invert: invert$3,
-    adjoint: adjoint$1,
-    determinant: determinant$1,
-    multiply: multiply$6,
-    translate: translate$2,
-    rotate: rotate$3,
-    scale: scale$6,
-    fromTranslation: fromTranslation$2,
-    fromRotation: fromRotation$2,
-    fromScaling: fromScaling$1,
-    fromMat2d: fromMat2d,
-    fromQuat: fromQuat$1,
-    normalFromMat4: normalFromMat4,
-    projection: projection,
-    str: str$6,
-    frob: frob$1,
-    add: add$6,
-    subtract: subtract$4,
-    multiplyScalar: multiplyScalar$1,
-    multiplyScalarAndAdd: multiplyScalarAndAdd$1,
-    exactEquals: exactEquals$6,
-    equals: equals$6,
-    mul: mul$6,
-    sub: sub$4
+  __proto__: null,
+  create: create$6,
+  fromMat4: fromMat4$1,
+  clone: clone$6,
+  copy: copy$6,
+  fromValues: fromValues$6,
+  set: set$6,
+  identity: identity$3,
+  transpose: transpose$1,
+  invert: invert$3,
+  adjoint: adjoint$1,
+  determinant: determinant$1,
+  multiply: multiply$6,
+  translate: translate$2,
+  rotate: rotate$3,
+  scale: scale$6,
+  fromTranslation: fromTranslation$2,
+  fromRotation: fromRotation$2,
+  fromScaling: fromScaling$1,
+  fromMat2d: fromMat2d,
+  fromQuat: fromQuat$1,
+  normalFromMat4: normalFromMat4,
+  projection: projection,
+  str: str$6,
+  frob: frob$1,
+  add: add$6,
+  subtract: subtract$4,
+  multiplyScalar: multiplyScalar$1,
+  multiplyScalarAndAdd: multiplyScalarAndAdd$1,
+  exactEquals: exactEquals$6,
+  equals: equals$6,
+  mul: mul$6,
+  sub: sub$4
 });
 
 /**
@@ -3787,58 +3765,58 @@ var mul$5 = multiply$5;
 var sub$3 = subtract$3;
 
 var mat4 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create$5,
-    clone: clone$5,
-    copy: copy$5,
-    fromValues: fromValues$5,
-    set: set$5,
-    identity: identity$2,
-    transpose: transpose,
-    invert: invert$2,
-    adjoint: adjoint,
-    determinant: determinant,
-    multiply: multiply$5,
-    translate: translate$1,
-    scale: scale$5,
-    rotate: rotate$2,
-    rotateX: rotateX$3,
-    rotateY: rotateY$3,
-    rotateZ: rotateZ$3,
-    fromTranslation: fromTranslation$1,
-    fromScaling: fromScaling,
-    fromRotation: fromRotation$1,
-    fromXRotation: fromXRotation,
-    fromYRotation: fromYRotation,
-    fromZRotation: fromZRotation,
-    fromRotationTranslation: fromRotationTranslation$1,
-    fromQuat2: fromQuat2,
-    getTranslation: getTranslation$1,
-    getScaling: getScaling,
-    getRotation: getRotation,
-    fromRotationTranslationScale: fromRotationTranslationScale,
-    fromRotationTranslationScaleOrigin: fromRotationTranslationScaleOrigin,
-    fromQuat: fromQuat,
-    frustum: frustum,
-    perspectiveNO: perspectiveNO,
-    perspective: perspective,
-    perspectiveZO: perspectiveZO,
-    perspectiveFromFieldOfView: perspectiveFromFieldOfView,
-    orthoNO: orthoNO,
-    ortho: ortho,
-    orthoZO: orthoZO,
-    lookAt: lookAt,
-    targetTo: targetTo,
-    str: str$5,
-    frob: frob,
-    add: add$5,
-    subtract: subtract$3,
-    multiplyScalar: multiplyScalar,
-    multiplyScalarAndAdd: multiplyScalarAndAdd,
-    exactEquals: exactEquals$5,
-    equals: equals$5,
-    mul: mul$5,
-    sub: sub$3
+  __proto__: null,
+  create: create$5,
+  clone: clone$5,
+  copy: copy$5,
+  fromValues: fromValues$5,
+  set: set$5,
+  identity: identity$2,
+  transpose: transpose,
+  invert: invert$2,
+  adjoint: adjoint,
+  determinant: determinant,
+  multiply: multiply$5,
+  translate: translate$1,
+  scale: scale$5,
+  rotate: rotate$2,
+  rotateX: rotateX$3,
+  rotateY: rotateY$3,
+  rotateZ: rotateZ$3,
+  fromTranslation: fromTranslation$1,
+  fromScaling: fromScaling,
+  fromRotation: fromRotation$1,
+  fromXRotation: fromXRotation,
+  fromYRotation: fromYRotation,
+  fromZRotation: fromZRotation,
+  fromRotationTranslation: fromRotationTranslation$1,
+  fromQuat2: fromQuat2,
+  getTranslation: getTranslation$1,
+  getScaling: getScaling,
+  getRotation: getRotation,
+  fromRotationTranslationScale: fromRotationTranslationScale,
+  fromRotationTranslationScaleOrigin: fromRotationTranslationScaleOrigin,
+  fromQuat: fromQuat,
+  frustum: frustum,
+  perspectiveNO: perspectiveNO,
+  perspective: perspective,
+  perspectiveZO: perspectiveZO,
+  perspectiveFromFieldOfView: perspectiveFromFieldOfView,
+  orthoNO: orthoNO,
+  ortho: ortho,
+  orthoZO: orthoZO,
+  lookAt: lookAt,
+  targetTo: targetTo,
+  str: str$5,
+  frob: frob,
+  add: add$5,
+  subtract: subtract$3,
+  multiplyScalar: multiplyScalar,
+  multiplyScalarAndAdd: multiplyScalarAndAdd,
+  exactEquals: exactEquals$5,
+  equals: equals$5,
+  mul: mul$5,
+  sub: sub$3
 });
 
 /**
@@ -4629,55 +4607,55 @@ var forEach$2 = function () {
 }();
 
 var vec3 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create$4,
-    clone: clone$4,
-    length: length$4,
-    fromValues: fromValues$4,
-    copy: copy$4,
-    set: set$4,
-    add: add$4,
-    subtract: subtract$2,
-    multiply: multiply$4,
-    divide: divide$2,
-    ceil: ceil$2,
-    floor: floor$2,
-    min: min$2,
-    max: max$2,
-    round: round$2,
-    scale: scale$4,
-    scaleAndAdd: scaleAndAdd$2,
-    distance: distance$2,
-    squaredDistance: squaredDistance$2,
-    squaredLength: squaredLength$4,
-    negate: negate$2,
-    inverse: inverse$2,
-    normalize: normalize$4,
-    dot: dot$5,
-    cross: cross$3,
-    lerp: lerp$5,
-    hermite: hermite,
-    bezier: bezier,
-    random: random$3,
-    transformMat4: transformMat4$2,
-    transformMat3: transformMat3$1,
-    transformQuat: transformQuat$1,
-    rotateX: rotateX$2,
-    rotateY: rotateY$2,
-    rotateZ: rotateZ$2,
-    angle: angle$1,
-    zero: zero$2,
-    str: str$4,
-    exactEquals: exactEquals$4,
-    equals: equals$4,
-    sub: sub$2,
-    mul: mul$4,
-    div: div$2,
-    dist: dist$2,
-    sqrDist: sqrDist$2,
-    len: len$4,
-    sqrLen: sqrLen$4,
-    forEach: forEach$2
+  __proto__: null,
+  create: create$4,
+  clone: clone$4,
+  length: length$4,
+  fromValues: fromValues$4,
+  copy: copy$4,
+  set: set$4,
+  add: add$4,
+  subtract: subtract$2,
+  multiply: multiply$4,
+  divide: divide$2,
+  ceil: ceil$2,
+  floor: floor$2,
+  min: min$2,
+  max: max$2,
+  round: round$2,
+  scale: scale$4,
+  scaleAndAdd: scaleAndAdd$2,
+  distance: distance$2,
+  squaredDistance: squaredDistance$2,
+  squaredLength: squaredLength$4,
+  negate: negate$2,
+  inverse: inverse$2,
+  normalize: normalize$4,
+  dot: dot$5,
+  cross: cross$3,
+  lerp: lerp$5,
+  hermite: hermite,
+  bezier: bezier,
+  random: random$3,
+  transformMat4: transformMat4$2,
+  transformMat3: transformMat3$1,
+  transformQuat: transformQuat$1,
+  rotateX: rotateX$2,
+  rotateY: rotateY$2,
+  rotateZ: rotateZ$2,
+  angle: angle$1,
+  zero: zero$2,
+  str: str$4,
+  exactEquals: exactEquals$4,
+  equals: equals$4,
+  sub: sub$2,
+  mul: mul$4,
+  div: div$2,
+  dist: dist$2,
+  sqrDist: sqrDist$2,
+  len: len$4,
+  sqrLen: sqrLen$4,
+  forEach: forEach$2
 });
 
 /**
@@ -5344,48 +5322,48 @@ var forEach$1 = function () {
 }();
 
 var vec4 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create$3,
-    clone: clone$3,
-    fromValues: fromValues$3,
-    copy: copy$3,
-    set: set$3,
-    add: add$3,
-    subtract: subtract$1,
-    multiply: multiply$3,
-    divide: divide$1,
-    ceil: ceil$1,
-    floor: floor$1,
-    min: min$1,
-    max: max$1,
-    round: round$1,
-    scale: scale$3,
-    scaleAndAdd: scaleAndAdd$1,
-    distance: distance$1,
-    squaredDistance: squaredDistance$1,
-    length: length$3,
-    squaredLength: squaredLength$3,
-    negate: negate$1,
-    inverse: inverse$1,
-    normalize: normalize$3,
-    dot: dot$4,
-    cross: cross$2,
-    lerp: lerp$4,
-    random: random$2,
-    transformMat4: transformMat4$1,
-    transformQuat: transformQuat,
-    zero: zero$1,
-    str: str$3,
-    exactEquals: exactEquals$3,
-    equals: equals$3,
-    sub: sub$1,
-    mul: mul$3,
-    div: div$1,
-    dist: dist$1,
-    sqrDist: sqrDist$1,
-    len: len$3,
-    sqrLen: sqrLen$3,
-    forEach: forEach$1
+  __proto__: null,
+  create: create$3,
+  clone: clone$3,
+  fromValues: fromValues$3,
+  copy: copy$3,
+  set: set$3,
+  add: add$3,
+  subtract: subtract$1,
+  multiply: multiply$3,
+  divide: divide$1,
+  ceil: ceil$1,
+  floor: floor$1,
+  min: min$1,
+  max: max$1,
+  round: round$1,
+  scale: scale$3,
+  scaleAndAdd: scaleAndAdd$1,
+  distance: distance$1,
+  squaredDistance: squaredDistance$1,
+  length: length$3,
+  squaredLength: squaredLength$3,
+  negate: negate$1,
+  inverse: inverse$1,
+  normalize: normalize$3,
+  dot: dot$4,
+  cross: cross$2,
+  lerp: lerp$4,
+  random: random$2,
+  transformMat4: transformMat4$1,
+  transformQuat: transformQuat,
+  zero: zero$1,
+  str: str$3,
+  exactEquals: exactEquals$3,
+  equals: equals$3,
+  sub: sub$1,
+  mul: mul$3,
+  div: div$1,
+  dist: dist$1,
+  sqrDist: sqrDist$1,
+  len: len$3,
+  sqrLen: sqrLen$3,
+  forEach: forEach$1
 });
 
 /**
@@ -6096,46 +6074,46 @@ var setAxes = function () {
 }();
 
 var quat = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create$2,
-    identity: identity$1,
-    setAxisAngle: setAxisAngle,
-    getAxisAngle: getAxisAngle,
-    getAngle: getAngle,
-    multiply: multiply$2,
-    rotateX: rotateX$1,
-    rotateY: rotateY$1,
-    rotateZ: rotateZ$1,
-    calculateW: calculateW,
-    exp: exp,
-    ln: ln,
-    pow: pow,
-    slerp: slerp,
-    random: random$1,
-    invert: invert$1,
-    conjugate: conjugate$1,
-    fromMat3: fromMat3,
-    fromEuler: fromEuler,
-    str: str$2,
-    clone: clone$2,
-    fromValues: fromValues$2,
-    copy: copy$2,
-    set: set$2,
-    add: add$2,
-    mul: mul$2,
-    scale: scale$2,
-    dot: dot$3,
-    lerp: lerp$3,
-    length: length$2,
-    len: len$2,
-    squaredLength: squaredLength$2,
-    sqrLen: sqrLen$2,
-    normalize: normalize$2,
-    exactEquals: exactEquals$2,
-    equals: equals$2,
-    rotationTo: rotationTo,
-    sqlerp: sqlerp,
-    setAxes: setAxes
+  __proto__: null,
+  create: create$2,
+  identity: identity$1,
+  setAxisAngle: setAxisAngle,
+  getAxisAngle: getAxisAngle,
+  getAngle: getAngle,
+  multiply: multiply$2,
+  rotateX: rotateX$1,
+  rotateY: rotateY$1,
+  rotateZ: rotateZ$1,
+  calculateW: calculateW,
+  exp: exp,
+  ln: ln,
+  pow: pow,
+  slerp: slerp,
+  random: random$1,
+  invert: invert$1,
+  conjugate: conjugate$1,
+  fromMat3: fromMat3,
+  fromEuler: fromEuler,
+  str: str$2,
+  clone: clone$2,
+  fromValues: fromValues$2,
+  copy: copy$2,
+  set: set$2,
+  add: add$2,
+  mul: mul$2,
+  scale: scale$2,
+  dot: dot$3,
+  lerp: lerp$3,
+  length: length$2,
+  len: len$2,
+  squaredLength: squaredLength$2,
+  sqrLen: sqrLen$2,
+  normalize: normalize$2,
+  exactEquals: exactEquals$2,
+  equals: equals$2,
+  rotationTo: rotationTo,
+  sqlerp: sqlerp,
+  setAxes: setAxes
 });
 
 /**
@@ -6972,46 +6950,46 @@ function equals$1(a, b) {
 }
 
 var quat2 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create$1,
-    clone: clone$1,
-    fromValues: fromValues$1,
-    fromRotationTranslationValues: fromRotationTranslationValues,
-    fromRotationTranslation: fromRotationTranslation,
-    fromTranslation: fromTranslation,
-    fromRotation: fromRotation,
-    fromMat4: fromMat4,
-    copy: copy$1,
-    identity: identity,
-    set: set$1,
-    getReal: getReal,
-    getDual: getDual,
-    setReal: setReal,
-    setDual: setDual,
-    getTranslation: getTranslation,
-    translate: translate,
-    rotateX: rotateX,
-    rotateY: rotateY,
-    rotateZ: rotateZ,
-    rotateByQuatAppend: rotateByQuatAppend,
-    rotateByQuatPrepend: rotateByQuatPrepend,
-    rotateAroundAxis: rotateAroundAxis,
-    add: add$1,
-    multiply: multiply$1,
-    mul: mul$1,
-    scale: scale$1,
-    dot: dot$2,
-    lerp: lerp$2,
-    invert: invert,
-    conjugate: conjugate,
-    length: length$1,
-    len: len$1,
-    squaredLength: squaredLength$1,
-    sqrLen: sqrLen$1,
-    normalize: normalize$1,
-    str: str$1,
-    exactEquals: exactEquals$1,
-    equals: equals$1
+  __proto__: null,
+  create: create$1,
+  clone: clone$1,
+  fromValues: fromValues$1,
+  fromRotationTranslationValues: fromRotationTranslationValues,
+  fromRotationTranslation: fromRotationTranslation,
+  fromTranslation: fromTranslation,
+  fromRotation: fromRotation,
+  fromMat4: fromMat4,
+  copy: copy$1,
+  identity: identity,
+  set: set$1,
+  getReal: getReal,
+  getDual: getDual,
+  setReal: setReal,
+  setDual: setDual,
+  getTranslation: getTranslation,
+  translate: translate,
+  rotateX: rotateX,
+  rotateY: rotateY,
+  rotateZ: rotateZ,
+  rotateByQuatAppend: rotateByQuatAppend,
+  rotateByQuatPrepend: rotateByQuatPrepend,
+  rotateAroundAxis: rotateAroundAxis,
+  add: add$1,
+  multiply: multiply$1,
+  mul: mul$1,
+  scale: scale$1,
+  dot: dot$2,
+  lerp: lerp$2,
+  invert: invert,
+  conjugate: conjugate,
+  length: length$1,
+  len: len$1,
+  squaredLength: squaredLength$1,
+  sqrLen: sqrLen$1,
+  normalize: normalize$1,
+  str: str$1,
+  exactEquals: exactEquals$1,
+  equals: equals$1
 });
 
 /**
@@ -7639,53 +7617,102 @@ var forEach = function () {
 }();
 
 var vec2 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    create: create,
-    clone: clone,
-    fromValues: fromValues,
-    copy: copy,
-    set: set,
-    add: add,
-    subtract: subtract,
-    multiply: multiply,
-    divide: divide,
-    ceil: ceil,
-    floor: floor,
-    min: min,
-    max: max,
-    round: round,
-    scale: scale,
-    scaleAndAdd: scaleAndAdd,
-    distance: distance,
-    squaredDistance: squaredDistance,
-    length: length,
-    squaredLength: squaredLength,
-    negate: negate,
-    inverse: inverse,
-    normalize: normalize,
-    dot: dot$1,
-    cross: cross$1,
-    lerp: lerp$1,
-    random: random,
-    transformMat2: transformMat2,
-    transformMat2d: transformMat2d,
-    transformMat3: transformMat3,
-    transformMat4: transformMat4,
-    rotate: rotate$1,
-    angle: angle,
-    zero: zero,
-    str: str,
-    exactEquals: exactEquals,
-    equals: equals,
-    len: len,
-    sub: sub,
-    mul: mul,
-    div: div,
-    dist: dist,
-    sqrDist: sqrDist,
-    sqrLen: sqrLen,
-    forEach: forEach
+  __proto__: null,
+  create: create,
+  clone: clone,
+  fromValues: fromValues,
+  copy: copy,
+  set: set,
+  add: add,
+  subtract: subtract,
+  multiply: multiply,
+  divide: divide,
+  ceil: ceil,
+  floor: floor,
+  min: min,
+  max: max,
+  round: round,
+  scale: scale,
+  scaleAndAdd: scaleAndAdd,
+  distance: distance,
+  squaredDistance: squaredDistance,
+  length: length,
+  squaredLength: squaredLength,
+  negate: negate,
+  inverse: inverse,
+  normalize: normalize,
+  dot: dot$1,
+  cross: cross$1,
+  lerp: lerp$1,
+  random: random,
+  transformMat2: transformMat2,
+  transformMat2d: transformMat2d,
+  transformMat3: transformMat3,
+  transformMat4: transformMat4,
+  rotate: rotate$1,
+  angle: angle,
+  zero: zero,
+  str: str,
+  exactEquals: exactEquals,
+  equals: equals,
+  len: len,
+  sub: sub,
+  mul: mul,
+  div: div,
+  dist: dist,
+  sqrDist: sqrDist,
+  sqrLen: sqrLen,
+  forEach: forEach
 });
+
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+const canvas = document.body.querySelector("canvas");
+const ctx = canvas.getContext("2d", { desynchronized: true });
+const screen$1 = {
+    width: 0,
+    height: 0,
+    dpr: 1,
+};
+function handleResize() {
+    screen$1.dpr = devicePixelRatio;
+    screen$1.width = document.body.clientWidth * screen$1.dpr;
+    screen$1.height = document.body.clientHeight * screen$1.dpr;
+    if (canvas.width == screen$1.width && canvas.height == screen$1.height) {
+        return;
+    }
+    canvas.width = screen$1.width;
+    canvas.height = screen$1.height;
+    canvas.style.width = document.body.clientWidth + "px";
+    canvas.style.height = document.body.clientHeight + "px";
+}
+handleResize();
+
+const camera = {
+    x: 0,
+    y: 0,
+    scale: 150,
+    m: create$7(),
+};
+function screenToWorld(p) {
+    const [x, y] = p;
+    return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
+}
+const focusPoint = create();
+const SCREEN_HEIGHT_IN_METERS = 3;
+function setupCamera() {
+    camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
+    const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
+    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.5;
+    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.3;
+    identity$4(camera.m);
+    translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
+    scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
+    translate$3(camera.m, camera.m, fromValues(-camera.x, -camera.y));
+}
+function setFocusPoint(x, y) {
+    set(focusPoint, x, y);
+    setupCamera();
+}
 
 var Box2D$1 = (function() {
   var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
@@ -8498,7 +8525,7 @@ function now() {
 }
 function setNow(time) {
     dtValue = (time - nowValue) / 1000;
-    nowValue = time / 10;
+    nowValue = time;
 }
 function getDT() {
     return dtValue;
@@ -8599,6 +8626,7 @@ class GraphicsObject {
     lastIndex = undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body = undefined;
+    fixture = undefined;
     contacts = new Map();
     onContactStart = undefined;
     onContactPresolve = undefined;
@@ -8683,33 +8711,6 @@ class GraphicsObject {
     }
 }
 
-const camera = {
-    x: 0,
-    y: 0,
-    scale: 150,
-    m: create$7(),
-};
-function screenToWorld(p) {
-    const [x, y] = p;
-    return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
-}
-const focusPoint = create();
-const SCREEN_HEIGHT_IN_METERS = 3;
-function setupCamera() {
-    camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
-    const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
-    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.5;
-    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.3;
-    identity$4(camera.m);
-    translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
-    scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
-    translate$3(camera.m, camera.m, fromValues(-camera.x, -camera.y));
-}
-function setFocusPoint(x, y) {
-    set(focusPoint, x, y);
-    setupCamera();
-}
-
 const keys = new Map();
 const mouse = create();
 document.body.onkeydown = e => {
@@ -8721,147 +8722,6 @@ document.body.onkeyup = e => {
 ctx.canvas.onmousemove = e => {
     set(mouse, e.clientX * screen$1.dpr, e.clientY * screen$1.dpr);
 };
-
-const TORSO_SLOT = 0;
-const ARMS_SLOT = 1;
-const HEAD_SLOT = 2;
-const WEAPON_SLOT = 3;
-const SHOOT_LINE_SLOT = 4;
-const FOOT_SENSOR_SLOT = 5;
-
-const player = new GraphicsObject();
-const idle_torso = new GraphicsObject();
-const idle_arms = new GraphicsObject();
-const run_torso = new GraphicsObject();
-const aiming_arms = new GraphicsObject();
-const blaster = new GraphicsObject();
-const shootLine = new GraphicsObject();
-const footSensor = new GraphicsObject();
-const UP = fromValues(0, -1);
-async function createPlayer() {
-    // animations
-    run_torso.graphics = await createGraphics("run", "torso_legs");
-    // const run_arms = await createGraphics('run', 'arms')
-    idle_torso.graphics = await createGraphics("idle", "torso_legs");
-    idle_arms.graphics = await createGraphics("idle", "arms");
-    aiming_arms.graphics = await createGraphics("aiming", "arms");
-    aiming_arms.z = 0.2;
-    // player
-    const playerGraphics = createDummyGraphics();
-    playerGraphics.physicsType = PhysicsType.DYNAMIC;
-    playerGraphics.fixedRotation = true;
-    const WIDTH = 0.2;
-    playerGraphics.physicsPoints = [
-        fromValues(-WIDTH / 8, 0),
-        fromValues(-WIDTH / 2, 0.5),
-        fromValues(-WIDTH / 8, 1),
-        fromValues(WIDTH / 8, 1),
-        fromValues(WIDTH / 2, 0.5),
-        fromValues(WIDTH / 8, 0),
-    ];
-    playerGraphics.physicsPivot = fromValues(0, -1);
-    player.graphics = playerGraphics;
-    player.scale = 2;
-    player.x = 0;
-    player.y = -1;
-    // player.mirror = true
-    // attachments
-    const footSensorGraphics = createDummyGraphics();
-    footSensorGraphics.physicsType = PhysicsType.DYNAMIC;
-    const W = 0.2;
-    footSensorGraphics.physicsPoints = [
-        fromValues(-W / 8, 0),
-        fromValues(-W / 8, W * 1),
-        fromValues(W / 8, W * 1),
-        fromValues(W / 8, 0),
-    ];
-    footSensorGraphics.physicsPivot = fromValues(0, 0);
-    footSensor.graphics = footSensorGraphics;
-    player.attach(FOOT_SENSOR_SLOT, footSensor);
-    footSensor.onContactPresolve = contact => {
-        contact.SetEnabled(false);
-    };
-    const head = new GraphicsObject();
-    head.graphics = await createGraphics("oleg");
-    head.angle = 1.57;
-    head.z = 0.1;
-    player.attach(HEAD_SLOT, head);
-    blaster.graphics = await createGraphics("blaster");
-    blaster.z = -0.05;
-    player.attach(WEAPON_SLOT, blaster);
-    shootLine.graphics = await createGraphics("shoot-line");
-    shootLine.z = -0.01;
-    player.attach(SHOOT_LINE_SLOT, shootLine);
-    addToScene(player);
-}
-function playerControls() {
-    player.attach(ARMS_SLOT, aiming_arms);
-    const isAiming = true;
-    const isInControl = true;
-    const body = player.body;
-    const vel = body.GetLinearVelocity();
-    if (keys.get("KeyD")) {
-        player.attach(TORSO_SLOT, run_torso);
-        vel.set_x(3 / PHYSICS_STEP);
-        player.mirror = false;
-    }
-    else if (keys.get("KeyA")) {
-        player.attach(TORSO_SLOT, run_torso);
-        vel.set_x(-3 / PHYSICS_STEP);
-        player.mirror = true;
-    }
-    else {
-        player.attach(TORSO_SLOT, idle_torso);
-        vel.set_x(0);
-    }
-    body.SetLinearVelocity(vel);
-    if (isAiming) {
-        // player.play(undefined, aiming_arms)
-    }
-    recalcWorldTransforms(player);
-    // TODO redo this into generic aiming method
-    const shouldersPivotPointWorldSpace = getWorldPivotPoint(aiming_arms);
-    const barrelAttachment = getAttachmentMatrix(player, "barrel", 1);
-    if (isAiming && shouldersPivotPointWorldSpace && barrelAttachment) {
-        const mouseWorldSpace = screenToWorld(mouse);
-        aiming_arms.angle = 0;
-        const { parentObj: barrelObj, m: attachmentMatrix } = barrelAttachment;
-        const barrelMatrix = create$7();
-        mul$7(barrelMatrix, barrelMatrix, aiming_arms.calcWorldMatrix());
-        mul$7(barrelMatrix, barrelMatrix, barrelObj.calcLocalMatrix());
-        mul$7(barrelMatrix, barrelMatrix, attachmentMatrix);
-        const barrelAngle = getAngleFromMatrix(barrelMatrix);
-        const barrelLocalSpace = fromValues(0, 0);
-        transformMat2d(barrelLocalSpace, barrelLocalSpace, barrelMatrix);
-        sub(barrelLocalSpace, barrelLocalSpace, shouldersPivotPointWorldSpace);
-        mul(barrelLocalSpace, barrelLocalSpace, player.mirrorVec);
-        const offsetHeight = dot(rotate(barrelLocalSpace, -barrelAngle), UP) * player.mirrorMul;
-        const offsetUp = create();
-        scale(offsetUp, UP, offsetHeight);
-        const mousePointShouldersLocalSpace = create();
-        add(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, mouseWorldSpace);
-        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, shouldersPivotPointWorldSpace);
-        const mouseAngle = getAngleFromVector(mousePointShouldersLocalSpace);
-        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, rotate(offsetUp, mouseAngle));
-        // normalized delta
-        const tangent = create();
-        normalize(tangent, mousePointShouldersLocalSpace);
-        const normal = cross(tangent);
-        const pointOnCircle = create();
-        scale(pointOnCircle, normal, offsetHeight);
-        const pointOnCircleWorldSpace = create();
-        add(pointOnCircleWorldSpace, shouldersPivotPointWorldSpace, pointOnCircle);
-        const deltaMouseAndPointOnCircle = create();
-        sub(deltaMouseAndPointOnCircle, mouseWorldSpace, pointOnCircleWorldSpace);
-        mul(deltaMouseAndPointOnCircle, deltaMouseAndPointOnCircle, player.mirrorVec);
-        aiming_arms.angle = getAngleFromVector(deltaMouseAndPointOnCircle) - barrelAngle;
-        aiming_arms.angleIsWorldAngle = true;
-        aiming_arms.calcWorldMatrix();
-    }
-}
-function playerControlsPostPhysics() {
-    //
-}
 
 const scene = [];
 const objectsToDraw = [];
@@ -8896,7 +8756,6 @@ function syncPhysics() {
     for (const obj of scene) {
         syncObjWithPhysics(obj);
     }
-    setFocusPoint(player.x, player.y);
 }
 function drawScene() {
     ctx.resetTransform();
@@ -9002,17 +8861,14 @@ function drawScene() {
             drawCollisionModel(obj.attachments[slot]);
         }
     }
-    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5]);
-    ctx.fillStyle = "rgb(0, 255, 0)";
-    for (const contact of footSensor.contacts.values()) {
-        const points = getWorldPointsAndNormalFromContact(contact);
-        for (let i = 1; i < points.length; i++) {
-            const p = points[i];
-            ctx.beginPath();
-            ctx.arc(p[0], p[1], 0.01, 0, 9);
-            ctx.fill();
-        }
-    }
+    /*
+    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
+    ctx.fillStyle = "rgb(0, 255, 0)"
+    const p = debugPoint
+    ctx.beginPath()
+    ctx.arc(p[0], p[1], 0.01, 0, 9)
+    ctx.fill()
+    */
 }
 function addToScene(obj) {
     scene.push(obj);
@@ -9034,14 +8890,17 @@ function getObjectByID(id) {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 let Box2D;
 let world;
-let ZERO;
 let temp;
+let temp2;
 const PHYSICS_STEP = 1 / 60;
 const MAX_STEPS_PER_STEP = 5;
 let currentTime = now() / 1000;
 const PHYSICS_SCALE = 15;
 const INV_PHYSICS_SCALE = 1 / PHYSICS_SCALE;
 let worldManifold;
+let rayCastCallback;
+const rayCastResult = create();
+let raycastFixtureToIgnorePtr;
 const contantPoint0 = create();
 const contantPoint1 = create();
 const normal = create();
@@ -9065,13 +8924,30 @@ function getWorldPointsAndNormalFromContact(contact) {
     }
     return result;
 }
+function raycast(x0, y0, x1, y1, fixtureToIgnore) {
+    temp.Set(x0 * PHYSICS_SCALE, y0 * PHYSICS_SCALE);
+    temp2.Set(x1 * PHYSICS_SCALE, y1 * PHYSICS_SCALE);
+    raycastFixtureToIgnorePtr = Box2D.getPointer(fixtureToIgnore);
+    set(rayCastResult, NaN, NaN);
+    world.RayCast(rayCastCallback, temp, temp2);
+    return !isNaN(rayCastResult[0]) ? rayCastResult : undefined;
+}
 async function initPhysics() {
     Box2D = await Box2D$1();
-    ZERO = new Box2D.b2Vec2(0.0, 0.0);
     temp = new Box2D.b2Vec2(0.0, 0.0);
+    temp2 = new Box2D.b2Vec2(0.0, 0.0);
     const gravity = new Box2D.b2Vec2(0.0, 9.8 * PHYSICS_SCALE);
     world = new Box2D.b2World(gravity);
     worldManifold = new Box2D.b2WorldManifold();
+    rayCastCallback = new Box2D.JSRayCastCallback();
+    rayCastCallback.ReportFixture = (fixturePtr, point, normal, fraction) => {
+        if (fixturePtr === raycastFixtureToIgnorePtr) {
+            return 1;
+        }
+        const p = Box2D.wrapPointer(point, Box2D.b2Vec2);
+        set(rayCastResult, p.get_x() * INV_PHYSICS_SCALE, p.get_y() * INV_PHYSICS_SCALE);
+        return fraction;
+    };
     const listener = new Box2D.JSContactListener();
     listener.BeginContact = (contactPtr) => {
         const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
@@ -9159,6 +9035,7 @@ function createFixture(obj, body) {
     fixtureDef.set_isSensor(obj.graphics.isSensor);
     const fixture = body.CreateFixture(fixtureDef);
     fixture.SetUserData(obj.id);
+    obj.fixture = fixture;
 }
 function initPhysicsForObject(obj) {
     if (obj.body || obj.graphics.physicsType == PhysicsType.NONE) {
@@ -9190,7 +9067,6 @@ function syncPhysicsWithObj(obj) {
     const body = obj.body;
     temp.Set(obj.x * PHYSICS_SCALE, obj.y * PHYSICS_SCALE);
     body.SetTransform(temp, obj.angle);
-    body.SetLinearVelocity(ZERO);
 }
 function syncObjWithPhysics(obj) {
     const body = obj.body;
@@ -9213,6 +9089,141 @@ function physicsStep() {
     }
 }
 
+const TORSO_SLOT = 0;
+const ARMS_SLOT = 1;
+const HEAD_SLOT = 2;
+const WEAPON_SLOT = 3;
+const SHOOT_LINE_SLOT = 4;
+const FOOT_SENSOR_SLOT = 5;
+
+const player = new GraphicsObject();
+const idle_torso = new GraphicsObject();
+const idle_arms = new GraphicsObject();
+const run_torso = new GraphicsObject();
+const aiming_arms = new GraphicsObject();
+const blaster = new GraphicsObject();
+const shootLine = new GraphicsObject();
+const UP = fromValues(0, -1);
+const PLAYER_FOOT_HEIGHT = 0.1;
+const PLAYER_FOOT_HEIGHT_PADDING = 0.1;
+const PLAYER_FOOT_FULL_HEIGHT = PLAYER_FOOT_HEIGHT + PLAYER_FOOT_HEIGHT_PADDING;
+async function createPlayer() {
+    // animations
+    run_torso.graphics = await createGraphics("run", "torso_legs");
+    // const run_arms = await createGraphics('run', 'arms')
+    idle_torso.graphics = await createGraphics("idle", "torso_legs");
+    idle_arms.graphics = await createGraphics("idle", "arms");
+    aiming_arms.graphics = await createGraphics("aiming", "arms");
+    aiming_arms.z = 0.2;
+    // player
+    const playerGraphics = createDummyGraphics();
+    playerGraphics.physicsType = PhysicsType.DYNAMIC;
+    playerGraphics.fixedRotation = true;
+    const WIDTH = 0.2;
+    playerGraphics.physicsPoints = [
+        fromValues(-WIDTH / 2, 0),
+        fromValues(-WIDTH / 2, 0.5),
+        fromValues(0, 1 - PLAYER_FOOT_HEIGHT),
+        fromValues(WIDTH / 2, 0.5),
+        fromValues(WIDTH / 2, 0),
+    ];
+    playerGraphics.physicsPivot = fromValues(0, -1);
+    player.graphics = playerGraphics;
+    player.scale = 2;
+    player.x = 0;
+    player.y = -1;
+    // player.mirror = true
+    // attachments
+    const head = new GraphicsObject();
+    head.graphics = await createGraphics("oleg");
+    head.angle = 1.57;
+    head.z = 0.1;
+    player.attach(HEAD_SLOT, head);
+    blaster.graphics = await createGraphics("blaster");
+    blaster.z = -0.05;
+    player.attach(WEAPON_SLOT, blaster);
+    shootLine.graphics = await createGraphics("shoot-line");
+    shootLine.z = -0.01;
+    player.attach(SHOOT_LINE_SLOT, shootLine);
+    addToScene(player);
+}
+function playerControls() {
+    player.attach(ARMS_SLOT, aiming_arms);
+    const isAiming = true;
+    const isInControl = true;
+    const body = player.body;
+    const vel = body.GetLinearVelocity();
+    if (keys.get("KeyD")) {
+        player.attach(TORSO_SLOT, run_torso);
+        vel.set_x(3 / PHYSICS_STEP);
+        player.mirror = false;
+    }
+    else if (keys.get("KeyA")) {
+        player.attach(TORSO_SLOT, run_torso);
+        vel.set_x(-3 / PHYSICS_STEP);
+        player.mirror = true;
+    }
+    else {
+        player.attach(TORSO_SLOT, idle_torso);
+        vel.set_x(0);
+    }
+    body.SetLinearVelocity(vel);
+    if (isAiming) {
+        // player.play(undefined, aiming_arms)
+    }
+    recalcWorldTransforms(player);
+    // TODO redo this into generic aiming method
+    const shouldersPivotPointWorldSpace = getWorldPivotPoint(aiming_arms);
+    const barrelAttachment = getAttachmentMatrix(player, "barrel", 1);
+    if (isAiming && shouldersPivotPointWorldSpace && barrelAttachment) {
+        const mouseWorldSpace = screenToWorld(mouse);
+        aiming_arms.angle = 0;
+        const { parentObj: barrelObj, m: attachmentMatrix } = barrelAttachment;
+        const barrelMatrix = create$7();
+        mul$7(barrelMatrix, barrelMatrix, aiming_arms.calcWorldMatrix());
+        mul$7(barrelMatrix, barrelMatrix, barrelObj.calcLocalMatrix());
+        mul$7(barrelMatrix, barrelMatrix, attachmentMatrix);
+        const barrelAngle = getAngleFromMatrix(barrelMatrix);
+        const barrelLocalSpace = fromValues(0, 0);
+        transformMat2d(barrelLocalSpace, barrelLocalSpace, barrelMatrix);
+        sub(barrelLocalSpace, barrelLocalSpace, shouldersPivotPointWorldSpace);
+        mul(barrelLocalSpace, barrelLocalSpace, player.mirrorVec);
+        const offsetHeight = dot(rotate(barrelLocalSpace, -barrelAngle), UP) * player.mirrorMul;
+        const offsetUp = create();
+        scale(offsetUp, UP, offsetHeight);
+        const mousePointShouldersLocalSpace = create();
+        add(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, mouseWorldSpace);
+        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, shouldersPivotPointWorldSpace);
+        const mouseAngle = getAngleFromVector(mousePointShouldersLocalSpace);
+        sub(mousePointShouldersLocalSpace, mousePointShouldersLocalSpace, rotate(offsetUp, mouseAngle));
+        // normalized delta
+        const tangent = create();
+        normalize(tangent, mousePointShouldersLocalSpace);
+        const normal = cross(tangent);
+        const pointOnCircle = create();
+        scale(pointOnCircle, normal, offsetHeight);
+        const pointOnCircleWorldSpace = create();
+        add(pointOnCircleWorldSpace, shouldersPivotPointWorldSpace, pointOnCircle);
+        const deltaMouseAndPointOnCircle = create();
+        sub(deltaMouseAndPointOnCircle, mouseWorldSpace, pointOnCircleWorldSpace);
+        mul(deltaMouseAndPointOnCircle, deltaMouseAndPointOnCircle, player.mirrorVec);
+        aiming_arms.angle = getAngleFromVector(deltaMouseAndPointOnCircle) - barrelAngle;
+        aiming_arms.angleIsWorldAngle = true;
+        aiming_arms.calcWorldMatrix();
+    }
+}
+function playerControlsPostPhysics() {
+    const footHeight = PLAYER_FOOT_FULL_HEIGHT;
+    const p = raycast(player.x, player.y - 0.5, player.x, player.y + footHeight, player.fixture);
+    if (p) {
+        player.y = p[1] - PLAYER_FOOT_HEIGHT;
+        syncPhysicsWithObj(player);
+        const vel = player.body.GetLinearVelocity();
+        vel.set_y(0);
+        player.body.SetLinearVelocity(vel);
+    }
+}
+
 async function initScene() {
     await createPlayer();
     const box = new GraphicsObject();
@@ -9222,14 +9233,15 @@ async function initScene() {
     box.z = -1;
     box.angle = 0.5;
     addToScene(box);
-    const angle = 0;
-    for (let i = -10; i < 20; i++) {
+    const COUNT = 3;
+    const angle = 0.5;
+    for (let i = -COUNT / 2; i < COUNT; i++) {
         const l = 10 * i;
         const dirt = new GraphicsObject();
         dirt.graphics = await createGraphics("dirt");
         dirt.scale = 10;
         dirt.x = Math.cos(angle) * l;
-        dirt.y = Math.sin(angle) * l;
+        dirt.y = Math.sin(angle) * l + 0.01;
         dirt.z = 1;
         dirt.angle = angle;
         addToScene(dirt);
@@ -9243,6 +9255,7 @@ function tick(time) {
     physicsStep();
     syncPhysics();
     playerControlsPostPhysics();
+    setFocusPoint(player.x, player.y);
     drawScene();
     requestAnimationFrame(tick);
 }

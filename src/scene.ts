@@ -1,12 +1,11 @@
 import { mat2d, vec2 } from "gl-matrix"
-import { camera, setFocusPoint } from "./camera"
+import { camera } from "./camera"
 import { GraphicsType, PhysicsType } from "./graphics"
 import { ctx } from "./init"
 import { mouse } from "./input-handler"
 import { getWorldScale, GraphicsObject } from "./object"
 import { getAttachmentMatrix, getParentWorldZ } from "./object-utils"
-import { addToPhysics, getWorldPointsAndNormalFromContact, syncObjWithPhysics } from "./physics"
-import { footSensor, player } from "./player"
+import { addToPhysics, syncObjWithPhysics } from "./physics"
 import { now } from "./time"
 
 const scene: GraphicsObject[] = []
@@ -51,7 +50,6 @@ export function syncPhysics() {
     for (const obj of scene) {
         syncObjWithPhysics(obj)
     }
-    setFocusPoint(player.x, player.y)
 }
 
 export function drawScene() {
@@ -187,17 +185,14 @@ export function drawScene() {
         }
     }
 
+    /*
     ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
     ctx.fillStyle = "rgb(0, 255, 0)"
-    for (const contact of footSensor.contacts.values()) {
-        const points = getWorldPointsAndNormalFromContact(contact)
-        for (let i = 1; i < points.length; i++) {
-            const p = points[i]
-            ctx.beginPath()
-            ctx.arc(p[0], p[1], 0.01, 0, 9)
-            ctx.fill()
-        }
-    }
+    const p = debugPoint
+    ctx.beginPath()
+    ctx.arc(p[0], p[1], 0.01, 0, 9)
+    ctx.fill()
+    */
 }
 
 export function addToScene(obj: GraphicsObject): void {

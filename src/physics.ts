@@ -11,8 +11,8 @@ import { now } from "./time"
 export let Box2D: any
 let world: any
 
-let ZERO: any
 let temp: any
+let temp2: any
 
 export const PHYSICS_STEP = 1 / 60
 const MAX_STEPS_PER_STEP = 5
@@ -23,6 +23,9 @@ const PHYSICS_SCALE = 15
 const INV_PHYSICS_SCALE = 1 / PHYSICS_SCALE
 
 let worldManifold: any
+let rayCastCallback: any
+const rayCastResult = vec2.create()
+let raycastFixtureToIgnorePtr: any
 
 const contantPoint0 = vec2.create()
 const contantPoint1 = vec2.create()
@@ -62,16 +65,50 @@ export function getWorldPointsAndNormalFromContact(contact: any): vec2[] {
     return result
 }
 
+export function raycast(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    fixtureToIgnore: any
+): vec2 | undefined {
+    temp.Set(x0 * PHYSICS_SCALE, y0 * PHYSICS_SCALE)
+    temp2.Set(x1 * PHYSICS_SCALE, y1 * PHYSICS_SCALE)
+    raycastFixtureToIgnorePtr = Box2D.getPointer(fixtureToIgnore)
+
+    vec2.set(rayCastResult, NaN, NaN)
+    world.RayCast(rayCastCallback, temp, temp2)
+
+    return !isNaN(rayCastResult[0]) ? rayCastResult : undefined
+}
+
 export async function initPhysics(): Promise<void> {
     Box2D = await Box2DInit()
 
-    ZERO = new Box2D.b2Vec2(0.0, 0.0)
     temp = new Box2D.b2Vec2(0.0, 0.0)
+    temp2 = new Box2D.b2Vec2(0.0, 0.0)
 
     const gravity = new Box2D.b2Vec2(0.0, 9.8 * PHYSICS_SCALE)
 
     world = new Box2D.b2World(gravity)
     worldManifold = new Box2D.b2WorldManifold()
+
+    rayCastCallback = new Box2D.JSRayCastCallback()
+    rayCastCallback.ReportFixture = (
+        fixturePtr: any,
+        point: any,
+        normal: any,
+        fraction: number
+    ) => {
+        if (fixturePtr === raycastFixtureToIgnorePtr) {
+            return 1
+        }
+
+        const p = Box2D.wrapPointer(point, Box2D.b2Vec2)
+        vec2.set(rayCastResult, p.get_x() * INV_PHYSICS_SCALE, p.get_y() * INV_PHYSICS_SCALE)
+
+        return fraction
+    }
 
     const listener = new Box2D.JSContactListener()
     listener.BeginContact = (contactPtr: any) => {
@@ -178,6 +215,8 @@ function createFixture(obj: GraphicsObject, body: any): void {
 
     const fixture = body.CreateFixture(fixtureDef)
     fixture.SetUserData(obj.id)
+
+    obj.fixture = fixture
 }
 
 function initPhysicsForObject(obj: GraphicsObject): void {
@@ -220,7 +259,6 @@ export function syncPhysicsWithObj(obj: GraphicsObject): void {
 
     temp.Set(obj.x * PHYSICS_SCALE, obj.y * PHYSICS_SCALE)
     body.SetTransform(temp, obj.angle)
-    body.SetLinearVelocity(ZERO)
 }
 
 export function syncObjWithPhysics(obj: GraphicsObject): void {

@@ -1,19 +1,12 @@
 import { mat2d, vec2 } from "gl-matrix"
 import { screenToWorld } from "./camera"
-import {
-    ARMS_SLOT,
-    FOOT_SENSOR_SLOT,
-    HEAD_SLOT,
-    SHOOT_LINE_SLOT,
-    TORSO_SLOT,
-    WEAPON_SLOT,
-} from "./character"
+import { ARMS_SLOT, HEAD_SLOT, SHOOT_LINE_SLOT, TORSO_SLOT, WEAPON_SLOT } from "./character"
 import { createDummyGraphics, createGraphics, PhysicsType } from "./graphics"
 import { keys, mouse } from "./input-handler"
 import { cross, dot, getAngleFromMatrix, getAngleFromVector, rotate } from "./math-utils"
 import { GraphicsObject } from "./object"
 import { getAttachmentMatrix, getWorldPivotPoint, recalcWorldTransforms } from "./object-utils"
-import { PHYSICS_STEP } from "./physics"
+import { PHYSICS_STEP, raycast, syncPhysicsWithObj } from "./physics"
 import { addToScene } from "./scene"
 
 export const player = new GraphicsObject()
@@ -23,9 +16,12 @@ const run_torso = new GraphicsObject()
 const aiming_arms = new GraphicsObject()
 const blaster = new GraphicsObject()
 const shootLine = new GraphicsObject()
-export const footSensor = new GraphicsObject()
 
 const UP = vec2.fromValues(0, -1)
+
+const PLAYER_FOOT_HEIGHT = 0.1
+const PLAYER_FOOT_HEIGHT_PADDING = 0.1
+const PLAYER_FOOT_FULL_HEIGHT = PLAYER_FOOT_HEIGHT + PLAYER_FOOT_HEIGHT_PADDING
 
 export async function createPlayer(): Promise<void> {
     // animations
@@ -47,12 +43,11 @@ export async function createPlayer(): Promise<void> {
 
     const WIDTH = 0.2
     playerGraphics.physicsPoints = [
-        vec2.fromValues(-WIDTH / 8, 0),
+        vec2.fromValues(-WIDTH / 2, 0),
         vec2.fromValues(-WIDTH / 2, 0.5),
-        vec2.fromValues(-WIDTH / 8, 1),
-        vec2.fromValues(WIDTH / 8, 1),
+        vec2.fromValues(0, 1 - PLAYER_FOOT_HEIGHT),
         vec2.fromValues(WIDTH / 2, 0.5),
-        vec2.fromValues(WIDTH / 8, 0),
+        vec2.fromValues(WIDTH / 2, 0),
     ]
     playerGraphics.physicsPivot = vec2.fromValues(0, -1)
 
@@ -63,24 +58,6 @@ export async function createPlayer(): Promise<void> {
     // player.mirror = true
 
     // attachments
-
-    const footSensorGraphics = createDummyGraphics()
-    footSensorGraphics.physicsType = PhysicsType.DYNAMIC
-    const W = 0.2
-    footSensorGraphics.physicsPoints = [
-        vec2.fromValues(-W / 8, 0),
-        vec2.fromValues(-W / 8, W * 1),
-        vec2.fromValues(W / 8, W * 1),
-        vec2.fromValues(W / 8, 0),
-    ]
-    footSensorGraphics.physicsPivot = vec2.fromValues(0, 0)
-
-    footSensor.graphics = footSensorGraphics
-    player.attach(FOOT_SENSOR_SLOT, footSensor)
-
-    footSensor.onContactPresolve = contact => {
-        contact.SetEnabled(false)
-    }
 
     const head = new GraphicsObject()
     head.graphics = await createGraphics("oleg")
@@ -195,5 +172,14 @@ export function playerControls() {
 }
 
 export function playerControlsPostPhysics() {
-    //
+    const footHeight = PLAYER_FOOT_FULL_HEIGHT
+
+    const p = raycast(player.x, player.y - 0.5, player.x, player.y + footHeight, player.fixture)
+    if (p) {
+        player.y = p[1] - PLAYER_FOOT_HEIGHT
+        syncPhysicsWithObj(player)
+        const vel = player.body.GetLinearVelocity()
+        vel.set_y(0)
+        player.body.SetLinearVelocity(vel)
+    }
 }

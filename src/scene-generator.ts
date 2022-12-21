@@ -14,14 +14,16 @@ export async function initScene(): Promise<void> {
     box.angle = 0.5
     addToScene(box)
 
-    const angle = 0
-    for (let i = -10; i < 20; i++) {
+    const COUNT = 3
+
+    const angle = 0.5
+    for (let i = -COUNT / 2; i < COUNT; i++) {
         const l = 10 * i
         const dirt = new GraphicsObject()
         dirt.graphics = await createGraphics("dirt")
         dirt.scale = 10
         dirt.x = Math.cos(angle) * l
-        dirt.y = Math.sin(angle) * l
+        dirt.y = Math.sin(angle) * l + 0.01
         dirt.z = 1
         dirt.angle = angle
         addToScene(dirt)

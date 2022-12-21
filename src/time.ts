@@ -7,7 +7,7 @@ export function now(): number {
 
 export function setNow(time: number): void {
     dtValue = (time - nowValue) / 1000
-    nowValue = time / 10
+    nowValue = time
 }
 
 export function getDT() {
