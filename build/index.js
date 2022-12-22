@@ -8596,20 +8596,20 @@ if (typeof exports === 'object' && typeof module === 'object')
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 const canvas = document.body.querySelector("canvas");
 const ctx = canvas.getContext("2d", { desynchronized: true });
-const screen$1 = {
+const screen = {
     width: 0,
     height: 0,
     dpr: 1,
 };
 function handleResize() {
-    screen$1.dpr = devicePixelRatio;
-    screen$1.width = document.body.clientWidth * screen$1.dpr;
-    screen$1.height = document.body.clientHeight * screen$1.dpr;
-    if (canvas.width == screen$1.width && canvas.height == screen$1.height) {
+    screen.dpr = devicePixelRatio;
+    screen.width = document.body.clientWidth * screen.dpr;
+    screen.height = document.body.clientHeight * screen.dpr;
+    if (canvas.width == screen.width && canvas.height == screen.height) {
         return;
     }
-    canvas.width = screen$1.width;
-    canvas.height = screen$1.height;
+    canvas.width = screen.width;
+    canvas.height = screen.height;
     canvas.style.width = document.body.clientWidth + "px";
     canvas.style.height = document.body.clientHeight + "px";
 }
@@ -8626,11 +8626,11 @@ function screenToWorld(p) {
     return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
 }
 const focusPoint = create();
-const SCREEN_HEIGHT_IN_METERS = 3;
+const SCREEN_HEIGHT_IN_METERS = 6;
 function setupCamera() {
     camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
     const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
-    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.5;
+    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.25;
     camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.3;
     identity$4(camera.m);
     translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
@@ -8651,7 +8651,7 @@ document.body.onkeyup = e => {
     keys.set(e.code, false);
 };
 ctx.canvas.onmousemove = e => {
-    set(mouse, e.clientX * screen$1.dpr, e.clientY * screen$1.dpr);
+    set(mouse, e.clientX * screen.dpr, e.clientY * screen.dpr);
 };
 
 let player;
