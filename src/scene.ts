@@ -54,6 +54,11 @@ export function syncPhysics() {
     }
 }
 
+export let vx: number
+export let y_v0: number
+export let g: number
+export let g2: number
+
 export function drawScene() {
     ctx.resetTransform()
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
@@ -205,6 +210,52 @@ export function drawScene() {
     const footY = player.obj.y - FOOT_HEIGHT * player.obj.scale
     ctx.moveTo(player.obj.x, footY - FOOT_START * player.obj.scale)
     ctx.lineTo(player.obj.x, footY + FOOT_FULL_HEIGHT * player.obj.scale)
+    ctx.stroke()
+
+    // DEBUG JUMP VISULIZATION
+
+    // const g = 9.8
+
+    const initialX = 0
+    const initialY = 0
+
+    const DT = 1 / 600
+
+    vx = 14 // horizontal speed
+    const p = 1
+    const xh = 2.5 * p // horizontal distance for jump
+    const h = -2.2 * p // height for jump
+
+    const th = xh / vx
+
+    y_v0 = (2 * h * vx) / xh
+    g = (-2 * h * vx * vx) / (xh * xh)
+    g2 = g * 2
+
+    const getY = (t: number) => 0.5 * g * t * t + y_v0 * t + initialY
+    const getDerivY = (t: number) => g * t + y_v0
+    const getY2 = (t: number) => 0.5 * g2 * t * t + getDerivY(th) * t + getY(th)
+    const getX = (t: number) => vx * t + initialX
+
+    let t = 0
+
+    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
+    ctx.strokeStyle = "blue"
+    ctx.lineWidth = 0.01
+    ctx.beginPath()
+    ctx.moveTo(getX(t), getY(t))
+    while (t < th) {
+        t = Math.min(t + DT, th)
+        ctx.lineTo(getX(t), getY(t))
+    }
+    while (t < th * 2) {
+        t = Math.min(t + DT, th * 2)
+        ctx.lineTo(getX(t), getY2(t - th))
+    }
+
+    ctx.moveTo(getX(th), 0)
+    ctx.lineTo(getX(th), getY(th))
+
     ctx.stroke()
 }
 

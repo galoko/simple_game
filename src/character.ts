@@ -2,8 +2,15 @@ import { vec2 } from "gl-matrix"
 import { aimAt } from "./character-utils"
 import { createDummyGraphics, Graphics, PhysicsType } from "./graphics"
 import { GraphicsObject } from "./object"
-import { mulVelocity, raycast, setVelocity, syncPhysicsWithObj } from "./physics"
-import { addToScene } from "./scene"
+import {
+    getVelocityX,
+    getVelocityY,
+    mulVelocity,
+    raycast,
+    setVelocity,
+    syncPhysicsWithObj,
+} from "./physics"
+import { addToScene, g, g2, vx, y_v0 } from "./scene"
 
 export const TORSO_SLOT = 0
 export const ARMS_SLOT = 1
@@ -15,6 +22,8 @@ export const EYE_LINE_SLOT = 5
 const idle_torso_graphics = new Graphics("idle", "torso_legs")
 const idle_arms_graphics = new Graphics("idle", "arms")
 const run_torso_graphics = new Graphics("run", "torso_legs")
+const fall_torso_graphics = new Graphics("fall", "torso_legs")
+const jump_start_torso_graphics = new Graphics("jump_start", "torso_legs")
 const aiming_arms_graphics = new Graphics("aiming", "arms")
 
 const oleg_graphics = new Graphics("oleg")
@@ -23,22 +32,26 @@ const blaster_graphics = new Graphics("blaster")
 const shoot_line_graphics = new Graphics("shoot-line")
 const eye_line_graphics = new Graphics("eye-line")
 
-export const FOOT_START = 0.0
+export const FOOT_START = 0.02
 export const FOOT_HEIGHT = 0.27
 const FOOT_HEIGHT_PADDING = 0.1
 export const FOOT_FULL_HEIGHT = FOOT_HEIGHT + FOOT_HEIGHT_PADDING
 
 export async function loadCharacterAnimations() {
-    await idle_torso_graphics.load()
-    await idle_arms_graphics.load()
-    await run_torso_graphics.load()
-    await aiming_arms_graphics.load()
+    await Promise.all([
+        idle_torso_graphics.load(),
+        idle_arms_graphics.load(),
+        run_torso_graphics.load(),
+        fall_torso_graphics.load(),
+        jump_start_torso_graphics.load(),
+        aiming_arms_graphics.load(),
 
-    await oleg_graphics.load()
+        oleg_graphics.load(),
 
-    await blaster_graphics.load()
-    await shoot_line_graphics.load()
-    await eye_line_graphics.load()
+        blaster_graphics.load(),
+        shoot_line_graphics.load(),
+        eye_line_graphics.load(),
+    ])
 }
 
 const characters: Character[] = []
@@ -47,6 +60,8 @@ export class Character {
     private readonly idle_torso = new GraphicsObject(idle_torso_graphics)
     // private readonly idle_arms = new GraphicsObject(idle_arms_graphics)
     private readonly run_torso = new GraphicsObject(run_torso_graphics)
+    private readonly fall_torso = new GraphicsObject(fall_torso_graphics)
+    private readonly jump_start_torso = new GraphicsObject(jump_start_torso_graphics)
     private readonly aiming_arms = new GraphicsObject(aiming_arms_graphics)
 
     private readonly head = new GraphicsObject(oleg_graphics)
@@ -60,6 +75,13 @@ export class Character {
 
     public onBeforePhysics: (() => void) | undefined
     public onAfterPhysics: (() => void) | undefined
+
+    public touchingGround = false
+    public isMoving = false
+    public movingDirection = 0
+    public currentSpeed = 0
+    public preparingToJump = false
+    public jumpSteps = 0
 
     constructor(public readonly name: string) {
         this.objGraphics.physicsType = PhysicsType.DYNAMIC
@@ -97,17 +119,34 @@ export class Character {
         //
 
         this.obj.scale = 2
-        this.obj.y = -1
+        // this.obj.y = -1
+    }
+
+    private updateAnimation() {
+        if (this.touchingGround) {
+            if (!this.isMoving) {
+                if (this.preparingToJump) {
+                    this.obj.attach(TORSO_SLOT, this.jump_start_torso)
+                } else {
+                    this.obj.attach(TORSO_SLOT, this.idle_torso)
+                }
+            } else {
+                this.obj.attach(TORSO_SLOT, this.run_torso)
+            }
+        } else {
+            this.obj.attach(TORSO_SLOT, this.fall_torso)
+        }
     }
 
     setSpeed(speed: number): void {
         setVelocity(this.obj.body, speed, undefined)
+        this.currentSpeed = speed
+        this.updateAnimation()
+    }
 
-        if (speed === 0) {
-            this.obj.attach(TORSO_SLOT, this.idle_torso)
-        } else {
-            this.obj.attach(TORSO_SLOT, this.run_torso)
-        }
+    steerSpeed(speed: number): void {
+        setVelocity(this.obj.body, getVelocityX(this.obj.body) + speed, undefined)
+        this.updateAnimation()
     }
 
     aimAt(p: vec2): void {
@@ -123,33 +162,66 @@ export class Character {
     }
 
     attachToGround(): void {
-        const footStart = FOOT_START * this.obj.scale
-        const footHeight = FOOT_FULL_HEIGHT * this.obj.scale
+        this.touchingGround = false
 
-        const footY = this.obj.y - FOOT_HEIGHT * this.obj.scale
+        if (getVelocityY(this.obj.body) >= -10e-5) {
+            const footStart = FOOT_START * this.obj.scale
+            const footHeight =
+                (this.touchingGround ? FOOT_FULL_HEIGHT : FOOT_HEIGHT) * this.obj.scale
 
-        const p = raycast(
-            this.obj.x,
-            footY - footStart,
-            this.obj.x,
-            footY + footHeight,
-            this.obj.fixture
-        )
-        if (p) {
-            this.obj.y = p[1]
-            syncPhysicsWithObj(this.obj)
-            mulVelocity(this.obj.body, 0.9, 0)
+            const footY = this.obj.y - FOOT_HEIGHT * this.obj.scale
+
+            const p = raycast(
+                this.obj.x,
+                footY - footStart,
+                this.obj.x,
+                footY + footHeight,
+                this.obj.fixture
+            )
+            if (p) {
+                this.obj.y = p[1]
+                syncPhysicsWithObj(this.obj)
+                setVelocity(this.obj.body, undefined, 0)
+
+                this.touchingGround = true
+            }
         }
+
+        this.updateAnimation()
     }
 
     beforePhysics(): void {
         this.onBeforePhysics?.()
+
+        if (this.jumpSteps > 0) {
+            this.obj.body.SetGravityScale(g / 9.8)
+            setVelocity(this.obj.body, vx, y_v0)
+            this.jumpSteps--
+        }
+        if (getVelocityY(this.obj.body) > 10e-4) {
+            this.obj.body.SetGravityScale(g2 / 9.8)
+        }
     }
 
     afterPhysics(): void {
         this.attachToGround()
 
         this.onAfterPhysics?.()
+    }
+
+    startJump(): void {
+        this.preparingToJump = true
+        this.updateAnimation()
+    }
+
+    get jumping() {
+        return this.jumpSteps > 0
+    }
+
+    jump(): void {
+        this.jumpSteps = 1
+        this.preparingToJump = false
+        this.updateAnimation()
     }
 }
 

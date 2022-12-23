@@ -14,12 +14,12 @@ let world: any
 let temp: any
 let temp2: any
 
-export const PHYSICS_STEP = 1 / 60
+export const PHYSICS_STEP = 1 / 600
 const MAX_STEPS_PER_STEP = 5
 
 let currentTime = now() / 1000
 
-const PHYSICS_SCALE = 15
+const PHYSICS_SCALE = 1
 const INV_PHYSICS_SCALE = 1 / PHYSICS_SCALE
 
 let worldManifold: any
@@ -84,13 +84,28 @@ export function raycast(
 
 export function setVelocity(body: any, x: number | undefined, y: number | undefined) {
     const vel = body.GetLinearVelocity()
+
+    temp.set_x(vel.get_x())
+    temp.set_y(vel.get_y())
+
     if (x !== undefined) {
-        vel.set_x(x * PHYSICS_SCALE)
+        temp.set_x(x * PHYSICS_SCALE)
     }
     if (y !== undefined) {
-        vel.set_y(y * PHYSICS_SCALE)
+        temp.set_y(y * PHYSICS_SCALE)
     }
-    body.SetLinearVelocity(vel)
+
+    // console.log("setVelocity", temp.get_x(), temp.get_y())
+
+    body.SetLinearVelocity(temp)
+}
+
+export function getVelocityX(body: any): number {
+    return body.GetLinearVelocity().get_x() * INV_PHYSICS_SCALE
+}
+
+export function getVelocityY(body: any): number {
+    return body.GetLinearVelocity().get_y() * INV_PHYSICS_SCALE
 }
 
 export function mulVelocity(body: any, x: number | undefined, y: number | undefined) {

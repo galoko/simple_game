@@ -8631,7 +8631,7 @@ function setupCamera() {
     camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
     const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
     camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.25;
-    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.3;
+    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0;
     identity$4(camera.m);
     translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
     scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
@@ -8655,18 +8655,62 @@ ctx.canvas.onmousemove = e => {
 };
 
 let player;
+const MAX_SPEED_ON_FOOT = 14;
+const ACCELERATION_ON_FOOT = 70;
 function playerControls() {
-    if (keys.get("KeyD")) {
-        player.setSpeed(7);
-        player.obj.mirror = false;
-    }
-    else if (keys.get("KeyA")) {
-        player.setSpeed(-7);
-        player.obj.mirror = true;
+    if (player.touchingGround) {
+        let dstVelocity;
+        if (keys.get("KeyD")) {
+            dstVelocity = MAX_SPEED_ON_FOOT;
+            player.isMoving = true;
+            player.obj.mirror = false;
+        }
+        else if (keys.get("KeyA")) {
+            player.isMoving = true;
+            dstVelocity = -MAX_SPEED_ON_FOOT;
+            player.obj.mirror = true;
+        }
+        else {
+            player.isMoving = false;
+            dstVelocity = 0;
+        }
+        let velX = getVelocityX(player.obj.body);
+        const dstDirection = Math.sign(dstVelocity);
+        if (dstDirection === -player.movingDirection) {
+            velX = -velX;
+        }
+        else if (dstDirection === 0) {
+            velX = 0;
+        }
+        player.movingDirection = dstDirection;
+        const delta = dstVelocity - velX;
+        const direction = Math.sign(delta);
+        const speed = Math.abs(delta);
+        const dt = getDT();
+        const velocityDiff = direction * Math.min(ACCELERATION_ON_FOOT * dt, speed);
+        const newVelocityX = velX + velocityDiff;
+        const cappedVelocityX = dstDirection * Math.min(newVelocityX * dstDirection, MAX_SPEED_ON_FOOT);
+        setVelocity(player.obj.body, cappedVelocityX, undefined);
+        if (keys.get("Space")) {
+            player.startJump();
+        }
+        else {
+            if (player.preparingToJump) {
+                player.jump();
+            }
+        }
     }
     else {
-        player.setSpeed(0);
+        if (keys.get("KeyD")) {
+            // player.steerSpeed(0.07)
+            player.obj.mirror = false;
+        }
+        else if (keys.get("KeyA")) {
+            // player.steerSpeed(-0.07)
+            player.obj.mirror = true;
+        }
     }
+    // console.log(getVelocityY(player.obj.body))
 }
 function playerControlsPostPhysics() {
     setFocusPoint(player.obj.x, player.obj.y);
@@ -8713,6 +8757,10 @@ function syncPhysics() {
         syncObjWithPhysics(obj);
     }
 }
+let vx;
+let y_v0;
+let g;
+let g2;
 function drawScene() {
     ctx.resetTransform();
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -8835,6 +8883,40 @@ function drawScene() {
     ctx.moveTo(player.obj.x, footY - FOOT_START * player.obj.scale);
     ctx.lineTo(player.obj.x, footY + FOOT_FULL_HEIGHT * player.obj.scale);
     ctx.stroke();
+    // DEBUG JUMP VISULIZATION
+    // const g = 9.8
+    const initialX = 0;
+    const initialY = 0;
+    const DT = 1 / 600;
+    vx = 14; // horizontal speed
+    const p = 1;
+    const xh = 2.5 * p; // horizontal distance for jump
+    const h = -2.2 * p; // height for jump
+    const th = xh / vx;
+    y_v0 = (2 * h * vx) / xh;
+    g = (-2 * h * vx * vx) / (xh * xh);
+    g2 = g * 2;
+    const getY = (t) => 0.5 * g * t * t + y_v0 * t + initialY;
+    const getDerivY = (t) => g * t + y_v0;
+    const getY2 = (t) => 0.5 * g2 * t * t + getDerivY(th) * t + getY(th);
+    const getX = (t) => vx * t + initialX;
+    let t = 0;
+    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5]);
+    ctx.strokeStyle = "blue";
+    ctx.lineWidth = 0.01;
+    ctx.beginPath();
+    ctx.moveTo(getX(t), getY(t));
+    while (t < th) {
+        t = Math.min(t + DT, th);
+        ctx.lineTo(getX(t), getY(t));
+    }
+    while (t < th * 2) {
+        t = Math.min(t + DT, th * 2);
+        ctx.lineTo(getX(t), getY2(t - th));
+    }
+    ctx.moveTo(getX(th), 0);
+    ctx.lineTo(getX(th), getY(th));
+    ctx.stroke();
 }
 function addToScene(obj) {
     scene.push(obj);
@@ -8858,10 +8940,10 @@ let Box2D;
 let world;
 let temp;
 let temp2;
-const PHYSICS_STEP = 1 / 60;
+const PHYSICS_STEP = 1 / 600;
 const MAX_STEPS_PER_STEP = 5;
 let currentTime = now() / 1000;
-const PHYSICS_SCALE = 15;
+const PHYSICS_SCALE = 1;
 const INV_PHYSICS_SCALE = 1 / PHYSICS_SCALE;
 let worldManifold;
 let rayCastCallback;
@@ -8900,13 +8982,22 @@ function raycast(x0, y0, x1, y1, fixtureToIgnore) {
 }
 function setVelocity(body, x, y) {
     const vel = body.GetLinearVelocity();
+    temp.set_x(vel.get_x());
+    temp.set_y(vel.get_y());
     if (x !== undefined) {
-        vel.set_x(x * PHYSICS_SCALE);
+        temp.set_x(x * PHYSICS_SCALE);
     }
     if (y !== undefined) {
-        vel.set_y(y * PHYSICS_SCALE);
+        temp.set_y(y * PHYSICS_SCALE);
     }
-    body.SetLinearVelocity(vel);
+    // console.log("setVelocity", temp.get_x(), temp.get_y())
+    body.SetLinearVelocity(temp);
+}
+function getVelocityX(body) {
+    return body.GetLinearVelocity().get_x() * INV_PHYSICS_SCALE;
+}
+function getVelocityY(body) {
+    return body.GetLinearVelocity().get_y() * INV_PHYSICS_SCALE;
 }
 function mulVelocity(body, x, y) {
     const vel = body.GetLinearVelocity();
@@ -9200,24 +9291,30 @@ const EYE_LINE_SLOT = 5;
 const idle_torso_graphics = new Graphics("idle", "torso_legs");
 const idle_arms_graphics = new Graphics("idle", "arms");
 const run_torso_graphics = new Graphics("run", "torso_legs");
+const fall_torso_graphics = new Graphics("fall", "torso_legs");
+const jump_start_torso_graphics = new Graphics("jump_start", "torso_legs");
 const aiming_arms_graphics = new Graphics("aiming", "arms");
 const oleg_graphics = new Graphics("oleg");
 const blaster_graphics = new Graphics("blaster");
 const shoot_line_graphics = new Graphics("shoot-line");
 const eye_line_graphics = new Graphics("eye-line");
-const FOOT_START = 0.0;
+const FOOT_START = 0.02;
 const FOOT_HEIGHT = 0.27;
 const FOOT_HEIGHT_PADDING = 0.1;
 const FOOT_FULL_HEIGHT = FOOT_HEIGHT + FOOT_HEIGHT_PADDING;
 async function loadCharacterAnimations() {
-    await idle_torso_graphics.load();
-    await idle_arms_graphics.load();
-    await run_torso_graphics.load();
-    await aiming_arms_graphics.load();
-    await oleg_graphics.load();
-    await blaster_graphics.load();
-    await shoot_line_graphics.load();
-    await eye_line_graphics.load();
+    await Promise.all([
+        idle_torso_graphics.load(),
+        idle_arms_graphics.load(),
+        run_torso_graphics.load(),
+        fall_torso_graphics.load(),
+        jump_start_torso_graphics.load(),
+        aiming_arms_graphics.load(),
+        oleg_graphics.load(),
+        blaster_graphics.load(),
+        shoot_line_graphics.load(),
+        eye_line_graphics.load(),
+    ]);
 }
 const characters = [];
 class Character {
@@ -9225,6 +9322,8 @@ class Character {
     idle_torso = new GraphicsObject(idle_torso_graphics);
     // private readonly idle_arms = new GraphicsObject(idle_arms_graphics)
     run_torso = new GraphicsObject(run_torso_graphics);
+    fall_torso = new GraphicsObject(fall_torso_graphics);
+    jump_start_torso = new GraphicsObject(jump_start_torso_graphics);
     aiming_arms = new GraphicsObject(aiming_arms_graphics);
     head = new GraphicsObject(oleg_graphics);
     blaster = new GraphicsObject(blaster_graphics);
@@ -9234,6 +9333,12 @@ class Character {
     obj = new GraphicsObject(this.objGraphics);
     onBeforePhysics;
     onAfterPhysics;
+    touchingGround = false;
+    isMoving = false;
+    movingDirection = 0;
+    currentSpeed = 0;
+    preparingToJump = false;
+    jumpSteps = 0;
     constructor(name) {
         this.name = name;
         this.objGraphics.physicsType = PhysicsType.DYNAMIC;
@@ -9261,16 +9366,34 @@ class Character {
         this.obj.attach(ARMS_SLOT, this.aiming_arms);
         //
         this.obj.scale = 2;
-        this.obj.y = -1;
+        // this.obj.y = -1
+    }
+    updateAnimation() {
+        if (this.touchingGround) {
+            if (!this.isMoving) {
+                if (this.preparingToJump) {
+                    this.obj.attach(TORSO_SLOT, this.jump_start_torso);
+                }
+                else {
+                    this.obj.attach(TORSO_SLOT, this.idle_torso);
+                }
+            }
+            else {
+                this.obj.attach(TORSO_SLOT, this.run_torso);
+            }
+        }
+        else {
+            this.obj.attach(TORSO_SLOT, this.fall_torso);
+        }
     }
     setSpeed(speed) {
         setVelocity(this.obj.body, speed, undefined);
-        if (speed === 0) {
-            this.obj.attach(TORSO_SLOT, this.idle_torso);
-        }
-        else {
-            this.obj.attach(TORSO_SLOT, this.run_torso);
-        }
+        this.currentSpeed = speed;
+        this.updateAnimation();
+    }
+    steerSpeed(speed) {
+        setVelocity(this.obj.body, getVelocityX(this.obj.body) + speed, undefined);
+        this.updateAnimation();
     }
     aimAt(p) {
         this.obj.attach(ARMS_SLOT, this.aiming_arms);
@@ -9282,22 +9405,47 @@ class Character {
         }
     }
     attachToGround() {
-        const footStart = FOOT_START * this.obj.scale;
-        const footHeight = FOOT_FULL_HEIGHT * this.obj.scale;
-        const footY = this.obj.y - FOOT_HEIGHT * this.obj.scale;
-        const p = raycast(this.obj.x, footY - footStart, this.obj.x, footY + footHeight, this.obj.fixture);
-        if (p) {
-            this.obj.y = p[1];
-            syncPhysicsWithObj(this.obj);
-            mulVelocity(this.obj.body, 0.9, 0);
+        this.touchingGround = false;
+        if (getVelocityY(this.obj.body) >= -10e-5) {
+            const footStart = FOOT_START * this.obj.scale;
+            const footHeight = (this.touchingGround ? FOOT_FULL_HEIGHT : FOOT_HEIGHT) * this.obj.scale;
+            const footY = this.obj.y - FOOT_HEIGHT * this.obj.scale;
+            const p = raycast(this.obj.x, footY - footStart, this.obj.x, footY + footHeight, this.obj.fixture);
+            if (p) {
+                this.obj.y = p[1];
+                syncPhysicsWithObj(this.obj);
+                setVelocity(this.obj.body, undefined, 0);
+                this.touchingGround = true;
+            }
         }
+        this.updateAnimation();
     }
     beforePhysics() {
         this.onBeforePhysics?.();
+        if (this.jumpSteps > 0) {
+            this.obj.body.SetGravityScale(g / 9.8);
+            setVelocity(this.obj.body, vx, y_v0);
+            this.jumpSteps--;
+        }
+        if (getVelocityY(this.obj.body) > 10e-4) {
+            this.obj.body.SetGravityScale(g2 / 9.8);
+        }
     }
     afterPhysics() {
         this.attachToGround();
         this.onAfterPhysics?.();
+    }
+    startJump() {
+        this.preparingToJump = true;
+        this.updateAnimation();
+    }
+    get jumping() {
+        return this.jumpSteps > 0;
+    }
+    jump() {
+        this.jumpSteps = 1;
+        this.preparingToJump = false;
+        this.updateAnimation();
     }
 }
 function addCharacter(character) {
@@ -9319,14 +9467,14 @@ async function initScene() {
     await loadCharacterAnimations();
     createPlayer();
     addCharacter(player);
-    addCharacter(new Character("eblo"));
+    // addCharacter(new Character("eblo"))
     const box = new GraphicsObject(await createGraphics("box"));
     box.x = 4;
     box.y = -0.25;
     box.z = -1;
     box.angle = 0;
     box.graphics.physicsType = PhysicsType.STATIC;
-    addToScene(box);
+    // addToScene(box)
     const COUNT = 3;
     const dirt_graphics = await createGraphics("dirt");
     const angle = 0;

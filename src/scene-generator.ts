@@ -10,7 +10,7 @@ export async function initScene(): Promise<void> {
     createPlayer()
     addCharacter(player)
 
-    addCharacter(new Character("eblo"))
+    // addCharacter(new Character("eblo"))
 
     const box = new GraphicsObject(await createGraphics("box"))
     box.x = 4
@@ -18,7 +18,7 @@ export async function initScene(): Promise<void> {
     box.z = -1
     box.angle = 0
     box.graphics.physicsType = PhysicsType.STATIC
-    addToScene(box)
+    // addToScene(box)
 
     const COUNT = 3
 

@@ -26,7 +26,7 @@ export function setupCamera(): void {
     const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale
 
     camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.25
-    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.3
+    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0
 
     mat2d.identity(camera.m)
     mat2d.translate(
