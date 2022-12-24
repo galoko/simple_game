@@ -1,23 +1,25 @@
 import { screenToWorld, setFocusPoint } from "./camera"
+import { Character, MAX_SPEED_ON_FOOT } from "./character"
 import {
-    ACCELERATION_IN_AIR,
-    ACCELERATION_ON_FOOT,
-    Character,
-    MAX_SPEED_ON_FOOT,
-} from "./character"
-import { keys, mouse } from "./input-handler"
-import { getVelocityX, setVelocity } from "./physics"
-import { getDT } from "./time"
+    getPressedDuration,
+    isPressed,
+    mouse,
+    markPressAsUsed,
+    getEllapsedSincePressStart,
+} from "./input-handler"
 
 export let player: Character
 
+const MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME = 100
+const JUMP_MAX_TIME = 200
+
 function playerControls() {
     let dstVelocity: number
-    if (keys.get("KeyD")) {
+    if (isPressed("KeyD")) {
         player.isMoving = true
         player.obj.mirror = false
         dstVelocity = MAX_SPEED_ON_FOOT
-    } else if (keys.get("KeyA")) {
+    } else if (isPressed("KeyA")) {
         player.isMoving = true
         player.obj.mirror = true
         dstVelocity = -MAX_SPEED_ON_FOOT
@@ -38,11 +40,33 @@ function playerControls() {
 
     player.changeSpeed(dstVelocity, velocityMul)
 
-    if (keys.get("Space") && player.touchingGround) {
-        player.startJump()
+    if (player.touchingGround) {
+        const spacePressed = isPressed("Space")
+        if (spacePressed) {
+            player.startJump()
+        }
+
+        const spacePressedDuration = getPressedDuration("Space")
+        if (spacePressedDuration !== undefined) {
+            if (!spacePressed || spacePressedDuration >= JUMP_MAX_TIME) {
+                const jumpPower = Math.min(spacePressedDuration / JUMP_MAX_TIME, 1)
+
+                if (jumpPower > 0.0) {
+                    player.jump(jumpPower)
+                } else {
+                    player.cancelJump()
+                }
+
+                markPressAsUsed("Space")
+            }
+        }
     } else {
-        if (player.preparingToJump) {
-            player.jump()
+        const ellapsedSincePressStart = getEllapsedSincePressStart("Space")
+        if (
+            ellapsedSincePressStart !== undefined &&
+            ellapsedSincePressStart > MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME
+        ) {
+            markPressAsUsed("Space")
         }
     }
 }

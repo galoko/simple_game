@@ -8645,24 +8645,69 @@ function setFocusPoint(x, y) {
 const keys = new Map();
 const mouse = create();
 document.body.onkeydown = e => {
-    keys.set(e.code, true);
+    const info = keys.get(e.code);
+    if (!info) {
+        keys.set(e.code, {
+            down_timestamp: e.timeStamp,
+        });
+    }
+    else {
+        // don't override initial timepstamp
+        if (info.up_timestamp === undefined) {
+            return;
+        }
+        info.down_timestamp = e.timeStamp;
+        delete info.up_timestamp;
+        delete info.used;
+    }
 };
 document.body.onkeyup = e => {
-    keys.set(e.code, false);
+    const info = keys.get(e.code);
+    if (!info) {
+        return;
+    }
+    info.up_timestamp = e.timeStamp;
 };
 ctx.canvas.onmousemove = e => {
     set(mouse, e.clientX * screen.dpr, e.clientY * screen.dpr);
 };
+function markPressAsUsed(key) {
+    const info = keys.get(key);
+    if (info) {
+        info.used = true;
+    }
+}
+function isPressed(key) {
+    const info = keys.get(key);
+    return info && !info.used && info.up_timestamp == undefined;
+}
+function getPressedDuration(key) {
+    const info = keys.get(key);
+    if (!info || info.used) {
+        return undefined;
+    }
+    const up_timestamp = info.up_timestamp || now();
+    return up_timestamp - info.down_timestamp;
+}
+function getEllapsedSincePressStart(key) {
+    const info = keys.get(key);
+    if (!info || info.used) {
+        return undefined;
+    }
+    return now() - info.down_timestamp;
+}
 
 let player;
+const MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME = 100;
+const JUMP_MAX_TIME = 200;
 function playerControls() {
     let dstVelocity;
-    if (keys.get("KeyD")) {
+    if (isPressed("KeyD")) {
         player.isMoving = true;
         player.obj.mirror = false;
         dstVelocity = MAX_SPEED_ON_FOOT;
     }
-    else if (keys.get("KeyA")) {
+    else if (isPressed("KeyA")) {
         player.isMoving = true;
         player.obj.mirror = true;
         dstVelocity = -MAX_SPEED_ON_FOOT;
@@ -8683,12 +8728,30 @@ function playerControls() {
         velocityMul = 1;
     }
     player.changeSpeed(dstVelocity, velocityMul);
-    if (keys.get("Space") && player.touchingGround) {
-        player.startJump();
+    if (player.touchingGround) {
+        const spacePressed = isPressed("Space");
+        if (spacePressed) {
+            player.startJump();
+        }
+        const spacePressedDuration = getPressedDuration("Space");
+        if (spacePressedDuration !== undefined) {
+            if (!spacePressed || spacePressedDuration >= JUMP_MAX_TIME) {
+                const jumpPower = Math.min(spacePressedDuration / JUMP_MAX_TIME, 1);
+                if (jumpPower > 0.0) {
+                    player.jump(jumpPower);
+                }
+                else {
+                    player.cancelJump();
+                }
+                markPressAsUsed("Space");
+            }
+        }
     }
     else {
-        if (player.preparingToJump) {
-            player.jump();
+        const ellapsedSincePressStart = getEllapsedSincePressStart("Space");
+        if (ellapsedSincePressStart !== undefined &&
+            ellapsedSincePressStart > MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME) {
+            markPressAsUsed("Space");
         }
     }
 }
@@ -9391,6 +9454,9 @@ class Character {
                 this.isJumping = false;
             }
         }
+        if (!this.touchingGround) {
+            this.preparingToJump = false;
+        }
         this.updateAnimation();
     }
     beforePhysics() {
@@ -9402,7 +9468,7 @@ class Character {
             }
         }
         else {
-            this.obj.body.SetGravityScale(1);
+            this.obj.body.SetGravityScale(2);
         }
     }
     afterPhysics() {
@@ -9413,15 +9479,17 @@ class Character {
         this.preparingToJump = true;
         this.updateAnimation();
     }
-    jump() {
+    cancelJump() {
+        this.preparingToJump = false;
+    }
+    jump(jumpPower) {
         this.preparingToJump = false;
         const velX = getVelocityX(this.obj.body);
-        const jumpPower = 1; // 0..1
-        const jumpDistance = velX * 0.5; // horizontal distance for jump
+        const jumpDistance = velX * 0.5 * jumpPower; // horizontal distance for jump
         const jumpHeight = -2.2 * jumpPower; // height for jump
         let th = jumpDistance / velX;
         if (isNaN(th)) {
-            th = 0.4;
+            th = 0.4 * jumpPower;
         }
         // vertical speed
         const velocityForJump = (2 * jumpHeight) / th;

@@ -225,6 +225,10 @@ export class Character {
             }
         }
 
+        if (!this.touchingGround) {
+            this.preparingToJump = false
+        }
+
         this.updateAnimation()
     }
 
@@ -237,7 +241,7 @@ export class Character {
                 this.obj.body.SetGravityScale(this.gravityForJumpFall / GRAVITY)
             }
         } else {
-            this.obj.body.SetGravityScale(1)
+            this.obj.body.SetGravityScale(2)
         }
     }
 
@@ -252,18 +256,21 @@ export class Character {
         this.updateAnimation()
     }
 
-    jump(): void {
+    cancelJump(): void {
+        this.preparingToJump = false
+    }
+
+    jump(jumpPower: number): void {
         this.preparingToJump = false
 
         const velX = getVelocityX(this.obj.body)
 
-        const jumpPower = 1 // 0..1
-        const jumpDistance = velX * 0.5 // horizontal distance for jump
+        const jumpDistance = velX * 0.5 * jumpPower // horizontal distance for jump
         const jumpHeight = -2.2 * jumpPower // height for jump
 
         let th = jumpDistance / velX
         if (isNaN(th)) {
-            th = 0.4
+            th = 0.4 * jumpPower
         }
 
         // vertical speed
