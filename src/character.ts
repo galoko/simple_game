@@ -5,12 +5,14 @@ import { GraphicsObject } from "./object"
 import {
     getVelocityX,
     getVelocityY,
+    GRAVITY,
     mulVelocity,
     raycast,
     setVelocity,
     syncPhysicsWithObj,
 } from "./physics"
-import { addToScene, g, g2, vx, y_v0 } from "./scene"
+import { addToScene } from "./scene"
+import { getDT } from "./time"
 
 export const TORSO_SLOT = 0
 export const ARMS_SLOT = 1
@@ -27,6 +29,7 @@ const jump_start_torso_graphics = new Graphics("jump_start", "torso_legs")
 const aiming_arms_graphics = new Graphics("aiming", "arms")
 
 const oleg_graphics = new Graphics("oleg")
+const misha_graphics = new Graphics("misha")
 
 const blaster_graphics = new Graphics("blaster")
 const shoot_line_graphics = new Graphics("shoot-line")
@@ -47,6 +50,7 @@ export async function loadCharacterAnimations() {
         aiming_arms_graphics.load(),
 
         oleg_graphics.load(),
+        misha_graphics.load(),
 
         blaster_graphics.load(),
         shoot_line_graphics.load(),
@@ -56,6 +60,10 @@ export async function loadCharacterAnimations() {
 
 const characters: Character[] = []
 
+export const MAX_SPEED_ON_FOOT = 7
+export const ACCELERATION_ON_FOOT = MAX_SPEED_ON_FOOT / 0.25
+export const ACCELERATION_IN_AIR = ACCELERATION_ON_FOOT * 1
+
 export class Character {
     private readonly idle_torso = new GraphicsObject(idle_torso_graphics)
     // private readonly idle_arms = new GraphicsObject(idle_arms_graphics)
@@ -64,7 +72,7 @@ export class Character {
     private readonly jump_start_torso = new GraphicsObject(jump_start_torso_graphics)
     private readonly aiming_arms = new GraphicsObject(aiming_arms_graphics)
 
-    private readonly head = new GraphicsObject(oleg_graphics)
+    private readonly head
 
     private readonly blaster = new GraphicsObject(blaster_graphics)
     private readonly shootLine = new GraphicsObject(shoot_line_graphics)
@@ -80,10 +88,12 @@ export class Character {
     public isMoving = false
     public movingDirection = 0
     public currentSpeed = 0
-    public preparingToJump = false
-    public jumpSteps = 0
 
-    constructor(public readonly name: string) {
+    public preparingToJump = false
+    public isJumping = false
+    public gravityForJumpFall = 0
+
+    constructor(public readonly name: string, isOleg: boolean) {
         this.objGraphics.physicsType = PhysicsType.DYNAMIC
         this.objGraphics.fixedRotation = true
 
@@ -101,6 +111,7 @@ export class Character {
 
         this.aiming_arms.z = 0.2
 
+        this.head = new GraphicsObject(isOleg ? oleg_graphics : misha_graphics)
         this.head.angle = 1.57
         this.head.z = 0.1
         this.obj.attach(HEAD_SLOT, this.head)
@@ -120,6 +131,32 @@ export class Character {
 
         this.obj.scale = 2
         // this.obj.y = -1
+
+        this.onBeforePhysics = () => {
+            this.changeSpeed(0)
+        }
+    }
+
+    public changeSpeed(dstVelocity: number, velocityMul = 1) {
+        const dstDirection = Math.sign(dstVelocity)
+        this.movingDirection = dstDirection
+
+        const velX = getVelocityX(this.obj.body) * velocityMul
+
+        const delta = dstVelocity - velX
+        const direction = Math.sign(delta)
+        const speed = Math.abs(delta)
+
+        const acceleration = this.touchingGround ? ACCELERATION_ON_FOOT : ACCELERATION_IN_AIR
+
+        const dt = getDT()
+        const velocityDiff = direction * Math.min(acceleration * dt, speed)
+        const newVelocityX = velX + velocityDiff
+
+        const cappedVelocityX =
+            dstDirection * Math.min(newVelocityX * dstDirection, MAX_SPEED_ON_FOOT)
+
+        setVelocity(this.obj.body, cappedVelocityX, undefined)
     }
 
     private updateAnimation() {
@@ -184,6 +221,7 @@ export class Character {
                 setVelocity(this.obj.body, undefined, 0)
 
                 this.touchingGround = true
+                this.isJumping = false
             }
         }
 
@@ -193,13 +231,13 @@ export class Character {
     beforePhysics(): void {
         this.onBeforePhysics?.()
 
-        if (this.jumpSteps > 0) {
-            this.obj.body.SetGravityScale(g / 9.8)
-            setVelocity(this.obj.body, vx, y_v0)
-            this.jumpSteps--
-        }
-        if (getVelocityY(this.obj.body) > 10e-4) {
-            this.obj.body.SetGravityScale(g2 / 9.8)
+        if (this.isJumping) {
+            // is decending?
+            if (getVelocityY(this.obj.body) > 10e-4) {
+                this.obj.body.SetGravityScale(this.gravityForJumpFall / GRAVITY)
+            }
+        } else {
+            this.obj.body.SetGravityScale(1)
         }
     }
 
@@ -214,13 +252,30 @@ export class Character {
         this.updateAnimation()
     }
 
-    get jumping() {
-        return this.jumpSteps > 0
-    }
-
     jump(): void {
-        this.jumpSteps = 1
         this.preparingToJump = false
+
+        const velX = getVelocityX(this.obj.body)
+
+        const jumpPower = 1 // 0..1
+        const jumpDistance = velX * 0.5 // horizontal distance for jump
+        const jumpHeight = -2.2 * jumpPower // height for jump
+
+        let th = jumpDistance / velX
+        if (isNaN(th)) {
+            th = 0.4
+        }
+
+        // vertical speed
+        const velocityForJump = (2 * jumpHeight) / th
+        const gravityForJump = (-2 * jumpHeight) / (th * th)
+        this.gravityForJumpFall = gravityForJump * 1.2
+
+        this.obj.body.SetGravityScale(gravityForJump / GRAVITY)
+        setVelocity(this.obj.body, undefined, velocityForJump)
+
+        this.isJumping = true
+
         this.updateAnimation()
     }
 }

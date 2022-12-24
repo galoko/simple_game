@@ -6,7 +6,7 @@ import { ctx } from "./init"
 import { mouse } from "./input-handler"
 import { getWorldScale, GraphicsObject } from "./object"
 import { getAttachmentInfo, getParentWorldZ } from "./object-utils"
-import { addToPhysics, syncObjWithPhysics } from "./physics"
+import { addToPhysics, getVelocityX, syncObjWithPhysics } from "./physics"
 import { player } from "./player"
 import { now } from "./time"
 
@@ -53,11 +53,6 @@ export function syncPhysics() {
         syncObjWithPhysics(obj)
     }
 }
-
-export let vx: number
-export let y_v0: number
-export let g: number
-export let g2: number
 
 export function drawScene() {
     ctx.resetTransform()
@@ -214,49 +209,15 @@ export function drawScene() {
 
     // DEBUG JUMP VISULIZATION
 
-    // const g = 9.8
-
-    const initialX = 0
-    const initialY = 0
-
-    const DT = 1 / 600
-
-    vx = 14 // horizontal speed
     const p = 1
     const xh = 2.5 * p // horizontal distance for jump
     const h = -2.2 * p // height for jump
 
-    const th = xh / vx
+    const vx = getVelocityX(player.obj.body) // horizontal speed
 
-    y_v0 = (2 * h * vx) / xh
-    g = (-2 * h * vx * vx) / (xh * xh)
-    g2 = g * 2
-
-    const getY = (t: number) => 0.5 * g * t * t + y_v0 * t + initialY
-    const getDerivY = (t: number) => g * t + y_v0
-    const getY2 = (t: number) => 0.5 * g2 * t * t + getDerivY(th) * t + getY(th)
-    const getX = (t: number) => vx * t + initialX
-
-    let t = 0
-
-    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
-    ctx.strokeStyle = "blue"
-    ctx.lineWidth = 0.01
-    ctx.beginPath()
-    ctx.moveTo(getX(t), getY(t))
-    while (t < th) {
-        t = Math.min(t + DT, th)
-        ctx.lineTo(getX(t), getY(t))
+    if (player.touchingGround) {
+        const a_vx = Math.abs(vx)
     }
-    while (t < th * 2) {
-        t = Math.min(t + DT, th * 2)
-        ctx.lineTo(getX(t), getY2(t - th))
-    }
-
-    ctx.moveTo(getX(th), 0)
-    ctx.lineTo(getX(th), getY(th))
-
-    ctx.stroke()
 }
 
 export function addToScene(obj: GraphicsObject): void {

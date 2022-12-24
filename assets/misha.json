@@ -1,0 +1,17 @@
+{
+	"scale": 0.17,
+	"attachPoint": "head",
+	"attachT": 0,
+	"pivot": [
+		74,
+		248
+	],
+	"points": [
+		{
+			"eyeline": [
+				160, 116,
+				166, 116
+			]
+		}
+	]
+}

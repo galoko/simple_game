@@ -7865,7 +7865,7 @@ class Graphics {
     physicsPivot = undefined;
     fixedRotation = false;
     density = 5;
-    friction = 1;
+    friction = 0;
     restitution = 0;
     isSensor = false;
     constructor(name, prefix) {
@@ -8655,62 +8655,42 @@ ctx.canvas.onmousemove = e => {
 };
 
 let player;
-const MAX_SPEED_ON_FOOT = 14;
-const ACCELERATION_ON_FOOT = 70;
 function playerControls() {
-    if (player.touchingGround) {
-        let dstVelocity;
-        if (keys.get("KeyD")) {
-            dstVelocity = MAX_SPEED_ON_FOOT;
-            player.isMoving = true;
-            player.obj.mirror = false;
-        }
-        else if (keys.get("KeyA")) {
-            player.isMoving = true;
-            dstVelocity = -MAX_SPEED_ON_FOOT;
-            player.obj.mirror = true;
-        }
-        else {
-            player.isMoving = false;
-            dstVelocity = 0;
-        }
-        let velX = getVelocityX(player.obj.body);
-        const dstDirection = Math.sign(dstVelocity);
-        if (dstDirection === -player.movingDirection) {
-            velX = -velX;
-        }
-        else if (dstDirection === 0) {
-            velX = 0;
-        }
-        player.movingDirection = dstDirection;
-        const delta = dstVelocity - velX;
-        const direction = Math.sign(delta);
-        const speed = Math.abs(delta);
-        const dt = getDT();
-        const velocityDiff = direction * Math.min(ACCELERATION_ON_FOOT * dt, speed);
-        const newVelocityX = velX + velocityDiff;
-        const cappedVelocityX = dstDirection * Math.min(newVelocityX * dstDirection, MAX_SPEED_ON_FOOT);
-        setVelocity(player.obj.body, cappedVelocityX, undefined);
-        if (keys.get("Space")) {
-            player.startJump();
-        }
-        else {
-            if (player.preparingToJump) {
-                player.jump();
-            }
-        }
+    let dstVelocity;
+    if (keys.get("KeyD")) {
+        player.isMoving = true;
+        player.obj.mirror = false;
+        dstVelocity = MAX_SPEED_ON_FOOT;
+    }
+    else if (keys.get("KeyA")) {
+        player.isMoving = true;
+        player.obj.mirror = true;
+        dstVelocity = -MAX_SPEED_ON_FOOT;
     }
     else {
-        if (keys.get("KeyD")) {
-            // player.steerSpeed(0.07)
-            player.obj.mirror = false;
-        }
-        else if (keys.get("KeyA")) {
-            // player.steerSpeed(-0.07)
-            player.obj.mirror = true;
+        player.isMoving = false;
+        dstVelocity = 0;
+    }
+    let velocityMul;
+    const dstDirection = Math.sign(dstVelocity);
+    if (dstDirection === -player.movingDirection) {
+        velocityMul = -1;
+    }
+    else if (dstDirection === 0) {
+        velocityMul = 0;
+    }
+    else {
+        velocityMul = 1;
+    }
+    player.changeSpeed(dstVelocity, velocityMul);
+    if (keys.get("Space") && player.touchingGround) {
+        player.startJump();
+    }
+    else {
+        if (player.preparingToJump) {
+            player.jump();
         }
     }
-    // console.log(getVelocityY(player.obj.body))
 }
 function playerControlsPostPhysics() {
     setFocusPoint(player.obj.x, player.obj.y);
@@ -8718,7 +8698,7 @@ function playerControlsPostPhysics() {
     player.aimAt(mouseWorldSpace);
 }
 function createPlayer() {
-    player = new Character("player");
+    player = new Character("player", true);
     player.onBeforePhysics = playerControls;
     player.onAfterPhysics = playerControlsPostPhysics;
 }
@@ -8757,10 +8737,6 @@ function syncPhysics() {
         syncObjWithPhysics(obj);
     }
 }
-let vx;
-let y_v0;
-let g;
-let g2;
 function drawScene() {
     ctx.resetTransform();
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -8884,39 +8860,13 @@ function drawScene() {
     ctx.lineTo(player.obj.x, footY + FOOT_FULL_HEIGHT * player.obj.scale);
     ctx.stroke();
     // DEBUG JUMP VISULIZATION
-    // const g = 9.8
-    const initialX = 0;
-    const initialY = 0;
-    const DT = 1 / 600;
-    vx = 14; // horizontal speed
     const p = 1;
     const xh = 2.5 * p; // horizontal distance for jump
     const h = -2.2 * p; // height for jump
-    const th = xh / vx;
-    y_v0 = (2 * h * vx) / xh;
-    g = (-2 * h * vx * vx) / (xh * xh);
-    g2 = g * 2;
-    const getY = (t) => 0.5 * g * t * t + y_v0 * t + initialY;
-    const getDerivY = (t) => g * t + y_v0;
-    const getY2 = (t) => 0.5 * g2 * t * t + getDerivY(th) * t + getY(th);
-    const getX = (t) => vx * t + initialX;
-    let t = 0;
-    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5]);
-    ctx.strokeStyle = "blue";
-    ctx.lineWidth = 0.01;
-    ctx.beginPath();
-    ctx.moveTo(getX(t), getY(t));
-    while (t < th) {
-        t = Math.min(t + DT, th);
-        ctx.lineTo(getX(t), getY(t));
+    const vx = getVelocityX(player.obj.body); // horizontal speed
+    if (player.touchingGround) {
+        const a_vx = Math.abs(vx);
     }
-    while (t < th * 2) {
-        t = Math.min(t + DT, th * 2);
-        ctx.lineTo(getX(t), getY2(t - th));
-    }
-    ctx.moveTo(getX(th), 0);
-    ctx.lineTo(getX(th), getY(th));
-    ctx.stroke();
 }
 function addToScene(obj) {
     scene.push(obj);
@@ -8940,11 +8890,10 @@ let Box2D;
 let world;
 let temp;
 let temp2;
-const PHYSICS_STEP = 1 / 600;
+const PHYSICS_STEP = 1 / 60;
 const MAX_STEPS_PER_STEP = 5;
+const GRAVITY = 9.8;
 let currentTime = now() / 1000;
-const PHYSICS_SCALE = 1;
-const INV_PHYSICS_SCALE = 1 / PHYSICS_SCALE;
 let worldManifold;
 let rayCastCallback;
 const rayCastResult = create();
@@ -8963,18 +8912,18 @@ function getWorldPointsAndNormalFromContact(contact) {
     set(normal, b2_normal.get_x(), b2_normal.get_y());
     const result = [normal];
     if (pointCount > 0) {
-        set(contantPoint0, b2_point0.get_x() * INV_PHYSICS_SCALE, b2_point0.get_y() * INV_PHYSICS_SCALE);
+        set(contantPoint0, b2_point0.get_x(), b2_point0.get_y());
         result.push(contantPoint0);
     }
     if (pointCount > 1) {
-        set(contantPoint1, b2_point1.get_x() * INV_PHYSICS_SCALE, b2_point1.get_y() * INV_PHYSICS_SCALE);
+        set(contantPoint1, b2_point1.get_x(), b2_point1.get_y());
         result.push(contantPoint1);
     }
     return result;
 }
 function raycast(x0, y0, x1, y1, fixtureToIgnore) {
-    temp.Set(x0 * PHYSICS_SCALE, y0 * PHYSICS_SCALE);
-    temp2.Set(x1 * PHYSICS_SCALE, y1 * PHYSICS_SCALE);
+    temp.Set(x0, y0);
+    temp2.Set(x1, y1);
     raycastFixtureToIgnorePtr = Box2D.getPointer(fixtureToIgnore);
     set(rayCastResult, NaN, NaN);
     world.RayCast(rayCastCallback, temp, temp2);
@@ -8985,19 +8934,19 @@ function setVelocity(body, x, y) {
     temp.set_x(vel.get_x());
     temp.set_y(vel.get_y());
     if (x !== undefined) {
-        temp.set_x(x * PHYSICS_SCALE);
+        temp.set_x(x);
     }
     if (y !== undefined) {
-        temp.set_y(y * PHYSICS_SCALE);
+        temp.set_y(y);
     }
     // console.log("setVelocity", temp.get_x(), temp.get_y())
     body.SetLinearVelocity(temp);
 }
 function getVelocityX(body) {
-    return body.GetLinearVelocity().get_x() * INV_PHYSICS_SCALE;
+    return body.GetLinearVelocity().get_x();
 }
 function getVelocityY(body) {
-    return body.GetLinearVelocity().get_y() * INV_PHYSICS_SCALE;
+    return body.GetLinearVelocity().get_y();
 }
 function mulVelocity(body, x, y) {
     const vel = body.GetLinearVelocity();
@@ -9013,7 +8962,7 @@ async function initPhysics() {
     Box2D = await Box2D$1();
     temp = new Box2D.b2Vec2(0.0, 0.0);
     temp2 = new Box2D.b2Vec2(0.0, 0.0);
-    const gravity = new Box2D.b2Vec2(0.0, 9.8 * PHYSICS_SCALE);
+    const gravity = new Box2D.b2Vec2(0.0, GRAVITY);
     world = new Box2D.b2World(gravity);
     worldManifold = new Box2D.b2WorldManifold();
     rayCastCallback = new Box2D.JSRayCastCallback();
@@ -9022,7 +8971,7 @@ async function initPhysics() {
             return 1;
         }
         const p = Box2D.wrapPointer(point, Box2D.b2Vec2);
-        set(rayCastResult, p.get_x() * INV_PHYSICS_SCALE, p.get_y() * INV_PHYSICS_SCALE);
+        set(rayCastResult, p.get_x(), p.get_y());
         return fraction;
     };
     const listener = new Box2D.JSContactListener();
@@ -9071,7 +9020,6 @@ function createShape(obj) {
             add(p, p, obj.graphics.physicsPivot);
         }
         scale(p, p, scale$1);
-        scale(p, p, PHYSICS_SCALE);
         Box2D.HEAPF32[(buffer + offset) >> 2] = p[0];
         Box2D.HEAPF32[(buffer + offset + 4) >> 2] = p[1];
         offset += 8;
@@ -9142,7 +9090,7 @@ function addToPhysics(obj) {
 }
 function syncPhysicsWithObj(obj) {
     const body = obj.body;
-    temp.Set(obj.x * PHYSICS_SCALE, obj.y * PHYSICS_SCALE);
+    temp.Set(obj.x, obj.y);
     body.SetTransform(temp, obj.angle);
 }
 function syncObjWithPhysics(obj) {
@@ -9151,8 +9099,8 @@ function syncObjWithPhysics(obj) {
         obj.graphics.physicsType === PhysicsType.DYNAMIC ||
         obj.graphics.physicsType === PhysicsType.KINEMATIC) {
         const bpos = body.GetPosition();
-        obj.x = bpos.get_x() * INV_PHYSICS_SCALE;
-        obj.y = bpos.get_y() * INV_PHYSICS_SCALE;
+        obj.x = bpos.get_x();
+        obj.y = bpos.get_y();
         obj.angle = body.GetAngle();
     }
 }
@@ -9295,6 +9243,7 @@ const fall_torso_graphics = new Graphics("fall", "torso_legs");
 const jump_start_torso_graphics = new Graphics("jump_start", "torso_legs");
 const aiming_arms_graphics = new Graphics("aiming", "arms");
 const oleg_graphics = new Graphics("oleg");
+const misha_graphics = new Graphics("misha");
 const blaster_graphics = new Graphics("blaster");
 const shoot_line_graphics = new Graphics("shoot-line");
 const eye_line_graphics = new Graphics("eye-line");
@@ -9311,12 +9260,16 @@ async function loadCharacterAnimations() {
         jump_start_torso_graphics.load(),
         aiming_arms_graphics.load(),
         oleg_graphics.load(),
+        misha_graphics.load(),
         blaster_graphics.load(),
         shoot_line_graphics.load(),
         eye_line_graphics.load(),
     ]);
 }
 const characters = [];
+const MAX_SPEED_ON_FOOT = 7;
+const ACCELERATION_ON_FOOT = MAX_SPEED_ON_FOOT / 0.25;
+const ACCELERATION_IN_AIR = ACCELERATION_ON_FOOT * 1;
 class Character {
     name;
     idle_torso = new GraphicsObject(idle_torso_graphics);
@@ -9325,7 +9278,7 @@ class Character {
     fall_torso = new GraphicsObject(fall_torso_graphics);
     jump_start_torso = new GraphicsObject(jump_start_torso_graphics);
     aiming_arms = new GraphicsObject(aiming_arms_graphics);
-    head = new GraphicsObject(oleg_graphics);
+    head;
     blaster = new GraphicsObject(blaster_graphics);
     shootLine = new GraphicsObject(shoot_line_graphics);
     eyeline = new GraphicsObject(eye_line_graphics);
@@ -9338,8 +9291,9 @@ class Character {
     movingDirection = 0;
     currentSpeed = 0;
     preparingToJump = false;
-    jumpSteps = 0;
-    constructor(name) {
+    isJumping = false;
+    gravityForJumpFall = 0;
+    constructor(name, isOleg) {
         this.name = name;
         this.objGraphics.physicsType = PhysicsType.DYNAMIC;
         this.objGraphics.fixedRotation = true;
@@ -9354,6 +9308,7 @@ class Character {
         this.objGraphics.physicsPivot = fromValues(0, -1);
         this.obj.attach(TORSO_SLOT, this.idle_torso);
         this.aiming_arms.z = 0.2;
+        this.head = new GraphicsObject(isOleg ? oleg_graphics : misha_graphics);
         this.head.angle = 1.57;
         this.head.z = 0.1;
         this.obj.attach(HEAD_SLOT, this.head);
@@ -9367,6 +9322,23 @@ class Character {
         //
         this.obj.scale = 2;
         // this.obj.y = -1
+        this.onBeforePhysics = () => {
+            this.changeSpeed(0);
+        };
+    }
+    changeSpeed(dstVelocity, velocityMul = 1) {
+        const dstDirection = Math.sign(dstVelocity);
+        this.movingDirection = dstDirection;
+        const velX = getVelocityX(this.obj.body) * velocityMul;
+        const delta = dstVelocity - velX;
+        const direction = Math.sign(delta);
+        const speed = Math.abs(delta);
+        const acceleration = this.touchingGround ? ACCELERATION_ON_FOOT : ACCELERATION_IN_AIR;
+        const dt = getDT();
+        const velocityDiff = direction * Math.min(acceleration * dt, speed);
+        const newVelocityX = velX + velocityDiff;
+        const cappedVelocityX = dstDirection * Math.min(newVelocityX * dstDirection, MAX_SPEED_ON_FOOT);
+        setVelocity(this.obj.body, cappedVelocityX, undefined);
     }
     updateAnimation() {
         if (this.touchingGround) {
@@ -9416,19 +9388,21 @@ class Character {
                 syncPhysicsWithObj(this.obj);
                 setVelocity(this.obj.body, undefined, 0);
                 this.touchingGround = true;
+                this.isJumping = false;
             }
         }
         this.updateAnimation();
     }
     beforePhysics() {
         this.onBeforePhysics?.();
-        if (this.jumpSteps > 0) {
-            this.obj.body.SetGravityScale(g / 9.8);
-            setVelocity(this.obj.body, vx, y_v0);
-            this.jumpSteps--;
+        if (this.isJumping) {
+            // is decending?
+            if (getVelocityY(this.obj.body) > 10e-4) {
+                this.obj.body.SetGravityScale(this.gravityForJumpFall / GRAVITY);
+            }
         }
-        if (getVelocityY(this.obj.body) > 10e-4) {
-            this.obj.body.SetGravityScale(g2 / 9.8);
+        else {
+            this.obj.body.SetGravityScale(1);
         }
     }
     afterPhysics() {
@@ -9439,12 +9413,23 @@ class Character {
         this.preparingToJump = true;
         this.updateAnimation();
     }
-    get jumping() {
-        return this.jumpSteps > 0;
-    }
     jump() {
-        this.jumpSteps = 1;
         this.preparingToJump = false;
+        const velX = getVelocityX(this.obj.body);
+        const jumpPower = 1; // 0..1
+        const jumpDistance = velX * 0.5; // horizontal distance for jump
+        const jumpHeight = -2.2 * jumpPower; // height for jump
+        let th = jumpDistance / velX;
+        if (isNaN(th)) {
+            th = 0.4;
+        }
+        // vertical speed
+        const velocityForJump = (2 * jumpHeight) / th;
+        const gravityForJump = (-2 * jumpHeight) / (th * th);
+        this.gravityForJumpFall = gravityForJump * 1.2;
+        this.obj.body.SetGravityScale(gravityForJump / GRAVITY);
+        setVelocity(this.obj.body, undefined, velocityForJump);
+        this.isJumping = true;
         this.updateAnimation();
     }
 }
@@ -9467,26 +9452,29 @@ async function initScene() {
     await loadCharacterAnimations();
     createPlayer();
     addCharacter(player);
-    // addCharacter(new Character("eblo"))
+    addCharacter(new Character("misha", false));
     const box = new GraphicsObject(await createGraphics("box"));
     box.x = 4;
     box.y = -0.25;
     box.z = -1;
     box.angle = 0;
     box.graphics.physicsType = PhysicsType.STATIC;
-    // addToScene(box)
+    addToScene(box);
     const COUNT = 3;
+    const FLOORS_COUNT = 10;
     const dirt_graphics = await createGraphics("dirt");
     const angle = 0;
-    for (let i = -COUNT / 2; i < COUNT; i++) {
-        const l = 10 * i;
-        const dirt = new GraphicsObject(dirt_graphics);
-        dirt.scale = 10;
-        dirt.x = Math.cos(angle) * l;
-        dirt.y = Math.sin(angle) * l;
-        dirt.z = 1;
-        dirt.angle = angle;
-        addToScene(dirt);
+    for (let j = 0; j < FLOORS_COUNT; j++) {
+        for (let i = -COUNT / 2; i < COUNT; i++) {
+            const l = 10 * i;
+            const dirt = new GraphicsObject(dirt_graphics);
+            dirt.scale = 10;
+            dirt.x = Math.cos(angle) * l * (j + 1);
+            dirt.y = Math.sin(angle) * l - j * 1.8;
+            dirt.z = 1;
+            dirt.angle = angle;
+            addToScene(dirt);
+        }
     }
 }
 

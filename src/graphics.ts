@@ -51,7 +51,7 @@ export class Graphics {
     public physicsPivot: vec2 | undefined = undefined
     public fixedRotation = false
     public density = 5
-    public friction = 1
+    public friction = 0
     public restitution = 0
     public isSensor = false
 

@@ -14,13 +14,12 @@ let world: any
 let temp: any
 let temp2: any
 
-export const PHYSICS_STEP = 1 / 600
+export const PHYSICS_STEP = 1 / 60
 const MAX_STEPS_PER_STEP = 5
 
-let currentTime = now() / 1000
+export const GRAVITY = 9.8
 
-const PHYSICS_SCALE = 1
-const INV_PHYSICS_SCALE = 1 / PHYSICS_SCALE
+let currentTime = now() / 1000
 
 let worldManifold: any
 let rayCastCallback: any
@@ -46,19 +45,11 @@ export function getWorldPointsAndNormalFromContact(contact: any): vec2[] {
     const result = [normal]
 
     if (pointCount > 0) {
-        vec2.set(
-            contantPoint0,
-            b2_point0.get_x() * INV_PHYSICS_SCALE,
-            b2_point0.get_y() * INV_PHYSICS_SCALE
-        )
+        vec2.set(contantPoint0, b2_point0.get_x(), b2_point0.get_y())
         result.push(contantPoint0)
     }
     if (pointCount > 1) {
-        vec2.set(
-            contantPoint1,
-            b2_point1.get_x() * INV_PHYSICS_SCALE,
-            b2_point1.get_y() * INV_PHYSICS_SCALE
-        )
+        vec2.set(contantPoint1, b2_point1.get_x(), b2_point1.get_y())
         result.push(contantPoint1)
     }
 
@@ -72,8 +63,8 @@ export function raycast(
     y1: number,
     fixtureToIgnore: any
 ): vec2 | undefined {
-    temp.Set(x0 * PHYSICS_SCALE, y0 * PHYSICS_SCALE)
-    temp2.Set(x1 * PHYSICS_SCALE, y1 * PHYSICS_SCALE)
+    temp.Set(x0, y0)
+    temp2.Set(x1, y1)
     raycastFixtureToIgnorePtr = Box2D.getPointer(fixtureToIgnore)
 
     vec2.set(rayCastResult, NaN, NaN)
@@ -89,10 +80,10 @@ export function setVelocity(body: any, x: number | undefined, y: number | undefi
     temp.set_y(vel.get_y())
 
     if (x !== undefined) {
-        temp.set_x(x * PHYSICS_SCALE)
+        temp.set_x(x)
     }
     if (y !== undefined) {
-        temp.set_y(y * PHYSICS_SCALE)
+        temp.set_y(y)
     }
 
     // console.log("setVelocity", temp.get_x(), temp.get_y())
@@ -101,11 +92,11 @@ export function setVelocity(body: any, x: number | undefined, y: number | undefi
 }
 
 export function getVelocityX(body: any): number {
-    return body.GetLinearVelocity().get_x() * INV_PHYSICS_SCALE
+    return body.GetLinearVelocity().get_x()
 }
 
 export function getVelocityY(body: any): number {
-    return body.GetLinearVelocity().get_y() * INV_PHYSICS_SCALE
+    return body.GetLinearVelocity().get_y()
 }
 
 export function mulVelocity(body: any, x: number | undefined, y: number | undefined) {
@@ -125,7 +116,7 @@ export async function initPhysics(): Promise<void> {
     temp = new Box2D.b2Vec2(0.0, 0.0)
     temp2 = new Box2D.b2Vec2(0.0, 0.0)
 
-    const gravity = new Box2D.b2Vec2(0.0, 9.8 * PHYSICS_SCALE)
+    const gravity = new Box2D.b2Vec2(0.0, GRAVITY)
 
     world = new Box2D.b2World(gravity)
     worldManifold = new Box2D.b2WorldManifold()
@@ -142,7 +133,7 @@ export async function initPhysics(): Promise<void> {
         }
 
         const p = Box2D.wrapPointer(point, Box2D.b2Vec2)
-        vec2.set(rayCastResult, p.get_x() * INV_PHYSICS_SCALE, p.get_y() * INV_PHYSICS_SCALE)
+        vec2.set(rayCastResult, p.get_x(), p.get_y())
 
         return fraction
     }
@@ -202,7 +193,6 @@ function createShape(obj: GraphicsObject): typeof Box2D.b2PolygonShape {
             vec2.add(p, p, obj.graphics.physicsPivot)
         }
         vec2.scale(p, p, scale)
-        vec2.scale(p, p, PHYSICS_SCALE)
 
         Box2D.HEAPF32[(buffer + offset) >> 2] = p[0]
         Box2D.HEAPF32[(buffer + offset + 4) >> 2] = p[1]
@@ -294,7 +284,7 @@ export function addToPhysics(obj: GraphicsObject): void {
 export function syncPhysicsWithObj(obj: GraphicsObject): void {
     const body = obj.body
 
-    temp.Set(obj.x * PHYSICS_SCALE, obj.y * PHYSICS_SCALE)
+    temp.Set(obj.x, obj.y)
     body.SetTransform(temp, obj.angle)
 }
 
@@ -306,8 +296,8 @@ export function syncObjWithPhysics(obj: GraphicsObject): void {
         obj.graphics.physicsType === PhysicsType.KINEMATIC
     ) {
         const bpos = body.GetPosition()
-        obj.x = bpos.get_x() * INV_PHYSICS_SCALE
-        obj.y = bpos.get_y() * INV_PHYSICS_SCALE
+        obj.x = bpos.get_x()
+        obj.y = bpos.get_y()
         obj.angle = body.GetAngle()
     }
 }
