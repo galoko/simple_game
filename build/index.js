@@ -7740,6 +7740,25 @@ function getAttachmentInfo(obj, pointName, t) {
     rotate$4(m, m, angle);
     return { m, parentObj };
 }
+function getAttachmentWorldMatrix(obj, pointName, t) {
+    const info = getAttachmentInfo(obj, pointName, t);
+    if (!info) {
+        return undefined;
+    }
+    const attachmentWorldMatrix = create$7();
+    mul$7(attachmentWorldMatrix, attachmentWorldMatrix, info.parentObj.calcWorldMatrix());
+    mul$7(attachmentWorldMatrix, attachmentWorldMatrix, info.m);
+    return attachmentWorldMatrix;
+}
+function getAttachmentPoint(obj, pointName, t) {
+    const m = getAttachmentWorldMatrix(obj, pointName, t);
+    if (!m) {
+        return undefined;
+    }
+    const p = create();
+    transformMat2d(p, p, m);
+    return p;
+}
 function getWorldPoint(obj) {
     const p = fromValues(0, 0);
     const m = obj.getWorldMatrix();
@@ -7780,15 +7799,11 @@ function aimAt(p, objectToRotate, attachmentName) {
         return;
     }
     recalcWorldTransforms(parent);
+    objectToRotate.angle = 0;
+    objectToRotate.calcWorldMatrix();
     const rotationCenter = getWorldPivotPoint(objectToRotate);
-    const attachmentInfo = getAttachmentInfo(parent, attachmentName, 1);
-    if (rotationCenter && attachmentInfo) {
-        objectToRotate.angle = 0;
-        objectToRotate.calcWorldMatrix();
-        const { parentObj: attachmentObj, m: attachmentMatrix } = attachmentInfo;
-        const attachmentWorldMatrix = create$7();
-        mul$7(attachmentWorldMatrix, attachmentWorldMatrix, attachmentObj.calcWorldMatrix());
-        mul$7(attachmentWorldMatrix, attachmentWorldMatrix, attachmentMatrix);
+    const attachmentWorldMatrix = getAttachmentWorldMatrix(parent, attachmentName, 1);
+    if (rotationCenter && attachmentWorldMatrix) {
         const attachmentAngle = getAngleFromMatrix(attachmentWorldMatrix);
         const attachmentLocalSpace = fromValues(0, 0);
         transformMat2d(attachmentLocalSpace, attachmentLocalSpace, attachmentWorldMatrix);
@@ -7841,6 +7856,20 @@ var PhysicsType;
     PhysicsType["KINEMATIC"] = "kinematic";
     PhysicsType["NONE"] = "none";
 })(PhysicsType || (PhysicsType = {}));
+var PhysicsCategory;
+(function (PhysicsCategory) {
+    PhysicsCategory["NONE"] = "none";
+    PhysicsCategory["BULLET"] = "bullet";
+})(PhysicsCategory || (PhysicsCategory = {}));
+var PhysicsCategoryBits;
+(function (PhysicsCategoryBits) {
+    PhysicsCategoryBits[PhysicsCategoryBits["NONE"] = 1] = "NONE";
+    PhysicsCategoryBits[PhysicsCategoryBits["BULLET"] = 2] = "BULLET";
+})(PhysicsCategoryBits || (PhysicsCategoryBits = {}));
+const PhysicsCategoryToBits = new Map();
+PhysicsCategoryToBits.set(PhysicsCategory.NONE, PhysicsCategoryBits.NONE);
+PhysicsCategoryToBits.set(PhysicsCategory.BULLET, PhysicsCategoryBits.BULLET);
+const ALL_MASK = Array.from(PhysicsCategoryToBits.values()).reduce((mask, bits) => mask | bits, 0);
 class Graphics {
     name;
     prefix;
@@ -7856,18 +7885,22 @@ class Graphics {
     points = [];
     duration = 1000;
     type = GraphicsType.NONE;
+    repeat = true;
     path = undefined;
     color = undefined;
     alpha = 1;
     stroke = true;
     physicsType = PhysicsType.NONE;
+    physicsCategory = PhysicsCategoryBits.NONE;
+    physicsMaskBits = ALL_MASK;
     physicsPoints = undefined;
     physicsPivot = undefined;
     fixedRotation = false;
     density = 5;
-    friction = 0;
+    friction = 1;
     restitution = 0;
     isSensor = false;
+    isBullet = false;
     constructor(name, prefix) {
         this.name = name;
         this.prefix = prefix;
@@ -7879,6 +7912,7 @@ class Graphics {
         const response = await fetch(dataUrl);
         const data = response.ok ? await response.json() : {};
         this.type = data.type || GraphicsType.IMG;
+        this.repeat = data.repeat ?? this.repeat;
         if (this.type === GraphicsType.IMG) {
             const promises = [];
             if (data.frames !== undefined) {
@@ -7912,6 +7946,11 @@ class Graphics {
         const pivot = data.pivot || (firstFrame ? [firstFrame.width / 2, firstFrame.height] : [0, 0]);
         // physics
         this.physicsType = data.physics || this.physicsType;
+        this.physicsCategory = PhysicsCategoryToBits.get(data.category) ?? this.physicsCategory;
+        if (data.mask) {
+            data.mask.reduce((mask, category) => mask | (PhysicsCategoryToBits.get(category) ?? 0), 0);
+        }
+        this.isBullet = data.bullet ?? this.isBullet;
         if (this.physicsType !== PhysicsType.NONE) {
             const physicsPoints = data.physicsPoints || [
                 0,
@@ -7941,7 +7980,11 @@ class Graphics {
         this.duration = data.duration || this.duration;
     }
     timeToIndex(time) {
-        const index = Math.max(0, Math.min(Math.trunc(((time / this.duration) % 1) * this.frames.length), this.frames.length - 1));
+        let t = time / this.duration;
+        if (this.repeat) {
+            t %= 1;
+        }
+        const index = Math.max(0, Math.min(Math.trunc(t * this.frames.length), this.frames.length - 1));
         return index;
     }
     getPoints(index) {
@@ -8626,12 +8669,12 @@ function screenToWorld(p) {
     return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
 }
 const focusPoint = create();
-const SCREEN_HEIGHT_IN_METERS = 6;
+const SCREEN_HEIGHT_IN_METERS = 12;
 function setupCamera() {
     camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
     const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
     camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.25;
-    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0;
+    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.0;
     identity$4(camera.m);
     translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
     scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
@@ -8644,11 +8687,11 @@ function setFocusPoint(x, y) {
 
 const keys = new Map();
 const mouse = create();
-document.body.onkeydown = e => {
-    const info = keys.get(e.code);
+function keyDown(code, timeStamp) {
+    const info = keys.get(code);
     if (!info) {
-        keys.set(e.code, {
-            down_timestamp: e.timeStamp,
+        keys.set(code, {
+            down_timestamp: timeStamp,
         });
     }
     else {
@@ -8656,20 +8699,35 @@ document.body.onkeydown = e => {
         if (info.up_timestamp === undefined) {
             return;
         }
-        info.down_timestamp = e.timeStamp;
+        info.down_timestamp = timeStamp;
         delete info.up_timestamp;
         delete info.used;
     }
-};
-document.body.onkeyup = e => {
-    const info = keys.get(e.code);
+}
+function keyUp(code, timeStamp) {
+    const info = keys.get(code);
     if (!info) {
         return;
     }
-    info.up_timestamp = e.timeStamp;
+    info.up_timestamp = timeStamp;
+}
+document.body.onkeydown = e => {
+    keyDown(e.code, e.timeStamp);
+};
+document.body.onkeyup = e => {
+    keyUp(e.code, e.timeStamp);
+};
+const mouseButtonToCode = ["LMB", "MMB", "RMB"];
+ctx.canvas.onmousedown = e => {
+    set(mouse, e.clientX * screen.dpr, e.clientY * screen.dpr);
+    keyDown(mouseButtonToCode[e.button], e.timeStamp);
 };
 ctx.canvas.onmousemove = e => {
     set(mouse, e.clientX * screen.dpr, e.clientY * screen.dpr);
+};
+ctx.canvas.onmouseup = e => {
+    set(mouse, e.clientX * screen.dpr, e.clientY * screen.dpr);
+    keyUp(mouseButtonToCode[e.button], e.timeStamp);
 };
 function markPressAsUsed(key) {
     const info = keys.get(key);
@@ -8699,8 +8757,10 @@ function getEllapsedSincePressStart(key) {
 
 let player;
 const MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME = 100;
-const JUMP_MAX_TIME = 200;
+const JUMP_MAX_TIME = 100;
+const CAYOTE_TIME = 150;
 function playerControls() {
+    // movement
     let dstVelocity;
     if (isPressed("KeyD")) {
         player.isMoving = true;
@@ -8728,11 +8788,25 @@ function playerControls() {
         velocityMul = 1;
     }
     player.changeSpeed(dstVelocity, velocityMul);
+    // jump
     if (player.touchingGround) {
         const spacePressed = isPressed("Space");
         if (spacePressed) {
             player.startJump();
         }
+    }
+    else {
+        const elapsed = now() - player.lastTouchgroundTimestamp;
+        if (elapsed > CAYOTE_TIME) {
+            const ellapsedSincePressStart = getEllapsedSincePressStart("Space");
+            if (ellapsedSincePressStart !== undefined &&
+                ellapsedSincePressStart > MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME) {
+                markPressAsUsed("Space");
+            }
+        }
+    }
+    if (player.preparingToJump) {
+        const spacePressed = isPressed("Space");
         const spacePressedDuration = getPressedDuration("Space");
         if (spacePressedDuration !== undefined) {
             if (!spacePressed || spacePressedDuration >= JUMP_MAX_TIME) {
@@ -8747,18 +8821,16 @@ function playerControls() {
             }
         }
     }
-    else {
-        const ellapsedSincePressStart = getEllapsedSincePressStart("Space");
-        if (ellapsedSincePressStart !== undefined &&
-            ellapsedSincePressStart > MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME) {
-            markPressAsUsed("Space");
-        }
-    }
 }
 function playerControlsPostPhysics() {
     setFocusPoint(player.obj.x, player.obj.y);
+    // shoot
     const mouseWorldSpace = screenToWorld(mouse);
     player.aimAt(mouseWorldSpace);
+    if (isPressed("LMB")) {
+        player.shoot();
+        markPressAsUsed("LMB");
+    }
 }
 function createPlayer() {
     player = new Character("player", true);
@@ -8953,8 +9025,8 @@ let Box2D;
 let world;
 let temp;
 let temp2;
-const PHYSICS_STEP = 1 / 60;
-const MAX_STEPS_PER_STEP = 5;
+const PHYSICS_STEP = 1 / 600;
+const MAX_STEPS_PER_STEP = 50;
 const GRAVITY = 9.8;
 let currentTime = now() / 1000;
 let worldManifold;
@@ -9031,6 +9103,10 @@ async function initPhysics() {
     rayCastCallback = new Box2D.JSRayCastCallback();
     rayCastCallback.ReportFixture = (fixturePtr, point, _normal, fraction) => {
         if (fixturePtr === raycastFixtureToIgnorePtr) {
+            return 1;
+        }
+        const f = Box2D.wrapPointer(fixturePtr, Box2D.b2Fixture);
+        if ((f.GetFilterData().get_categoryBits() & PhysicsCategoryBits.BULLET) !== 0) {
             return 1;
         }
         const p = Box2D.wrapPointer(point, Box2D.b2Vec2);
@@ -9121,6 +9197,9 @@ function createFixture(obj, body) {
     fixtureDef.set_restitution(obj.graphics.restitution);
     fixtureDef.set_friction(obj.graphics.friction);
     fixtureDef.set_isSensor(obj.graphics.isSensor);
+    const filter = fixtureDef.get_filter();
+    filter.set_categoryBits(obj.graphics.physicsCategory);
+    filter.set_maskBits(obj.graphics.physicsMaskBits);
     const fixture = body.CreateFixture(fixtureDef);
     fixture.SetUserData(obj.id);
     obj.fixture = fixture;
@@ -9135,6 +9214,7 @@ function initPhysicsForObject(obj) {
     bd.set_fixedRotation(obj.graphics.fixedRotation);
     const body = world.CreateBody(bd);
     // body.SetAngularVelocity(-5)
+    body.SetBullet(obj.graphics.isBullet);
     createFixture(obj, body);
     for (const slot in obj.attachments) {
         createFixture(obj.attachments[slot], body);
@@ -9299,6 +9379,7 @@ const HEAD_SLOT = 2;
 const WEAPON_SLOT = 3;
 const SHOOT_LINE_SLOT = 4;
 const EYE_LINE_SLOT = 5;
+const BLAST_SLOT = 6;
 const idle_torso_graphics = new Graphics("idle", "torso_legs");
 const idle_arms_graphics = new Graphics("idle", "arms");
 const run_torso_graphics = new Graphics("run", "torso_legs");
@@ -9308,6 +9389,8 @@ const aiming_arms_graphics = new Graphics("aiming", "arms");
 const oleg_graphics = new Graphics("oleg");
 const misha_graphics = new Graphics("misha");
 const blaster_graphics = new Graphics("blaster");
+const bullet_graphics = new Graphics("bullet");
+const blast_graphics = new Graphics("blast", "blast");
 const shoot_line_graphics = new Graphics("shoot-line");
 const eye_line_graphics = new Graphics("eye-line");
 const FOOT_START = 0.02;
@@ -9325,6 +9408,8 @@ async function loadCharacterAnimations() {
         oleg_graphics.load(),
         misha_graphics.load(),
         blaster_graphics.load(),
+        blast_graphics.load(),
+        bullet_graphics.load(),
         shoot_line_graphics.load(),
         eye_line_graphics.load(),
     ]);
@@ -9343,6 +9428,7 @@ class Character {
     aiming_arms = new GraphicsObject(aiming_arms_graphics);
     head;
     blaster = new GraphicsObject(blaster_graphics);
+    blast = new GraphicsObject(blast_graphics);
     shootLine = new GraphicsObject(shoot_line_graphics);
     eyeline = new GraphicsObject(eye_line_graphics);
     objGraphics = createDummyGraphics();
@@ -9356,10 +9442,12 @@ class Character {
     preparingToJump = false;
     isJumping = false;
     gravityForJumpFall = 0;
+    lastTouchgroundTimestamp = 0;
     constructor(name, isOleg) {
         this.name = name;
         this.objGraphics.physicsType = PhysicsType.DYNAMIC;
         this.objGraphics.fixedRotation = true;
+        this.objGraphics.friction = 0;
         const WIDTH = 0.2;
         this.objGraphics.physicsPoints = [
             fromValues(-WIDTH / 2, 0),
@@ -9439,6 +9527,25 @@ class Character {
             this.head.angle = oldHeadAngle;
         }
     }
+    shoot() {
+        const m = getAttachmentWorldMatrix(this.obj, "barrel", 1);
+        if (!m) {
+            return;
+        }
+        const p = create();
+        transformMat2d(p, p, m);
+        const angle = getAngleFromMatrix(m) * (this.obj.mirror ? -1 : 1) + (this.obj.mirror ? Math.PI : 0);
+        const bullet = new GraphicsObject(bullet_graphics);
+        bullet.angle = angle;
+        bullet.x = p[0];
+        bullet.y = p[1];
+        addToScene(bullet);
+        bullet.body.SetGravityScale(0);
+        const v = rotate(fromValues(25, 0), angle);
+        setVelocity(bullet.body, v[0], v[1]);
+        this.obj.attach(BLAST_SLOT, this.blast);
+        this.blast.reset();
+    }
     attachToGround() {
         this.touchingGround = false;
         if (getVelocityY(this.obj.body) >= -10e-5) {
@@ -9452,10 +9559,8 @@ class Character {
                 setVelocity(this.obj.body, undefined, 0);
                 this.touchingGround = true;
                 this.isJumping = false;
+                this.lastTouchgroundTimestamp = now();
             }
-        }
-        if (!this.touchingGround) {
-            this.preparingToJump = false;
         }
         this.updateAnimation();
     }

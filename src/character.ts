@@ -1,18 +1,19 @@
 import { vec2 } from "gl-matrix"
 import { aimAt } from "./character-utils"
 import { createDummyGraphics, Graphics, PhysicsType } from "./graphics"
+import { getAngleFromMatrix, rotate } from "./math-utils"
 import { GraphicsObject } from "./object"
+import { getAttachmentWorldMatrix } from "./object-utils"
 import {
     getVelocityX,
     getVelocityY,
     GRAVITY,
-    mulVelocity,
     raycast,
     setVelocity,
     syncPhysicsWithObj,
 } from "./physics"
 import { addToScene } from "./scene"
-import { getDT } from "./time"
+import { getDT, now } from "./time"
 
 export const TORSO_SLOT = 0
 export const ARMS_SLOT = 1
@@ -20,6 +21,7 @@ export const HEAD_SLOT = 2
 export const WEAPON_SLOT = 3
 export const SHOOT_LINE_SLOT = 4
 export const EYE_LINE_SLOT = 5
+export const BLAST_SLOT = 6
 
 const idle_torso_graphics = new Graphics("idle", "torso_legs")
 const idle_arms_graphics = new Graphics("idle", "arms")
@@ -32,6 +34,8 @@ const oleg_graphics = new Graphics("oleg")
 const misha_graphics = new Graphics("misha")
 
 const blaster_graphics = new Graphics("blaster")
+const bullet_graphics = new Graphics("bullet")
+const blast_graphics = new Graphics("blast", "blast")
 const shoot_line_graphics = new Graphics("shoot-line")
 const eye_line_graphics = new Graphics("eye-line")
 
@@ -53,6 +57,8 @@ export async function loadCharacterAnimations() {
         misha_graphics.load(),
 
         blaster_graphics.load(),
+        blast_graphics.load(),
+        bullet_graphics.load(),
         shoot_line_graphics.load(),
         eye_line_graphics.load(),
     ])
@@ -75,6 +81,7 @@ export class Character {
     private readonly head
 
     private readonly blaster = new GraphicsObject(blaster_graphics)
+    private readonly blast = new GraphicsObject(blast_graphics)
     private readonly shootLine = new GraphicsObject(shoot_line_graphics)
     private readonly eyeline = new GraphicsObject(eye_line_graphics)
 
@@ -92,10 +99,12 @@ export class Character {
     public preparingToJump = false
     public isJumping = false
     public gravityForJumpFall = 0
+    public lastTouchgroundTimestamp = 0
 
     constructor(public readonly name: string, isOleg: boolean) {
         this.objGraphics.physicsType = PhysicsType.DYNAMIC
         this.objGraphics.fixedRotation = true
+        this.objGraphics.friction = 0
 
         const WIDTH = 0.2
         this.objGraphics.physicsPoints = [
@@ -198,6 +207,33 @@ export class Character {
         }
     }
 
+    shoot(): void {
+        const m = getAttachmentWorldMatrix(this.obj, "barrel", 1)
+        if (!m) {
+            return
+        }
+
+        const p = vec2.create()
+        vec2.transformMat2d(p, p, m)
+        const angle =
+            getAngleFromMatrix(m) * (this.obj.mirror ? -1 : 1) + (this.obj.mirror ? Math.PI : 0)
+
+        const bullet = new GraphicsObject(bullet_graphics)
+        bullet.angle = angle
+        bullet.x = p[0]
+        bullet.y = p[1]
+
+        addToScene(bullet)
+
+        bullet.body.SetGravityScale(0)
+
+        const v = rotate(vec2.fromValues(25, 0), angle)
+        setVelocity(bullet.body, v[0], v[1])
+
+        this.obj.attach(BLAST_SLOT, this.blast)
+        this.blast.reset()
+    }
+
     attachToGround(): void {
         this.touchingGround = false
 
@@ -222,11 +258,8 @@ export class Character {
 
                 this.touchingGround = true
                 this.isJumping = false
+                this.lastTouchgroundTimestamp = now()
             }
-        }
-
-        if (!this.touchingGround) {
-            this.preparingToJump = false
         }
 
         this.updateAnimation()

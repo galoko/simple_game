@@ -1,7 +1,7 @@
-import { mat2d, vec2 } from "gl-matrix"
+import { vec2 } from "gl-matrix"
 import { cross, dot, getAngleFromMatrix, getAngleFromVector, rotate } from "./math-utils"
 import { GraphicsObject } from "./object"
-import { getAttachmentInfo, getWorldPivotPoint, recalcWorldTransforms } from "./object-utils"
+import { getAttachmentWorldMatrix, getWorldPivotPoint, recalcWorldTransforms } from "./object-utils"
 
 const UP = vec2.fromValues(0, -1)
 
@@ -13,18 +13,13 @@ export function aimAt(p: vec2, objectToRotate: GraphicsObject, attachmentName: s
 
     recalcWorldTransforms(parent)
 
+    objectToRotate.angle = 0
+    objectToRotate.calcWorldMatrix()
+
     const rotationCenter = getWorldPivotPoint(objectToRotate)
-    const attachmentInfo = getAttachmentInfo(parent, attachmentName, 1)
+    const attachmentWorldMatrix = getAttachmentWorldMatrix(parent, attachmentName, 1)
 
-    if (rotationCenter && attachmentInfo) {
-        objectToRotate.angle = 0
-        objectToRotate.calcWorldMatrix()
-
-        const { parentObj: attachmentObj, m: attachmentMatrix } = attachmentInfo
-        const attachmentWorldMatrix = mat2d.create()
-        mat2d.mul(attachmentWorldMatrix, attachmentWorldMatrix, attachmentObj.calcWorldMatrix())
-        mat2d.mul(attachmentWorldMatrix, attachmentWorldMatrix, attachmentMatrix)
-
+    if (rotationCenter && attachmentWorldMatrix) {
         const attachmentAngle = getAngleFromMatrix(attachmentWorldMatrix)
 
         const attachmentLocalSpace = vec2.fromValues(0, 0)

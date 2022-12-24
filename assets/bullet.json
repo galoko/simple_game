@@ -1,0 +1,7 @@
+{
+	"scale": 0.05,
+	"pivot": [0, 1],
+	"physics": "dynamic",
+	"bullet": true,
+	"category": "bullet"
+}

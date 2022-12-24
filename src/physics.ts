@@ -3,7 +3,7 @@ import { vec2 } from "gl-matrix"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Box2DInit from "../third-party/Box2D_v2.3.1_min.wasm"
-import { PhysicsType } from "./graphics"
+import { PhysicsCategoryBits, PhysicsCategoryToBits, PhysicsType } from "./graphics"
 import { getWorldScale, GraphicsObject } from "./object"
 import { getObjectByID } from "./scene"
 import { now } from "./time"
@@ -14,8 +14,8 @@ let world: any
 let temp: any
 let temp2: any
 
-export const PHYSICS_STEP = 1 / 60
-const MAX_STEPS_PER_STEP = 5
+export const PHYSICS_STEP = 1 / 600
+const MAX_STEPS_PER_STEP = 50
 
 export const GRAVITY = 9.8
 
@@ -132,6 +132,11 @@ export async function initPhysics(): Promise<void> {
             return 1
         }
 
+        const f = Box2D.wrapPointer(fixturePtr, Box2D.b2Fixture)
+        if ((f.GetFilterData().get_categoryBits() & PhysicsCategoryBits.BULLET) !== 0) {
+            return 1
+        }
+
         const p = Box2D.wrapPointer(point, Box2D.b2Vec2)
         vec2.set(rayCastResult, p.get_x(), p.get_y())
 
@@ -240,6 +245,10 @@ function createFixture(obj: GraphicsObject, body: any): void {
     fixtureDef.set_friction(obj.graphics.friction)
     fixtureDef.set_isSensor(obj.graphics.isSensor)
 
+    const filter = fixtureDef.get_filter()
+    filter.set_categoryBits(obj.graphics.physicsCategory)
+    filter.set_maskBits(obj.graphics.physicsMaskBits)
+
     const fixture = body.CreateFixture(fixtureDef)
     fixture.SetUserData(obj.id)
 
@@ -258,6 +267,7 @@ function initPhysicsForObject(obj: GraphicsObject): void {
     bd.set_fixedRotation(obj.graphics.fixedRotation)
     const body = world.CreateBody(bd)
     // body.SetAngularVelocity(-5)
+    body.SetBullet(obj.graphics.isBullet)
 
     createFixture(obj, body)
     for (const slot in obj.attachments) {

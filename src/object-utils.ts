@@ -58,6 +58,39 @@ export function getAttachmentInfo(
     return { m, parentObj }
 }
 
+export function getAttachmentWorldMatrix(
+    obj: GraphicsObject,
+    pointName: string,
+    t: number
+): mat2d | undefined {
+    const info = getAttachmentInfo(obj, pointName, t)
+    if (!info) {
+        return undefined
+    }
+
+    const attachmentWorldMatrix = mat2d.create()
+    mat2d.mul(attachmentWorldMatrix, attachmentWorldMatrix, info.parentObj.calcWorldMatrix())
+    mat2d.mul(attachmentWorldMatrix, attachmentWorldMatrix, info.m)
+
+    return attachmentWorldMatrix
+}
+
+export function getAttachmentPoint(
+    obj: GraphicsObject,
+    pointName: string,
+    t: number
+): vec2 | undefined {
+    const m = getAttachmentWorldMatrix(obj, pointName, t)
+    if (!m) {
+        return undefined
+    }
+
+    const p = vec2.create()
+    vec2.transformMat2d(p, p, m)
+
+    return p
+}
+
 export function getWorldPoint(obj: GraphicsObject) {
     const p = vec2.fromValues(0, 0)
     const m = obj.getWorldMatrix()

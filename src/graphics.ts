@@ -27,6 +27,25 @@ export enum PhysicsType {
     NONE = "none",
 }
 
+export enum PhysicsCategory {
+    NONE = "none",
+    BULLET = "bullet",
+}
+
+export enum PhysicsCategoryBits {
+    NONE = 1 << 0,
+    BULLET = 1 << 1,
+}
+
+export const PhysicsCategoryToBits = new Map<PhysicsCategory, number>()
+PhysicsCategoryToBits.set(PhysicsCategory.NONE, PhysicsCategoryBits.NONE)
+PhysicsCategoryToBits.set(PhysicsCategory.BULLET, PhysicsCategoryBits.BULLET)
+
+export const ALL_MASK = Array.from(PhysicsCategoryToBits.values()).reduce(
+    (mask, bits) => mask | bits,
+    0
+)
+
 export class Graphics {
     public frames: HTMLImageElement[] = []
     public unitMatrix = mat2d.create()
@@ -41,19 +60,24 @@ export class Graphics {
     public duration = 1000
     public type = GraphicsType.NONE
 
+    public repeat = true
+
     public path: Path2D = undefined!
     public color: string = undefined!
     public alpha = 1
     public stroke = true
 
     public physicsType = PhysicsType.NONE
+    public physicsCategory = PhysicsCategoryBits.NONE
+    public physicsMaskBits = ALL_MASK
     public physicsPoints: vec2[] = undefined!
     public physicsPivot: vec2 | undefined = undefined
     public fixedRotation = false
     public density = 5
-    public friction = 0
+    public friction = 1
     public restitution = 0
     public isSensor = false
+    public isBullet = false
 
     constructor(public name: string, public prefix?: string) {}
 
@@ -65,6 +89,7 @@ export class Graphics {
         const data = response.ok ? await response.json() : {}
 
         this.type = data.type || GraphicsType.IMG
+        this.repeat = data.repeat ?? this.repeat
 
         if (this.type === GraphicsType.IMG) {
             const promises: Promise<HTMLImageElement>[] = []
@@ -102,6 +127,16 @@ export class Graphics {
 
         // physics
         this.physicsType = data.physics || this.physicsType
+        this.physicsCategory = PhysicsCategoryToBits.get(data.category) ?? this.physicsCategory
+        if (data.mask) {
+            data.mask.reduce(
+                (mask: number, category: PhysicsCategory) =>
+                    mask | (PhysicsCategoryToBits.get(category) ?? 0),
+                0
+            )
+        }
+
+        this.isBullet = data.bullet ?? this.isBullet
 
         if (this.physicsType !== PhysicsType.NONE) {
             const physicsPoints: number[] = data.physicsPoints || [
@@ -139,13 +174,16 @@ export class Graphics {
     }
 
     timeToIndex(time: number): number {
+        let t = time / this.duration
+        if (this.repeat) {
+            t %= 1
+        }
+
         const index = Math.max(
             0,
-            Math.min(
-                Math.trunc(((time / this.duration) % 1) * this.frames.length),
-                this.frames.length - 1
-            )
+            Math.min(Math.trunc(t * this.frames.length), this.frames.length - 1)
         )
+
         return index
     }
 

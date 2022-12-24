@@ -7,13 +7,17 @@ import {
     markPressAsUsed,
     getEllapsedSincePressStart,
 } from "./input-handler"
+import { now } from "./time"
 
 export let player: Character
 
 const MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME = 100
-const JUMP_MAX_TIME = 200
+const JUMP_MAX_TIME = 100
+const CAYOTE_TIME = 150
 
 function playerControls() {
+    // movement
+
     let dstVelocity: number
     if (isPressed("KeyD")) {
         player.isMoving = true
@@ -40,12 +44,28 @@ function playerControls() {
 
     player.changeSpeed(dstVelocity, velocityMul)
 
+    // jump
+
     if (player.touchingGround) {
         const spacePressed = isPressed("Space")
         if (spacePressed) {
             player.startJump()
         }
+    } else {
+        const elapsed = now() - player.lastTouchgroundTimestamp
+        if (elapsed > CAYOTE_TIME) {
+            const ellapsedSincePressStart = getEllapsedSincePressStart("Space")
+            if (
+                ellapsedSincePressStart !== undefined &&
+                ellapsedSincePressStart > MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME
+            ) {
+                markPressAsUsed("Space")
+            }
+        }
+    }
 
+    if (player.preparingToJump) {
+        const spacePressed = isPressed("Space")
         const spacePressedDuration = getPressedDuration("Space")
         if (spacePressedDuration !== undefined) {
             if (!spacePressed || spacePressedDuration >= JUMP_MAX_TIME) {
@@ -60,21 +80,22 @@ function playerControls() {
                 markPressAsUsed("Space")
             }
         }
-    } else {
-        const ellapsedSincePressStart = getEllapsedSincePressStart("Space")
-        if (
-            ellapsedSincePressStart !== undefined &&
-            ellapsedSincePressStart > MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME
-        ) {
-            markPressAsUsed("Space")
-        }
     }
 }
 
 function playerControlsPostPhysics() {
     setFocusPoint(player.obj.x, player.obj.y)
+
+    // shoot
+
     const mouseWorldSpace = screenToWorld(mouse)
     player.aimAt(mouseWorldSpace)
+
+    if (isPressed("LMB")) {
+        player.shoot()
+
+        markPressAsUsed("LMB")
+    }
 }
 
 export function createPlayer() {

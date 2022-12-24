@@ -13,11 +13,11 @@ const keys = new Map<string, KeyPressInfo>()
 
 export const mouse = vec2.create()
 
-document.body.onkeydown = e => {
-    const info = keys.get(e.code)
+function keyDown(code: string, timeStamp: number): void {
+    const info = keys.get(code)
     if (!info) {
-        keys.set(e.code, {
-            down_timestamp: e.timeStamp,
+        keys.set(code, {
+            down_timestamp: timeStamp,
         })
     } else {
         // don't override initial timepstamp
@@ -25,23 +25,44 @@ document.body.onkeydown = e => {
             return
         }
 
-        info.down_timestamp = e.timeStamp
+        info.down_timestamp = timeStamp
         delete info.up_timestamp
         delete info.used
     }
 }
-document.body.onkeyup = e => {
-    const info = keys.get(e.code)
+
+function keyUp(code: string, timeStamp: number): void {
+    const info = keys.get(code)
 
     if (!info) {
         return
     }
 
-    info.up_timestamp = e.timeStamp
+    info.up_timestamp = timeStamp
+}
+
+document.body.onkeydown = e => {
+    keyDown(e.code, e.timeStamp)
+}
+
+document.body.onkeyup = e => {
+    keyUp(e.code, e.timeStamp)
+}
+
+const mouseButtonToCode = ["LMB", "MMB", "RMB"]
+
+ctx.canvas.onmousedown = e => {
+    vec2.set(mouse, e.clientX * screen.dpr, e.clientY * screen.dpr)
+    keyDown(mouseButtonToCode[e.button], e.timeStamp)
 }
 
 ctx.canvas.onmousemove = e => {
     vec2.set(mouse, e.clientX * screen.dpr, e.clientY * screen.dpr)
+}
+
+ctx.canvas.onmouseup = e => {
+    vec2.set(mouse, e.clientX * screen.dpr, e.clientY * screen.dpr)
+    keyUp(mouseButtonToCode[e.button], e.timeStamp)
 }
 
 export function markPressAsUsed(key: string) {
