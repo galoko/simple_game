@@ -2,7 +2,7 @@
 import { mat2d, vec2 } from "gl-matrix"
 import { Character } from "./character"
 import { Graphics } from "./graphics"
-import { getAngleFromMatrix } from "./math-utils"
+import { getAngleFromMatrix, getScaleFromMatrix } from "./math-utils"
 import { getAttachmentInfo, getParent, getParentWorldMatrix } from "./object-utils"
 import { Box2D } from "./physics"
 import { now } from "./time"
@@ -30,6 +30,7 @@ export class GraphicsObject {
     public z = 0
     public mirror = false
     public angleIsWorldAngle = false
+    public scaleIsWorldScale = false
 
     public mat = mat2d.create()
     public startTime = 0
@@ -125,6 +126,11 @@ export class GraphicsObject {
             if (attachmentInfo) {
                 mat2d.mul(m, m, attachmentInfo.m)
             }
+        }
+
+        if (this.scaleIsWorldScale && parentWorldMatrix) {
+            const parentScale = getScaleFromMatrix(parentWorldMatrix)
+            mat2d.scale(m, m, vec2.fromValues(1 / parentScale, 1 / parentScale))
         }
 
         if (this.angleIsWorldAngle && parentWorldMatrix) {

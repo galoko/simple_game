@@ -17,6 +17,10 @@ export function getAngleFromMatrix(m: mat2d) {
     return Math.atan2(m[1], m[3])
 }
 
+export function getScaleFromMatrix(m: mat2d): number {
+    return Math.sqrt(m[1] * m[1] + m[3] * m[3])
+}
+
 export function dot(v1: vec2, v2: vec2): number {
     const [x0, y0] = v1
     const [x1, y1] = v2

@@ -13,6 +13,7 @@
 	],
 	"duration": 150,
 	"negativeMask": [
-		"meat"
+		"meat",
+		"platform"
 	]
 }

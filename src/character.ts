@@ -163,6 +163,7 @@ export class Character {
         this.obj.attach(HEAD_SLOT, this.head)
 
         this.blaster.z = -0.05
+        this.blaster.scaleIsWorldScale = true
         this.obj.attach(WEAPON_SLOT, this.blaster)
 
         this.shootLine.z = -0.01

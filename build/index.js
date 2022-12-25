@@ -7678,6 +7678,9 @@ function getAngleFromVector(v) {
 function getAngleFromMatrix(m) {
     return Math.atan2(m[1], m[3]);
 }
+function getScaleFromMatrix(m) {
+    return Math.sqrt(m[1] * m[1] + m[3] * m[3]);
+}
 function dot(v1, v2) {
     const [x0, y0] = v1;
     const [x1, y1] = v2;
@@ -9635,11 +9638,11 @@ function screenToWorld(p) {
     return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
 }
 const focusPoint = create();
-const SCREEN_HEIGHT_IN_METERS = 6;
+const SCREEN_HEIGHT_IN_METERS = 12;
 function setupCamera() {
     camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
     const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
-    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.25;
+    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0;
     camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.25;
     identity$4(camera.m);
     translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
@@ -10259,6 +10262,7 @@ class GraphicsObject {
     z = 0;
     mirror = false;
     angleIsWorldAngle = false;
+    scaleIsWorldScale = false;
     mat = create$7();
     startTime = 0;
     points = new Map();
@@ -10330,6 +10334,10 @@ class GraphicsObject {
             if (attachmentInfo) {
                 mul$7(m, m, attachmentInfo.m);
             }
+        }
+        if (this.scaleIsWorldScale && parentWorldMatrix) {
+            const parentScale = getScaleFromMatrix(parentWorldMatrix);
+            scale$7(m, m, fromValues(1 / parentScale, 1 / parentScale));
         }
         if (this.angleIsWorldAngle && parentWorldMatrix) {
             const parentAngle = getAngleFromMatrix(parentWorldMatrix);
@@ -10546,6 +10554,7 @@ class Character {
         this.head.z = 0.1;
         this.obj.attach(HEAD_SLOT, this.head);
         this.blaster.z = -0.05;
+        this.blaster.scaleIsWorldScale = true;
         this.obj.attach(WEAPON_SLOT, this.blaster);
         this.shootLine.z = -0.01;
         this.obj.attach(SHOOT_LINE_SLOT, this.shootLine);
@@ -10817,14 +10826,6 @@ async function initScene() {
     await loadCharacterAnimations();
     createPlayer();
     addCharacter(player);
-    for (let i = 0; i < 10; i++) {
-        const enemy = new Character("enemy", generic_head_graphics);
-        enemy.obj.x = 3 + i * 3;
-        enemy.obj.y = 0;
-        enemy.obj.mirror = true;
-        addCharacter(enemy);
-        enemy.aimAt(fromValues(0, -2 + 0.17));
-    }
     const box = new GraphicsObject(await createGraphics("box"));
     box.x = 4;
     box.y = -0.25;
@@ -10832,24 +10833,50 @@ async function initScene() {
     box.angle = 0;
     box.graphics.physicsType = PhysicsType.STATIC;
     addToScene(box);
-    const COUNT = 3;
-    const dirt_graphics = await createGraphics("dirt");
-    const angle = 0;
-    for (let i = -COUNT / 2; i < COUNT; i++) {
-        const l = 10 * i;
-        const dirt = new GraphicsObject(dirt_graphics);
-        dirt.scale = 10;
-        dirt.x = Math.cos(angle) * l;
-        dirt.y = Math.sin(angle) * l;
-        dirt.z = 1;
-        dirt.angle = angle;
-        addToScene(dirt);
+    const COUNT = 30;
+    for (let i = -2; i < COUNT; i++) {
+        const platform = new GraphicsObject(platform_graphics);
+        platform.x = i;
+        platform.y = 0;
+        platform.z = 1;
+        addToScene(platform);
     }
     const platform = new GraphicsObject(platform_graphics);
     platform.x = 0;
     platform.y = -1;
     platform.z = 1;
     addToScene(platform);
+    const r = new Random(MersenneTwister19937.seedWithArray([0x12345678, 0x90abcdef]));
+    let currentHeight = -1;
+    let currentX = 0;
+    let direction = 1;
+    for (let i = 0; i < 100; i++) {
+        currentHeight -= r.real(1, 2);
+        currentX += r.real(1, 2) * direction;
+        const length = r.integer(2, 8);
+        if (r.real(0, 1) > 0.8) {
+            direction = -direction;
+        }
+        const startX = currentX;
+        let endX = startX;
+        for (let j = 0; j < length; j++) {
+            const platform = new GraphicsObject(platform_graphics);
+            platform.x = currentX;
+            platform.y = currentHeight;
+            platform.z = 1;
+            addToScene(platform);
+            endX = currentX;
+            currentX += platform_graphics.scale * direction;
+        }
+        if (r.real(0, 1) > 0.7) {
+            const padding = platform_graphics.scale * 0.5;
+            const enemy = new Character("enemy", generic_head_graphics);
+            enemy.obj.x = r.real(startX + padding, endX - padding);
+            enemy.obj.y = currentHeight;
+            enemy.obj.mirror = r.real(0, 1) > 0.5;
+            addCharacter(enemy);
+        }
+    }
 }
 
 function tick(time) {

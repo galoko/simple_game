@@ -19,13 +19,13 @@ export function screenToWorld(p: vec2): vec2 {
 
 const focusPoint = vec2.create()
 
-const SCREEN_HEIGHT_IN_METERS = 6
+const SCREEN_HEIGHT_IN_METERS = 12
 
 export function setupCamera(): void {
     camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS)
     const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale
 
-    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.25
+    camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0
     camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.25
 
     mat2d.identity(camera.m)
