@@ -14,8 +14,8 @@ let world: any
 let temp: any
 let temp2: any
 
-export const PHYSICS_STEP = 1 / 600
-const MAX_STEPS_PER_STEP = 50
+export const PHYSICS_STEP = 1 / 60
+const MAX_STEPS_PER_STEP = 5
 
 export const GRAVITY = 9.8
 
@@ -29,6 +29,9 @@ let raycastFixtureToIgnorePtr: any
 const contantPoint0 = vec2.create()
 const contantPoint1 = vec2.create()
 const normal = vec2.create()
+
+const objectsToAdd = new Set<GraphicsObject>()
+const objectsToDelete = new Map<GraphicsObject, () => void>()
 
 export function getWorldPointsAndNormalFromContact(contact: any): vec2[] {
     contact.GetWorldManifold(worldManifold)
@@ -73,7 +76,19 @@ export function raycast(
     return !isNaN(rayCastResult[0]) ? rayCastResult : undefined
 }
 
-export function setVelocity(body: any, x: number | undefined, y: number | undefined) {
+export function setVelocity(obj: GraphicsObject, x: number | undefined, y: number | undefined) {
+    if (x !== undefined) {
+        obj.vx = x
+    }
+    if (y !== undefined) {
+        obj.vy = y
+    }
+
+    const body = obj.body
+    if (!body) {
+        return
+    }
+
     const vel = body.GetLinearVelocity()
 
     temp.set_x(vel.get_x())
@@ -86,20 +101,30 @@ export function setVelocity(body: any, x: number | undefined, y: number | undefi
         temp.set_y(y)
     }
 
-    // console.log("setVelocity", temp.get_x(), temp.get_y())
-
     body.SetLinearVelocity(temp)
 }
 
-export function getVelocityX(body: any): number {
-    return body.GetLinearVelocity().get_x()
+export function getVelocityX(obj: GraphicsObject): number {
+    return obj.body.GetLinearVelocity().get_x() ?? obj.vx
 }
 
-export function getVelocityY(body: any): number {
-    return body.GetLinearVelocity().get_y()
+export function getVelocityY(obj: GraphicsObject): number {
+    return obj.body.GetLinearVelocity().get_y() ?? obj.vy
 }
 
-export function mulVelocity(body: any, x: number | undefined, y: number | undefined) {
+export function mulVelocity(obj: GraphicsObject, x: number | undefined, y: number | undefined) {
+    if (x !== undefined) {
+        obj.vx *= x
+    }
+    if (y !== undefined) {
+        obj.vy *= y
+    }
+
+    const body = obj.body
+    if (!body) {
+        return
+    }
+
     const vel = body.GetLinearVelocity()
     if (x !== undefined) {
         vel.set_x(vel.get_x() * x)
@@ -108,6 +133,17 @@ export function mulVelocity(body: any, x: number | undefined, y: number | undefi
         vel.set_y(vel.get_y() * y)
     }
     body.SetLinearVelocity(vel)
+}
+
+export function setGravityScale(obj: GraphicsObject, gravityScale: number) {
+    obj.gravityScale = gravityScale
+
+    const body = obj.body
+    if (!body) {
+        return
+    }
+
+    body.SetGravityScale(obj.gravityScale)
 }
 
 export async function initPhysics(): Promise<void> {
@@ -121,6 +157,7 @@ export async function initPhysics(): Promise<void> {
     world = new Box2D.b2World(gravity)
     worldManifold = new Box2D.b2WorldManifold()
 
+    const RAY_EXCLUDE_CATEGORIES = PhysicsCategoryBits.BULLET | PhysicsCategoryBits.MEAT
     rayCastCallback = new Box2D.JSRayCastCallback()
     rayCastCallback.ReportFixture = (
         fixturePtr: any,
@@ -133,7 +170,7 @@ export async function initPhysics(): Promise<void> {
         }
 
         const f = Box2D.wrapPointer(fixturePtr, Box2D.b2Fixture)
-        if ((f.GetFilterData().get_categoryBits() & PhysicsCategoryBits.BULLET) !== 0) {
+        if ((f.GetFilterData().get_categoryBits() & RAY_EXCLUDE_CATEGORIES) !== 0) {
             return 1
         }
 
@@ -150,10 +187,10 @@ export async function initPhysics(): Promise<void> {
         const fixtureB = contact.GetFixtureB()
 
         const objA = getObjectByID(fixtureA.GetUserData())
-        objA.contactStarted(contactPtr)
-
         const objB = getObjectByID(fixtureB.GetUserData())
-        objB.contactStarted(contactPtr)
+
+        objA.contactStarted(contactPtr, objB)
+        objB.contactStarted(contactPtr, objA)
     }
     listener.EndContact = (contactPtr: any) => {
         const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact)
@@ -248,6 +285,7 @@ function createFixture(obj: GraphicsObject, body: any): void {
     const filter = fixtureDef.get_filter()
     filter.set_categoryBits(obj.graphics.physicsCategory)
     filter.set_maskBits(obj.graphics.physicsMaskBits)
+    filter.set_groupIndex(obj.physicsGroupIndex)
 
     const fixture = body.CreateFixture(fixtureDef)
     fixture.SetUserData(obj.id)
@@ -277,7 +315,7 @@ function initPhysicsForObject(obj: GraphicsObject): void {
     obj.body = body
 }
 
-export function addToPhysics(obj: GraphicsObject): void {
+function doAddToPhysics(obj: GraphicsObject): void {
     initPhysicsForObject(obj)
 
     const body = obj.body
@@ -287,8 +325,23 @@ export function addToPhysics(obj: GraphicsObject): void {
 
     body.SetAwake(1)
     body.SetActive(1)
+    body.SetGravityScale(obj.gravityScale)
+
+    temp.set_x(obj.vx)
+    temp.set_y(obj.vy)
+    body.SetLinearVelocity(temp)
 
     syncPhysicsWithObj(obj)
+}
+
+let isInProgress = false
+
+export function addToPhysics(obj: GraphicsObject): void {
+    if (isInProgress) {
+        objectsToAdd.add(obj)
+    } else {
+        doAddToPhysics(obj)
+    }
 }
 
 export function syncPhysicsWithObj(obj: GraphicsObject): void {
@@ -312,6 +365,26 @@ export function syncObjWithPhysics(obj: GraphicsObject): void {
     }
 }
 
+export function scheduleToRemovePhysics(obj: GraphicsObject, callback: () => void): void {
+    objectsToDelete.set(obj, callback)
+}
+
+function addObjects() {
+    for (const obj of objectsToAdd) {
+        doAddToPhysics(obj)
+    }
+    objectsToAdd.clear()
+}
+
+function deleteObjects() {
+    for (const [obj, callback] of objectsToDelete) {
+        world.DestroyBody(obj.body)
+        obj.body = null
+        callback()
+    }
+    objectsToDelete.clear()
+}
+
 export function physicsStep() {
     const time = now() / 1000
 
@@ -321,7 +394,12 @@ export function physicsStep() {
 
     currentTime += stepCount * PHYSICS_STEP
 
+    isInProgress = true
     for (let i = 0; i < stepsToSimulate; i++) {
         world.Step(PHYSICS_STEP, 20, 20)
     }
+    isInProgress = false
+
+    deleteObjects()
+    addObjects()
 }

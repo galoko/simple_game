@@ -30,6 +30,7 @@
     },
     "dependencies": {
         "gl-matrix": "^3.4.3",
+        "random-js": "^2.1.0",
         "ts-deferred": "^1.0.4"
     }
 }

@@ -30,16 +30,22 @@ export enum PhysicsType {
 export enum PhysicsCategory {
     NONE = "none",
     BULLET = "bullet",
+    MEAT = "meat",
+    PLATFORM = "platform",
 }
 
 export enum PhysicsCategoryBits {
     NONE = 1 << 0,
     BULLET = 1 << 1,
+    MEAT = 1 << 2,
+    PLATFORM = 1 << 3,
 }
 
 export const PhysicsCategoryToBits = new Map<PhysicsCategory, number>()
 PhysicsCategoryToBits.set(PhysicsCategory.NONE, PhysicsCategoryBits.NONE)
 PhysicsCategoryToBits.set(PhysicsCategory.BULLET, PhysicsCategoryBits.BULLET)
+PhysicsCategoryToBits.set(PhysicsCategory.MEAT, PhysicsCategoryBits.MEAT)
+PhysicsCategoryToBits.set(PhysicsCategory.PLATFORM, PhysicsCategoryBits.PLATFORM)
 
 export const ALL_MASK = Array.from(PhysicsCategoryToBits.values()).reduce(
     (mask, bits) => mask | bits,
@@ -74,7 +80,7 @@ export class Graphics {
     public physicsPivot: vec2 | undefined = undefined
     public fixedRotation = false
     public density = 5
-    public friction = 1
+    public friction = 0.5
     public restitution = 0
     public isSensor = false
     public isBullet = false
@@ -98,7 +104,10 @@ export class Graphics {
                     promises.push(loadImage(`assets/${this.name}/${this.prefix}_${i}.png`))
                 }
             } else {
-                promises.push(loadImage(`assets/${this.name}.png`))
+                const name = !this.prefix
+                    ? `assets/${this.name}.png`
+                    : `assets/${this.name}/${this.prefix}.png`
+                promises.push(loadImage(name))
             }
             this.frames = await Promise.all(promises)
         } else {
@@ -129,14 +138,28 @@ export class Graphics {
         this.physicsType = data.physics || this.physicsType
         this.physicsCategory = PhysicsCategoryToBits.get(data.category) ?? this.physicsCategory
         if (data.mask) {
-            data.mask.reduce(
+            this.physicsMaskBits = data.mask.reduce(
                 (mask: number, category: PhysicsCategory) =>
                     mask | (PhysicsCategoryToBits.get(category) ?? 0),
                 0
             )
         }
+        if (data.negativeMask) {
+            this.physicsMaskBits =
+                ALL_MASK &
+                ~data.negativeMask.reduce(
+                    (mask: number, category: PhysicsCategory) =>
+                        mask | (PhysicsCategoryToBits.get(category) ?? 0),
+                    0
+                )
+        }
 
         this.isBullet = data.bullet ?? this.isBullet
+        this.isSensor = data.sensor ?? this.isSensor
+
+        this.density = data.density ?? this.density
+        this.friction = data.friction ?? this.friction
+        this.restitution = data.restitution ?? this.restitution
 
         if (this.physicsType !== PhysicsType.NONE) {
             const physicsPoints: number[] = data.physicsPoints || [

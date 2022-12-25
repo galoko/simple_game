@@ -1,4 +1,11 @@
-import { addCharacter, Character, loadCharacterAnimations } from "./character"
+import { vec2 } from "gl-matrix"
+import {
+    addCharacter,
+    Character,
+    generic_head_graphics,
+    loadCharacterAnimations,
+    platform_graphics,
+} from "./character"
 import { createGraphics, PhysicsType } from "./graphics"
 import { GraphicsObject } from "./object"
 import { createPlayer, player } from "./player"
@@ -10,7 +17,14 @@ export async function initScene(): Promise<void> {
     createPlayer()
     addCharacter(player)
 
-    addCharacter(new Character("misha", false))
+    for (let i = 0; i < 10; i++) {
+        const enemy = new Character("enemy", generic_head_graphics)
+        enemy.obj.x = 3 + i * 3
+        enemy.obj.y = 0
+        enemy.obj.mirror = true
+        addCharacter(enemy)
+        enemy.aimAt(vec2.fromValues(0, -2 + 0.17))
+    }
 
     const box = new GraphicsObject(await createGraphics("box"))
     box.x = 4
@@ -21,21 +35,24 @@ export async function initScene(): Promise<void> {
     addToScene(box)
 
     const COUNT = 3
-    const FLOORS_COUNT = 10
 
     const dirt_graphics = await createGraphics("dirt")
 
     const angle = 0
-    for (let j = 0; j < FLOORS_COUNT; j++) {
-        for (let i = -COUNT / 2; i < COUNT; i++) {
-            const l = 10 * i
-            const dirt = new GraphicsObject(dirt_graphics)
-            dirt.scale = 10
-            dirt.x = Math.cos(angle) * l * (j + 1)
-            dirt.y = Math.sin(angle) * l - j * 1.8
-            dirt.z = 1
-            dirt.angle = angle
-            addToScene(dirt)
-        }
+    for (let i = -COUNT / 2; i < COUNT; i++) {
+        const l = 10 * i
+        const dirt = new GraphicsObject(dirt_graphics)
+        dirt.scale = 10
+        dirt.x = Math.cos(angle) * l
+        dirt.y = Math.sin(angle) * l
+        dirt.z = 1
+        dirt.angle = angle
+        addToScene(dirt)
     }
+
+    const platform = new GraphicsObject(platform_graphics)
+    platform.x = 0
+    platform.y = -1
+    platform.z = 1
+    addToScene(platform)
 }

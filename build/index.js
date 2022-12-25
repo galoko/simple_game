@@ -253,7 +253,7 @@ function determinant$3(a) {
  * @returns {mat2} out
  */
 
-function multiply$8(out, a, b) {
+function multiply$9(out, a, b) {
   var a0 = a[0],
       a1 = a[1],
       a2 = a[2],
@@ -396,7 +396,7 @@ function LDU(L, D, U, a) {
  * @returns {mat2} out
  */
 
-function add$8(out, a, b) {
+function add$9(out, a, b) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
@@ -487,7 +487,7 @@ function multiplyScalarAndAdd$3(out, a, b, scale) {
  * @function
  */
 
-var mul$8 = multiply$8;
+var mul$8 = multiply$9;
 /**
  * Alias for {@link mat2.subtract}
  * @function
@@ -507,7 +507,7 @@ var mat2 = /*#__PURE__*/Object.freeze({
   invert: invert$5,
   adjoint: adjoint$2,
   determinant: determinant$3,
-  multiply: multiply$8,
+  multiply: multiply$9,
   rotate: rotate$5,
   scale: scale$8,
   fromRotation: fromRotation$4,
@@ -515,7 +515,7 @@ var mat2 = /*#__PURE__*/Object.freeze({
   str: str$8,
   frob: frob$3,
   LDU: LDU,
-  add: add$8,
+  add: add$9,
   subtract: subtract$6,
   exactEquals: exactEquals$8,
   equals: equals$8,
@@ -707,7 +707,7 @@ function determinant$2(a) {
  * @returns {mat2d} out
  */
 
-function multiply$7(out, a, b) {
+function multiply$8(out, a, b) {
   var a0 = a[0],
       a1 = a[1],
       a2 = a[2],
@@ -900,7 +900,7 @@ function frob$2(a) {
  * @returns {mat2d} out
  */
 
-function add$7(out, a, b) {
+function add$8(out, a, b) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
@@ -1003,7 +1003,7 @@ function equals$7(a, b) {
  * @function
  */
 
-var mul$7 = multiply$7;
+var mul$7 = multiply$8;
 /**
  * Alias for {@link mat2d.subtract}
  * @function
@@ -1021,7 +1021,7 @@ var mat2d = /*#__PURE__*/Object.freeze({
   set: set$7,
   invert: invert$4,
   determinant: determinant$2,
-  multiply: multiply$7,
+  multiply: multiply$8,
   rotate: rotate$4,
   scale: scale$7,
   translate: translate$3,
@@ -1030,7 +1030,7 @@ var mat2d = /*#__PURE__*/Object.freeze({
   fromTranslation: fromTranslation$3,
   str: str$7,
   frob: frob$2,
-  add: add$7,
+  add: add$8,
   subtract: subtract$5,
   multiplyScalar: multiplyScalar$2,
   multiplyScalarAndAdd: multiplyScalarAndAdd$2,
@@ -1334,7 +1334,7 @@ function determinant$1(a) {
  * @returns {mat3} out
  */
 
-function multiply$6(out, a, b) {
+function multiply$7(out, a, b) {
   var a00 = a[0],
       a01 = a[1],
       a02 = a[2];
@@ -1689,7 +1689,7 @@ function frob$1(a) {
  * @returns {mat3} out
  */
 
-function add$6(out, a, b) {
+function add$7(out, a, b) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
@@ -1810,7 +1810,7 @@ function equals$6(a, b) {
  * @function
  */
 
-var mul$6 = multiply$6;
+var mul$6 = multiply$7;
 /**
  * Alias for {@link mat3.subtract}
  * @function
@@ -1831,7 +1831,7 @@ var mat3 = /*#__PURE__*/Object.freeze({
   invert: invert$3,
   adjoint: adjoint$1,
   determinant: determinant$1,
-  multiply: multiply$6,
+  multiply: multiply$7,
   translate: translate$2,
   rotate: rotate$3,
   scale: scale$6,
@@ -1844,7 +1844,7 @@ var mat3 = /*#__PURE__*/Object.freeze({
   projection: projection,
   str: str$6,
   frob: frob$1,
-  add: add$6,
+  add: add$7,
   subtract: subtract$4,
   multiplyScalar: multiplyScalar$1,
   multiplyScalarAndAdd: multiplyScalarAndAdd$1,
@@ -2257,7 +2257,7 @@ function determinant(a) {
  * @returns {mat4} out
  */
 
-function multiply$5(out, a, b) {
+function multiply$6(out, a, b) {
   var a00 = a[0],
       a01 = a[1],
       a02 = a[2],
@@ -3593,7 +3593,7 @@ function frob(a) {
  * @returns {mat4} out
  */
 
-function add$5(out, a, b) {
+function add$6(out, a, b) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
@@ -3756,7 +3756,7 @@ function equals$5(a, b) {
  * @function
  */
 
-var mul$5 = multiply$5;
+var mul$5 = multiply$6;
 /**
  * Alias for {@link mat4.subtract}
  * @function
@@ -3776,7 +3776,7 @@ var mat4 = /*#__PURE__*/Object.freeze({
   invert: invert$2,
   adjoint: adjoint,
   determinant: determinant,
-  multiply: multiply$5,
+  multiply: multiply$6,
   translate: translate$1,
   scale: scale$5,
   rotate: rotate$2,
@@ -3809,7 +3809,7 @@ var mat4 = /*#__PURE__*/Object.freeze({
   targetTo: targetTo,
   str: str$5,
   frob: frob,
-  add: add$5,
+  add: add$6,
   subtract: subtract$3,
   multiplyScalar: multiplyScalar,
   multiplyScalarAndAdd: multiplyScalarAndAdd,
@@ -3923,7 +3923,7 @@ function set$4(out, x, y, z) {
  * @returns {vec3} out
  */
 
-function add$4(out, a, b) {
+function add$5(out, a, b) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
@@ -3953,7 +3953,7 @@ function subtract$2(out, a, b) {
  * @returns {vec3} out
  */
 
-function multiply$4(out, a, b) {
+function multiply$5(out, a, b) {
   out[0] = a[0] * b[0];
   out[1] = a[1] * b[1];
   out[2] = a[2] * b[2];
@@ -4529,7 +4529,7 @@ var sub$2 = subtract$2;
  * @function
  */
 
-var mul$4 = multiply$4;
+var mul$4 = multiply$5;
 /**
  * Alias for {@link vec3.divide}
  * @function
@@ -4614,9 +4614,9 @@ var vec3 = /*#__PURE__*/Object.freeze({
   fromValues: fromValues$4,
   copy: copy$4,
   set: set$4,
-  add: add$4,
+  add: add$5,
   subtract: subtract$2,
-  multiply: multiply$4,
+  multiply: multiply$5,
   divide: divide$2,
   ceil: ceil$2,
   floor: floor$2,
@@ -4756,7 +4756,7 @@ function set$3(out, x, y, z, w) {
  * @returns {vec4} out
  */
 
-function add$3(out, a, b) {
+function add$4(out, a, b) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
@@ -4788,7 +4788,7 @@ function subtract$1(out, a, b) {
  * @returns {vec4} out
  */
 
-function multiply$3(out, a, b) {
+function multiply$4(out, a, b) {
   out[0] = a[0] * b[0];
   out[1] = a[1] * b[1];
   out[2] = a[2] * b[2];
@@ -5242,7 +5242,7 @@ var sub$1 = subtract$1;
  * @function
  */
 
-var mul$3 = multiply$3;
+var mul$3 = multiply$4;
 /**
  * Alias for {@link vec4.divide}
  * @function
@@ -5328,9 +5328,9 @@ var vec4 = /*#__PURE__*/Object.freeze({
   fromValues: fromValues$3,
   copy: copy$3,
   set: set$3,
-  add: add$3,
+  add: add$4,
   subtract: subtract$1,
-  multiply: multiply$3,
+  multiply: multiply$4,
   divide: divide$1,
   ceil: ceil$1,
   floor: floor$1,
@@ -5474,7 +5474,7 @@ function getAngle(a, b) {
  * @returns {quat} out
  */
 
-function multiply$2(out, a, b) {
+function multiply$3(out, a, b) {
   var ax = a[0],
       ay = a[1],
       az = a[2],
@@ -5886,13 +5886,13 @@ var set$2 = set$3;
  * @function
  */
 
-var add$2 = add$3;
+var add$3 = add$4;
 /**
  * Alias for {@link quat.multiply}
  * @function
  */
 
-var mul$2 = multiply$2;
+var mul$2 = multiply$3;
 /**
  * Scales a quat by a scalar number
  *
@@ -6080,7 +6080,7 @@ var quat = /*#__PURE__*/Object.freeze({
   setAxisAngle: setAxisAngle,
   getAxisAngle: getAxisAngle,
   getAngle: getAngle,
-  multiply: multiply$2,
+  multiply: multiply$3,
   rotateX: rotateX$1,
   rotateY: rotateY$1,
   rotateZ: rotateZ$1,
@@ -6099,7 +6099,7 @@ var quat = /*#__PURE__*/Object.freeze({
   fromValues: fromValues$2,
   copy: copy$2,
   set: set$2,
-  add: add$2,
+  add: add$3,
   mul: mul$2,
   scale: scale$2,
   dot: dot$3,
@@ -6687,7 +6687,7 @@ function rotateAroundAxis(out, a, axis, rad) {
  * @function
  */
 
-function add$1(out, a, b) {
+function add$2(out, a, b) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   out[2] = a[2] + b[2];
@@ -6707,7 +6707,7 @@ function add$1(out, a, b) {
  * @returns {quat2} out
  */
 
-function multiply$1(out, a, b) {
+function multiply$2(out, a, b) {
   var ax0 = a[0],
       ay0 = a[1],
       az0 = a[2],
@@ -6739,7 +6739,7 @@ function multiply$1(out, a, b) {
  * @function
  */
 
-var mul$1 = multiply$1;
+var mul$1 = multiply$2;
 /**
  * Scales a dual quat by a scalar number
  *
@@ -6974,8 +6974,8 @@ var quat2 = /*#__PURE__*/Object.freeze({
   rotateByQuatAppend: rotateByQuatAppend,
   rotateByQuatPrepend: rotateByQuatPrepend,
   rotateAroundAxis: rotateAroundAxis,
-  add: add$1,
-  multiply: multiply$1,
+  add: add$2,
+  multiply: multiply$2,
   mul: mul$1,
   scale: scale$1,
   dot: dot$2,
@@ -7076,7 +7076,7 @@ function set(out, x, y) {
  * @returns {vec2} out
  */
 
-function add(out, a, b) {
+function add$1(out, a, b) {
   out[0] = a[0] + b[0];
   out[1] = a[1] + b[1];
   return out;
@@ -7104,7 +7104,7 @@ function subtract(out, a, b) {
  * @returns {vec2} out
  */
 
-function multiply(out, a, b) {
+function multiply$1(out, a, b) {
   out[0] = a[0] * b[0];
   out[1] = a[1] * b[1];
   return out;
@@ -7547,7 +7547,7 @@ var sub = subtract;
  * @function
  */
 
-var mul = multiply;
+var mul = multiply$1;
 /**
  * Alias for {@link vec2.divide}
  * @function
@@ -7623,9 +7623,9 @@ var vec2 = /*#__PURE__*/Object.freeze({
   fromValues: fromValues,
   copy: copy,
   set: set,
-  add: add,
+  add: add$1,
   subtract: subtract,
-  multiply: multiply,
+  multiply: multiply$1,
   divide: divide,
   ceil: ceil,
   floor: floor,
@@ -7813,7 +7813,7 @@ function aimAt(p, objectToRotate, attachmentName) {
         const offsetUp = create();
         scale(offsetUp, UP, offsetHeight);
         const delta = create();
-        add(delta, delta, p);
+        add$1(delta, delta, p);
         sub(delta, delta, rotationCenter);
         const mouseAngle = getAngleFromVector(delta);
         sub(delta, delta, rotate(offsetUp, mouseAngle));
@@ -7824,7 +7824,7 @@ function aimAt(p, objectToRotate, attachmentName) {
         const pointOnCircle = create();
         scale(pointOnCircle, normal, offsetHeight);
         const pointOnCircleWorldSpace = create();
-        add(pointOnCircleWorldSpace, rotationCenter, pointOnCircle);
+        add$1(pointOnCircleWorldSpace, rotationCenter, pointOnCircle);
         const deltaPointAndPointOnCircle = create();
         sub(deltaPointAndPointOnCircle, p, pointOnCircleWorldSpace);
         mul(deltaPointAndPointOnCircle, deltaPointAndPointOnCircle, parent.mirrorVec);
@@ -7860,15 +7860,21 @@ var PhysicsCategory;
 (function (PhysicsCategory) {
     PhysicsCategory["NONE"] = "none";
     PhysicsCategory["BULLET"] = "bullet";
+    PhysicsCategory["MEAT"] = "meat";
+    PhysicsCategory["PLATFORM"] = "platform";
 })(PhysicsCategory || (PhysicsCategory = {}));
 var PhysicsCategoryBits;
 (function (PhysicsCategoryBits) {
     PhysicsCategoryBits[PhysicsCategoryBits["NONE"] = 1] = "NONE";
     PhysicsCategoryBits[PhysicsCategoryBits["BULLET"] = 2] = "BULLET";
+    PhysicsCategoryBits[PhysicsCategoryBits["MEAT"] = 4] = "MEAT";
+    PhysicsCategoryBits[PhysicsCategoryBits["PLATFORM"] = 8] = "PLATFORM";
 })(PhysicsCategoryBits || (PhysicsCategoryBits = {}));
 const PhysicsCategoryToBits = new Map();
 PhysicsCategoryToBits.set(PhysicsCategory.NONE, PhysicsCategoryBits.NONE);
 PhysicsCategoryToBits.set(PhysicsCategory.BULLET, PhysicsCategoryBits.BULLET);
+PhysicsCategoryToBits.set(PhysicsCategory.MEAT, PhysicsCategoryBits.MEAT);
+PhysicsCategoryToBits.set(PhysicsCategory.PLATFORM, PhysicsCategoryBits.PLATFORM);
 const ALL_MASK = Array.from(PhysicsCategoryToBits.values()).reduce((mask, bits) => mask | bits, 0);
 class Graphics {
     name;
@@ -7897,7 +7903,7 @@ class Graphics {
     physicsPivot = undefined;
     fixedRotation = false;
     density = 5;
-    friction = 1;
+    friction = 0.5;
     restitution = 0;
     isSensor = false;
     isBullet = false;
@@ -7921,7 +7927,10 @@ class Graphics {
                 }
             }
             else {
-                promises.push(loadImage(`assets/${this.name}.png`));
+                const name = !this.prefix
+                    ? `assets/${this.name}.png`
+                    : `assets/${this.name}/${this.prefix}.png`;
+                promises.push(loadImage(name));
             }
             this.frames = await Promise.all(promises);
         }
@@ -7948,9 +7957,18 @@ class Graphics {
         this.physicsType = data.physics || this.physicsType;
         this.physicsCategory = PhysicsCategoryToBits.get(data.category) ?? this.physicsCategory;
         if (data.mask) {
-            data.mask.reduce((mask, category) => mask | (PhysicsCategoryToBits.get(category) ?? 0), 0);
+            this.physicsMaskBits = data.mask.reduce((mask, category) => mask | (PhysicsCategoryToBits.get(category) ?? 0), 0);
+        }
+        if (data.negativeMask) {
+            this.physicsMaskBits =
+                ALL_MASK &
+                    ~data.negativeMask.reduce((mask, category) => mask | (PhysicsCategoryToBits.get(category) ?? 0), 0);
         }
         this.isBullet = data.bullet ?? this.isBullet;
+        this.isSensor = data.sensor ?? this.isSensor;
+        this.density = data.density ?? this.density;
+        this.friction = data.friction ?? this.friction;
+        this.restitution = data.restitution ?? this.restitution;
         if (this.physicsType !== PhysicsType.NONE) {
             const physicsPoints = data.physicsPoints || [
                 0,
@@ -8005,6 +8023,954 @@ async function createGraphics(name, prefix) {
 }
 function createDummyGraphics() {
     return new Graphics("dummy");
+}
+
+const SMALLEST_UNSAFE_INTEGER = 0x20000000000000;
+const LARGEST_SAFE_INTEGER = SMALLEST_UNSAFE_INTEGER - 1;
+const UINT32_MAX = -1 >>> 0;
+const UINT32_SIZE = UINT32_MAX + 1;
+const INT32_SIZE = UINT32_SIZE / 2;
+const INT32_MAX = INT32_SIZE - 1;
+const UINT21_SIZE = 1 << 21;
+const UINT21_MAX = UINT21_SIZE - 1;
+
+/**
+ * Returns a value within [-0x80000000, 0x7fffffff]
+ */
+function int32(engine) {
+    return engine.next() | 0;
+}
+
+function add(distribution, addend) {
+    if (addend === 0) {
+        return distribution;
+    }
+    else {
+        return engine => distribution(engine) + addend;
+    }
+}
+
+/**
+ * Returns a value within [-0x20000000000000, 0x1fffffffffffff]
+ */
+function int53(engine) {
+    const high = engine.next() | 0;
+    const low = engine.next() >>> 0;
+    return ((high & UINT21_MAX) * UINT32_SIZE +
+        low +
+        (high & UINT21_SIZE ? -SMALLEST_UNSAFE_INTEGER : 0));
+}
+
+/**
+ * Returns a value within [-0x20000000000000, 0x20000000000000]
+ */
+function int53Full(engine) {
+    while (true) {
+        const high = engine.next() | 0;
+        if (high & 0x400000) {
+            if ((high & 0x7fffff) === 0x400000 && (engine.next() | 0) === 0) {
+                return SMALLEST_UNSAFE_INTEGER;
+            }
+        }
+        else {
+            const low = engine.next() >>> 0;
+            return ((high & UINT21_MAX) * UINT32_SIZE +
+                low +
+                (high & UINT21_SIZE ? -SMALLEST_UNSAFE_INTEGER : 0));
+        }
+    }
+}
+
+/**
+ * Returns a value within [0, 0xffffffff]
+ */
+function uint32(engine) {
+    return engine.next() >>> 0;
+}
+
+/**
+ * Returns a value within [0, 0x1fffffffffffff]
+ */
+function uint53(engine) {
+    const high = engine.next() & UINT21_MAX;
+    const low = engine.next() >>> 0;
+    return high * UINT32_SIZE + low;
+}
+
+/**
+ * Returns a value within [0, 0x20000000000000]
+ */
+function uint53Full(engine) {
+    while (true) {
+        const high = engine.next() | 0;
+        if (high & UINT21_SIZE) {
+            if ((high & UINT21_MAX) === 0 && (engine.next() | 0) === 0) {
+                return SMALLEST_UNSAFE_INTEGER;
+            }
+        }
+        else {
+            const low = engine.next() >>> 0;
+            return (high & UINT21_MAX) * UINT32_SIZE + low;
+        }
+    }
+}
+
+function isPowerOfTwoMinusOne(value) {
+    return ((value + 1) & value) === 0;
+}
+function bitmask(masking) {
+    return (engine) => engine.next() & masking;
+}
+function downscaleToLoopCheckedRange(range) {
+    const extendedRange = range + 1;
+    const maximum = extendedRange * Math.floor(UINT32_SIZE / extendedRange);
+    return engine => {
+        let value = 0;
+        do {
+            value = engine.next() >>> 0;
+        } while (value >= maximum);
+        return value % extendedRange;
+    };
+}
+function downscaleToRange(range) {
+    if (isPowerOfTwoMinusOne(range)) {
+        return bitmask(range);
+    }
+    else {
+        return downscaleToLoopCheckedRange(range);
+    }
+}
+function isEvenlyDivisibleByMaxInt32(value) {
+    return (value | 0) === 0;
+}
+function upscaleWithHighMasking(masking) {
+    return engine => {
+        const high = engine.next() & masking;
+        const low = engine.next() >>> 0;
+        return high * UINT32_SIZE + low;
+    };
+}
+function upscaleToLoopCheckedRange(extendedRange) {
+    const maximum = extendedRange * Math.floor(SMALLEST_UNSAFE_INTEGER / extendedRange);
+    return engine => {
+        let ret = 0;
+        do {
+            const high = engine.next() & UINT21_MAX;
+            const low = engine.next() >>> 0;
+            ret = high * UINT32_SIZE + low;
+        } while (ret >= maximum);
+        return ret % extendedRange;
+    };
+}
+function upscaleWithinU53(range) {
+    const extendedRange = range + 1;
+    if (isEvenlyDivisibleByMaxInt32(extendedRange)) {
+        const highRange = ((extendedRange / UINT32_SIZE) | 0) - 1;
+        if (isPowerOfTwoMinusOne(highRange)) {
+            return upscaleWithHighMasking(highRange);
+        }
+    }
+    return upscaleToLoopCheckedRange(extendedRange);
+}
+function upscaleWithinI53AndLoopCheck(min, max) {
+    return engine => {
+        let ret = 0;
+        do {
+            const high = engine.next() | 0;
+            const low = engine.next() >>> 0;
+            ret =
+                (high & UINT21_MAX) * UINT32_SIZE +
+                    low +
+                    (high & UINT21_SIZE ? -SMALLEST_UNSAFE_INTEGER : 0);
+        } while (ret < min || ret > max);
+        return ret;
+    };
+}
+/**
+ * Returns a Distribution to return a value within [min, max]
+ * @param min The minimum integer value, inclusive. No less than -0x20000000000000.
+ * @param max The maximum integer value, inclusive. No greater than 0x20000000000000.
+ */
+function integer(min, max) {
+    min = Math.floor(min);
+    max = Math.floor(max);
+    if (min < -SMALLEST_UNSAFE_INTEGER || !isFinite(min)) {
+        throw new RangeError(`Expected min to be at least ${-SMALLEST_UNSAFE_INTEGER}`);
+    }
+    else if (max > SMALLEST_UNSAFE_INTEGER || !isFinite(max)) {
+        throw new RangeError(`Expected max to be at most ${SMALLEST_UNSAFE_INTEGER}`);
+    }
+    const range = max - min;
+    if (range <= 0 || !isFinite(range)) {
+        return () => min;
+    }
+    else if (range === UINT32_MAX) {
+        if (min === 0) {
+            return uint32;
+        }
+        else {
+            return add(int32, min + INT32_SIZE);
+        }
+    }
+    else if (range < UINT32_MAX) {
+        return add(downscaleToRange(range), min);
+    }
+    else if (range === LARGEST_SAFE_INTEGER) {
+        return add(uint53, min);
+    }
+    else if (range < LARGEST_SAFE_INTEGER) {
+        return add(upscaleWithinU53(range), min);
+    }
+    else if (max - 1 - min === LARGEST_SAFE_INTEGER) {
+        return add(uint53Full, min);
+    }
+    else if (min === -SMALLEST_UNSAFE_INTEGER &&
+        max === SMALLEST_UNSAFE_INTEGER) {
+        return int53Full;
+    }
+    else if (min === -SMALLEST_UNSAFE_INTEGER && max === LARGEST_SAFE_INTEGER) {
+        return int53;
+    }
+    else if (min === -LARGEST_SAFE_INTEGER && max === SMALLEST_UNSAFE_INTEGER) {
+        return add(int53, 1);
+    }
+    else if (max === SMALLEST_UNSAFE_INTEGER) {
+        return add(upscaleWithinI53AndLoopCheck(min - 1, max - 1), 1);
+    }
+    else {
+        return upscaleWithinI53AndLoopCheck(min, max);
+    }
+}
+
+function isLeastBitTrue(engine) {
+    return (engine.next() & 1) === 1;
+}
+function lessThan(distribution, value) {
+    return engine => distribution(engine) < value;
+}
+function probability(percentage) {
+    if (percentage <= 0) {
+        return () => false;
+    }
+    else if (percentage >= 1) {
+        return () => true;
+    }
+    else {
+        const scaled = percentage * UINT32_SIZE;
+        if (scaled % 1 === 0) {
+            return lessThan(int32, (scaled - INT32_SIZE) | 0);
+        }
+        else {
+            return lessThan(uint53, Math.round(percentage * SMALLEST_UNSAFE_INTEGER));
+        }
+    }
+}
+function bool(numerator, denominator) {
+    if (denominator == null) {
+        if (numerator == null) {
+            return isLeastBitTrue;
+        }
+        return probability(numerator);
+    }
+    else {
+        if (numerator <= 0) {
+            return () => false;
+        }
+        else if (numerator >= denominator) {
+            return () => true;
+        }
+        return lessThan(integer(0, denominator - 1), numerator);
+    }
+}
+
+/**
+ * Returns a Distribution that returns a random `Date` within the inclusive
+ * range of [`start`, `end`].
+ * @param start The minimum `Date`
+ * @param end The maximum `Date`
+ */
+function date(start, end) {
+    const distribution = integer(+start, +end);
+    return engine => new Date(distribution(engine));
+}
+
+/**
+ * Returns a Distribution to return a value within [1, sideCount]
+ * @param sideCount The number of sides of the die
+ */
+function die(sideCount) {
+    return integer(1, sideCount);
+}
+
+/**
+ * Returns a distribution that returns an array of length `dieCount` of values
+ * within [1, `sideCount`]
+ * @param sideCount The number of sides of each die
+ * @param dieCount The number of dice
+ */
+function dice(sideCount, dieCount) {
+    const distribution = die(sideCount);
+    return engine => {
+        const result = [];
+        for (let i = 0; i < dieCount; ++i) {
+            result.push(distribution(engine));
+        }
+        return result;
+    };
+}
+
+// tslint:disable:unified-signatures
+// has 2**x chars, for faster uniform distribution
+const DEFAULT_STRING_POOL = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
+function string(pool = DEFAULT_STRING_POOL) {
+    const poolLength = pool.length;
+    if (!poolLength) {
+        throw new Error("Expected pool not to be an empty string");
+    }
+    const distribution = integer(0, poolLength - 1);
+    return (engine, length) => {
+        let result = "";
+        for (let i = 0; i < length; ++i) {
+            const j = distribution(engine);
+            result += pool.charAt(j);
+        }
+        return result;
+    };
+}
+
+const LOWER_HEX_POOL = "0123456789abcdef";
+const lowerHex = string(LOWER_HEX_POOL);
+const upperHex = string(LOWER_HEX_POOL.toUpperCase());
+/**
+ * Returns a Distribution that returns a random string comprised of numbers
+ * or the characters `abcdef` (or `ABCDEF`) of length `length`.
+ * @param length Length of the result string
+ * @param uppercase Whether the string should use `ABCDEF` instead of `abcdef`
+ */
+function hex(uppercase) {
+    if (uppercase) {
+        return upperHex;
+    }
+    else {
+        return lowerHex;
+    }
+}
+
+function convertSliceArgument(value, length) {
+    if (value < 0) {
+        return Math.max(value + length, 0);
+    }
+    else {
+        return Math.min(value, length);
+    }
+}
+
+function toInteger(value) {
+    const num = +value;
+    if (num < 0) {
+        return Math.ceil(num);
+    }
+    else {
+        return Math.floor(num);
+    }
+}
+
+/**
+ * Returns a random value within the provided `source` within the sliced
+ * bounds of `begin` and `end`.
+ * @param source an array of items to pick from
+ * @param begin the beginning slice index (defaults to `0`)
+ * @param end the ending slice index (defaults to `source.length`)
+ */
+function pick(engine, source, begin, end) {
+    const length = source.length;
+    if (length === 0) {
+        throw new RangeError("Cannot pick from an empty array");
+    }
+    const start = begin == null ? 0 : convertSliceArgument(toInteger(begin), length);
+    const finish = end === void 0 ? length : convertSliceArgument(toInteger(end), length);
+    if (start >= finish) {
+        throw new RangeError(`Cannot pick between bounds ${start} and ${finish}`);
+    }
+    const distribution = integer(start, finish - 1);
+    return source[distribution(engine)];
+}
+
+function multiply(distribution, multiplier) {
+    if (multiplier === 1) {
+        return distribution;
+    }
+    else if (multiplier === 0) {
+        return () => 0;
+    }
+    else {
+        return engine => distribution(engine) * multiplier;
+    }
+}
+
+/**
+ * Returns a floating-point value within [0.0, 1.0)
+ */
+function realZeroToOneExclusive(engine) {
+    return uint53(engine) / SMALLEST_UNSAFE_INTEGER;
+}
+
+/**
+ * Returns a floating-point value within [0.0, 1.0]
+ */
+function realZeroToOneInclusive(engine) {
+    return uint53Full(engine) / SMALLEST_UNSAFE_INTEGER;
+}
+
+/**
+ * Returns a floating-point value within [min, max) or [min, max]
+ * @param min The minimum floating-point value, inclusive.
+ * @param max The maximum floating-point value.
+ * @param inclusive If true, `max` will be inclusive.
+ */
+function real(min, max, inclusive = false) {
+    if (!isFinite(min)) {
+        throw new RangeError("Expected min to be a finite number");
+    }
+    else if (!isFinite(max)) {
+        throw new RangeError("Expected max to be a finite number");
+    }
+    return add(multiply(inclusive ? realZeroToOneInclusive : realZeroToOneExclusive, max - min), min);
+}
+
+const sliceArray = Array.prototype.slice;
+
+/**
+ * Shuffles an array in-place
+ * @param engine The Engine to use when choosing random values
+ * @param array The array to shuffle
+ * @param downTo minimum index to shuffle. Only used internally.
+ */
+function shuffle(engine, array, downTo = 0) {
+    const length = array.length;
+    if (length) {
+        for (let i = (length - 1) >>> 0; i > downTo; --i) {
+            const distribution = integer(0, i);
+            const j = distribution(engine);
+            if (i !== j) {
+                const tmp = array[i];
+                array[i] = array[j];
+                array[j] = tmp;
+            }
+        }
+    }
+    return array;
+}
+
+/**
+ * From the population array, produce an array with sampleSize elements that
+ * are randomly chosen without repeats.
+ * @param engine The Engine to use when choosing random values
+ * @param population An array that has items to choose a sample from
+ * @param sampleSize The size of the result array
+ */
+function sample(engine, population, sampleSize) {
+    if (sampleSize < 0 ||
+        sampleSize > population.length ||
+        !isFinite(sampleSize)) {
+        throw new RangeError("Expected sampleSize to be within 0 and the length of the population");
+    }
+    if (sampleSize === 0) {
+        return [];
+    }
+    const clone = sliceArray.call(population);
+    const length = clone.length;
+    if (length === sampleSize) {
+        return shuffle(engine, clone, 0);
+    }
+    const tailLength = length - sampleSize;
+    return shuffle(engine, clone, tailLength - 1).slice(tailLength);
+}
+
+const stringRepeat = (() => {
+    try {
+        if ("x".repeat(3) === "xxx") {
+            return (pattern, count) => pattern.repeat(count);
+        }
+    }
+    catch (_) {
+        // nothing to do here
+    }
+    return (pattern, count) => {
+        let result = "";
+        while (count > 0) {
+            if (count & 1) {
+                result += pattern;
+            }
+            count >>= 1;
+            pattern += pattern;
+        }
+        return result;
+    };
+})();
+
+function zeroPad(text, zeroCount) {
+    return stringRepeat("0", zeroCount - text.length) + text;
+}
+/**
+ * Returns a Universally Unique Identifier Version 4.
+ *
+ * See http://en.wikipedia.org/wiki/Universally_unique_identifier
+ */
+function uuid4(engine) {
+    const a = engine.next() >>> 0;
+    const b = engine.next() | 0;
+    const c = engine.next() | 0;
+    const d = engine.next() >>> 0;
+    return (zeroPad(a.toString(16), 8) +
+        "-" +
+        zeroPad((b & 0xffff).toString(16), 4) +
+        "-" +
+        zeroPad((((b >> 4) & 0x0fff) | 0x4000).toString(16), 4) +
+        "-" +
+        zeroPad(((c & 0x3fff) | 0x8000).toString(16), 4) +
+        "-" +
+        zeroPad(((c >> 4) & 0xffff).toString(16), 4) +
+        zeroPad(d.toString(16), 8));
+}
+
+/**
+ * An int32-producing Engine that uses `Math.random()`
+ */
+const nativeMath = {
+    next() {
+        return (Math.random() * UINT32_SIZE) | 0;
+    }
+};
+
+// tslint:disable:unified-signatures
+/**
+ * A wrapper around an Engine that provides easy-to-use methods for
+ * producing values based on known distributions
+ */
+class Random {
+    /**
+     * Creates a new Random wrapper
+     * @param engine The engine to use (defaults to a `Math.random`-based implementation)
+     */
+    constructor(engine = nativeMath) {
+        this.engine = engine;
+    }
+    /**
+     * Returns a value within [-0x80000000, 0x7fffffff]
+     */
+    int32() {
+        return int32(this.engine);
+    }
+    /**
+     * Returns a value within [0, 0xffffffff]
+     */
+    uint32() {
+        return uint32(this.engine);
+    }
+    /**
+     * Returns a value within [0, 0x1fffffffffffff]
+     */
+    uint53() {
+        return uint53(this.engine);
+    }
+    /**
+     * Returns a value within [0, 0x20000000000000]
+     */
+    uint53Full() {
+        return uint53Full(this.engine);
+    }
+    /**
+     * Returns a value within [-0x20000000000000, 0x1fffffffffffff]
+     */
+    int53() {
+        return int53(this.engine);
+    }
+    /**
+     * Returns a value within [-0x20000000000000, 0x20000000000000]
+     */
+    int53Full() {
+        return int53Full(this.engine);
+    }
+    /**
+     * Returns a value within [min, max]
+     * @param min The minimum integer value, inclusive. No less than -0x20000000000000.
+     * @param max The maximum integer value, inclusive. No greater than 0x20000000000000.
+     */
+    integer(min, max) {
+        return integer(min, max)(this.engine);
+    }
+    /**
+     * Returns a floating-point value within [0.0, 1.0]
+     */
+    realZeroToOneInclusive() {
+        return realZeroToOneInclusive(this.engine);
+    }
+    /**
+     * Returns a floating-point value within [0.0, 1.0)
+     */
+    realZeroToOneExclusive() {
+        return realZeroToOneExclusive(this.engine);
+    }
+    /**
+     * Returns a floating-point value within [min, max) or [min, max]
+     * @param min The minimum floating-point value, inclusive.
+     * @param max The maximum floating-point value.
+     * @param inclusive If true, `max` will be inclusive.
+     */
+    real(min, max, inclusive = false) {
+        return real(min, max, inclusive)(this.engine);
+    }
+    bool(numerator, denominator) {
+        return bool(numerator, denominator)(this.engine);
+    }
+    /**
+     * Return a random value within the provided `source` within the sliced
+     * bounds of `begin` and `end`.
+     * @param source an array of items to pick from
+     * @param begin the beginning slice index (defaults to `0`)
+     * @param end the ending slice index (defaults to `source.length`)
+     */
+    pick(source, begin, end) {
+        return pick(this.engine, source, begin, end);
+    }
+    /**
+     * Shuffles an array in-place
+     * @param array The array to shuffle
+     */
+    shuffle(array) {
+        return shuffle(this.engine, array);
+    }
+    /**
+     * From the population array, returns an array with sampleSize elements that
+     * are randomly chosen without repeats.
+     * @param population An array that has items to choose a sample from
+     * @param sampleSize The size of the result array
+     */
+    sample(population, sampleSize) {
+        return sample(this.engine, population, sampleSize);
+    }
+    /**
+     * Returns a value within [1, sideCount]
+     * @param sideCount The number of sides of the die
+     */
+    die(sideCount) {
+        return die(sideCount)(this.engine);
+    }
+    /**
+     * Returns an array of length `dieCount` of values within [1, sideCount]
+     * @param sideCount The number of sides of each die
+     * @param dieCount The number of dice
+     */
+    dice(sideCount, dieCount) {
+        return dice(sideCount, dieCount)(this.engine);
+    }
+    /**
+     * Returns a Universally Unique Identifier Version 4.
+     *
+     * See http://en.wikipedia.org/wiki/Universally_unique_identifier
+     */
+    uuid4() {
+        return uuid4(this.engine);
+    }
+    string(length, pool) {
+        return string(pool)(this.engine, length);
+    }
+    /**
+     * Returns a random string comprised of numbers or the characters `abcdef`
+     * (or `ABCDEF`) of length `length`.
+     * @param length Length of the result string
+     * @param uppercase Whether the string should use `ABCDEF` instead of `abcdef`
+     */
+    hex(length, uppercase) {
+        return hex(uppercase)(this.engine, length);
+    }
+    /**
+     * Returns a random `Date` within the inclusive range of [`start`, `end`].
+     * @param start The minimum `Date`
+     * @param end The maximum `Date`
+     */
+    date(start, end) {
+        return date(start, end)(this.engine);
+    }
+}
+
+/**
+ * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array
+ */
+const I32Array = (() => {
+    try {
+        const buffer = new ArrayBuffer(4);
+        const view = new Int32Array(buffer);
+        view[0] = INT32_SIZE;
+        if (view[0] === -INT32_SIZE) {
+            return Int32Array;
+        }
+    }
+    catch (_) {
+        // nothing to do here
+    }
+    return Array;
+})();
+
+let data = null;
+const COUNT = 128;
+let index = COUNT;
+/**
+ * An Engine that relies on the globally-available `crypto.getRandomValues`,
+ * which is typically available in modern browsers.
+ *
+ * See https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues
+ *
+ * If unavailable or otherwise non-functioning, then `browserCrypto` will
+ * likely `throw` on the first call to `next()`.
+ */
+const browserCrypto = {
+    next() {
+        if (index >= COUNT) {
+            if (data === null) {
+                data = new I32Array(COUNT);
+            }
+            crypto.getRandomValues(data);
+            index = 0;
+        }
+        return data[index++] | 0;
+    }
+};
+
+/**
+ * Returns an array of random int32 values, based on current time
+ * and a random number engine
+ *
+ * @param engine an Engine to pull random values from, default `nativeMath`
+ * @param length the length of the Array, minimum 1, default 16
+ */
+function createEntropy(engine = nativeMath, length = 16) {
+    const array = [];
+    array.push(new Date().getTime() | 0);
+    for (let i = 1; i < length; ++i) {
+        array[i] = engine.next() | 0;
+    }
+    return array;
+}
+
+/**
+ * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/imul
+ */
+const imul = (() => {
+    try {
+        if (Math.imul(UINT32_MAX, 5) === -5) {
+            return Math.imul;
+        }
+    }
+    catch (_) {
+        // nothing to do here
+    }
+    const UINT16_MAX = 0xffff;
+    return (a, b) => {
+        const ah = (a >>> 16) & UINT16_MAX;
+        const al = a & UINT16_MAX;
+        const bh = (b >>> 16) & UINT16_MAX;
+        const bl = b & UINT16_MAX;
+        // the shift by 0 fixes the sign on the high part
+        // the final |0 converts the unsigned value into a signed value
+        return (al * bl + (((ah * bl + al * bh) << 16) >>> 0)) | 0;
+    };
+})();
+
+const ARRAY_SIZE = 624;
+const ARRAY_MAX = ARRAY_SIZE - 1;
+const M = 397;
+const ARRAY_SIZE_MINUS_M = ARRAY_SIZE - M;
+const A = 0x9908b0df;
+/**
+ * An Engine that is a pseudorandom number generator using the Mersenne
+ * Twister algorithm based on the prime 2**19937 − 1
+ *
+ * See http://en.wikipedia.org/wiki/Mersenne_twister
+ */
+class MersenneTwister19937 {
+    /**
+     * MersenneTwister19937 should not be instantiated directly.
+     * Instead, use the static methods `seed`, `seedWithArray`, or `autoSeed`.
+     */
+    constructor() {
+        this.data = new I32Array(ARRAY_SIZE);
+        this.index = 0; // integer within [0, 624]
+        this.uses = 0;
+    }
+    /**
+     * Returns a MersenneTwister19937 seeded with an initial int32 value
+     * @param initial the initial seed value
+     */
+    static seed(initial) {
+        return new MersenneTwister19937().seed(initial);
+    }
+    /**
+     * Returns a MersenneTwister19937 seeded with zero or more int32 values
+     * @param source A series of int32 values
+     */
+    static seedWithArray(source) {
+        return new MersenneTwister19937().seedWithArray(source);
+    }
+    /**
+     * Returns a MersenneTwister19937 seeded with the current time and
+     * a series of natively-generated random values
+     */
+    static autoSeed() {
+        return MersenneTwister19937.seedWithArray(createEntropy());
+    }
+    /**
+     * Returns the next int32 value of the sequence
+     */
+    next() {
+        if ((this.index | 0) >= ARRAY_SIZE) {
+            refreshData(this.data);
+            this.index = 0;
+        }
+        const value = this.data[this.index];
+        this.index = (this.index + 1) | 0;
+        this.uses += 1;
+        return temper(value) | 0;
+    }
+    /**
+     * Returns the number of times that the Engine has been used.
+     *
+     * This can be provided to an unused MersenneTwister19937 with the same
+     * seed, bringing it to the exact point that was left off.
+     */
+    getUseCount() {
+        return this.uses;
+    }
+    /**
+     * Discards one or more items from the engine
+     * @param count The count of items to discard
+     */
+    discard(count) {
+        if (count <= 0) {
+            return this;
+        }
+        this.uses += count;
+        if ((this.index | 0) >= ARRAY_SIZE) {
+            refreshData(this.data);
+            this.index = 0;
+        }
+        while (count + this.index > ARRAY_SIZE) {
+            count -= ARRAY_SIZE - this.index;
+            refreshData(this.data);
+            this.index = 0;
+        }
+        this.index = (this.index + count) | 0;
+        return this;
+    }
+    seed(initial) {
+        let previous = 0;
+        this.data[0] = previous = initial | 0;
+        for (let i = 1; i < ARRAY_SIZE; i = (i + 1) | 0) {
+            this.data[i] = previous =
+                (imul(previous ^ (previous >>> 30), 0x6c078965) + i) | 0;
+        }
+        this.index = ARRAY_SIZE;
+        this.uses = 0;
+        return this;
+    }
+    seedWithArray(source) {
+        this.seed(0x012bd6aa);
+        seedWithArray(this.data, source);
+        return this;
+    }
+}
+function refreshData(data) {
+    let k = 0;
+    let tmp = 0;
+    for (; (k | 0) < ARRAY_SIZE_MINUS_M; k = (k + 1) | 0) {
+        tmp = (data[k] & INT32_SIZE) | (data[(k + 1) | 0] & INT32_MAX);
+        data[k] = data[(k + M) | 0] ^ (tmp >>> 1) ^ (tmp & 0x1 ? A : 0);
+    }
+    for (; (k | 0) < ARRAY_MAX; k = (k + 1) | 0) {
+        tmp = (data[k] & INT32_SIZE) | (data[(k + 1) | 0] & INT32_MAX);
+        data[k] =
+            data[(k - ARRAY_SIZE_MINUS_M) | 0] ^ (tmp >>> 1) ^ (tmp & 0x1 ? A : 0);
+    }
+    tmp = (data[ARRAY_MAX] & INT32_SIZE) | (data[0] & INT32_MAX);
+    data[ARRAY_MAX] = data[M - 1] ^ (tmp >>> 1) ^ (tmp & 0x1 ? A : 0);
+}
+function temper(value) {
+    value ^= value >>> 11;
+    value ^= (value << 7) & 0x9d2c5680;
+    value ^= (value << 15) & 0xefc60000;
+    return value ^ (value >>> 18);
+}
+function seedWithArray(data, source) {
+    let i = 1;
+    let j = 0;
+    const sourceLength = source.length;
+    let k = Math.max(sourceLength, ARRAY_SIZE) | 0;
+    let previous = data[0] | 0;
+    for (; (k | 0) > 0; --k) {
+        data[i] = previous =
+            ((data[i] ^ imul(previous ^ (previous >>> 30), 0x0019660d)) +
+                (source[j] | 0) +
+                (j | 0)) |
+                0;
+        i = (i + 1) | 0;
+        ++j;
+        if ((i | 0) > ARRAY_MAX) {
+            data[0] = data[ARRAY_MAX];
+            i = 1;
+        }
+        if (j >= sourceLength) {
+            j = 0;
+        }
+    }
+    for (k = ARRAY_MAX; (k | 0) > 0; --k) {
+        data[i] = previous =
+            ((data[i] ^ imul(previous ^ (previous >>> 30), 0x5d588b65)) - i) | 0;
+        i = (i + 1) | 0;
+        if ((i | 0) > ARRAY_MAX) {
+            data[0] = data[ARRAY_MAX];
+            i = 1;
+        }
+    }
+    data[0] = INT32_SIZE;
+}
+
+let data$1 = null;
+const COUNT$1 = 128;
+let index$1 = COUNT$1;
+/**
+ * An Engine that relies on the node-available
+ * `require('crypto').randomBytes`, which has been available since 0.58.
+ *
+ * See https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+ *
+ * If unavailable or otherwise non-functioning, then `nodeCrypto` will
+ * likely `throw` on the first call to `next()`.
+ */
+const nodeCrypto = {
+    next() {
+        if (index$1 >= COUNT$1) {
+            data$1 = new Int32Array(new Int8Array(require("crypto").randomBytes(4 * COUNT$1)).buffer);
+            index$1 = 0;
+        }
+        return data$1[index$1++] | 0;
+    }
+};
+
+/**
+ * Returns a Distribution to random value within the provided `source`
+ * within the sliced bounds of `begin` and `end`.
+ * @param source an array of items to pick from
+ * @param begin the beginning slice index (defaults to `0`)
+ * @param end the ending slice index (defaults to `source.length`)
+ */
+function picker(source, begin, end) {
+    const clone = sliceArray.call(source, begin, end);
+    if (clone.length === 0) {
+        throw new RangeError(`Cannot pick from a source with no items`);
+    }
+    const distribution = integer(0, clone.length - 1);
+    return engine => clone[distribution(engine)];
 }
 
 var Box2D$1 = (function() {
@@ -8669,12 +9635,12 @@ function screenToWorld(p) {
     return fromValues((x - ctx.canvas.width / 2) / camera.scale + camera.x, (y - ctx.canvas.height / 2) / camera.scale + camera.y);
 }
 const focusPoint = create();
-const SCREEN_HEIGHT_IN_METERS = 12;
+const SCREEN_HEIGHT_IN_METERS = 6;
 function setupCamera() {
     camera.scale = Math.max(0.01, screen.height / SCREEN_HEIGHT_IN_METERS);
     const SCREEN_WIDTH_IN_METERS = screen.width / camera.scale;
     camera.x = focusPoint[0] + SCREEN_WIDTH_IN_METERS * 0.25;
-    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.0;
+    camera.y = focusPoint[1] - SCREEN_HEIGHT_IN_METERS * 0.25;
     identity$4(camera.m);
     translate$3(camera.m, camera.m, fromValues(ctx.canvas.width / 2, ctx.canvas.height / 2));
     scale$7(camera.m, camera.m, fromValues(camera.scale, camera.scale));
@@ -8755,90 +9721,7 @@ function getEllapsedSincePressStart(key) {
     return now() - info.down_timestamp;
 }
 
-let player;
-const MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME = 100;
-const JUMP_MAX_TIME = 100;
-const CAYOTE_TIME = 150;
-function playerControls() {
-    // movement
-    let dstVelocity;
-    if (isPressed("KeyD")) {
-        player.isMoving = true;
-        player.obj.mirror = false;
-        dstVelocity = MAX_SPEED_ON_FOOT;
-    }
-    else if (isPressed("KeyA")) {
-        player.isMoving = true;
-        player.obj.mirror = true;
-        dstVelocity = -MAX_SPEED_ON_FOOT;
-    }
-    else {
-        player.isMoving = false;
-        dstVelocity = 0;
-    }
-    let velocityMul;
-    const dstDirection = Math.sign(dstVelocity);
-    if (dstDirection === -player.movingDirection) {
-        velocityMul = -1;
-    }
-    else if (dstDirection === 0) {
-        velocityMul = 0;
-    }
-    else {
-        velocityMul = 1;
-    }
-    player.changeSpeed(dstVelocity, velocityMul);
-    // jump
-    if (player.touchingGround) {
-        const spacePressed = isPressed("Space");
-        if (spacePressed) {
-            player.startJump();
-        }
-    }
-    else {
-        const elapsed = now() - player.lastTouchgroundTimestamp;
-        if (elapsed > CAYOTE_TIME) {
-            const ellapsedSincePressStart = getEllapsedSincePressStart("Space");
-            if (ellapsedSincePressStart !== undefined &&
-                ellapsedSincePressStart > MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME) {
-                markPressAsUsed("Space");
-            }
-        }
-    }
-    if (player.preparingToJump) {
-        const spacePressed = isPressed("Space");
-        const spacePressedDuration = getPressedDuration("Space");
-        if (spacePressedDuration !== undefined) {
-            if (!spacePressed || spacePressedDuration >= JUMP_MAX_TIME) {
-                const jumpPower = Math.min(spacePressedDuration / JUMP_MAX_TIME, 1);
-                if (jumpPower > 0.0) {
-                    player.jump(jumpPower);
-                }
-                else {
-                    player.cancelJump();
-                }
-                markPressAsUsed("Space");
-            }
-        }
-    }
-}
-function playerControlsPostPhysics() {
-    setFocusPoint(player.obj.x, player.obj.y);
-    // shoot
-    const mouseWorldSpace = screenToWorld(mouse);
-    player.aimAt(mouseWorldSpace);
-    if (isPressed("LMB")) {
-        player.shoot();
-        markPressAsUsed("LMB");
-    }
-}
-function createPlayer() {
-    player = new Character("player", true);
-    player.onBeforePhysics = playerControls;
-    player.onAfterPhysics = playerControlsPostPhysics;
-}
-
-const scene = [];
+const scene = new Set();
 const objectsToDraw = [];
 const objectsByID = new Map();
 function drawObj(obj) {
@@ -8872,9 +9755,49 @@ function syncPhysics() {
         syncObjWithPhysics(obj);
     }
 }
+function deleteObjects$1() {
+    const n = now();
+    for (const obj of scene) {
+        if (obj.deleteTimestamp !== undefined && n >= obj.deleteTimestamp) {
+            removeFromScene(obj);
+        }
+    }
+}
+function tileBackground() {
+    const background = mountains_graphics;
+    const worldMat = create$7();
+    scale$7(worldMat, worldMat, fromValues(background.scale, background.scale));
+    const unitMatrix = background.unitMatrix;
+    const mvpMatrix = create$7();
+    mul$7(mvpMatrix, camera.m, worldMat);
+    mul$7(mvpMatrix, mvpMatrix, unitMatrix);
+    ctx.setTransform(mvpMatrix[0], mvpMatrix[1], mvpMatrix[2], mvpMatrix[3], mvpMatrix[4], mvpMatrix[5]);
+    const invMVP = create$7();
+    invert$4(invMVP, mvpMatrix);
+    const p = fromValues(0, 0);
+    transformMat2d(p, p, invMVP);
+    const img = background.getFrame(0);
+    const p2 = fromValues(img.width, img.height);
+    transformMat2(p2, p2, mvpMatrix);
+    const w = Math.ceil(screen.width / p2[0]) + 1;
+    const h = Math.ceil(screen.height / p2[1]) + 1;
+    for (let x = 0; x < w; x++) {
+        for (let y = 0; y < h; y++) {
+            ctx.drawImage(img, (Math.floor(p[0] / img.width) + x) * img.width, (Math.floor(p[1] / img.height) + y) * img.height);
+        }
+    }
+    /*
+    for (let x = 0; x < wCount; x++) {
+        for (let y = 0; y < hCount; y++) {
+            ctx.drawImage(img, x * screenWidth, y * screenHeight)
+        }
+    }
+    */
+}
 function drawScene() {
     ctx.resetTransform();
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    tileBackground();
     objectsToDraw.length = 0;
     for (const obj of scene) {
         drawObj(obj);
@@ -8954,7 +9877,7 @@ function drawScene() {
         for (let i = 0; i < physicsPoints.length; i++) {
             const p = fromValues(physicsPoints[i][0], physicsPoints[i][1]);
             if (obj.graphics.physicsPivot) {
-                add(p, p, obj.graphics.physicsPivot);
+                add$1(p, p, obj.graphics.physicsPivot);
             }
             transformMat2d(p, p, obj.graphics.invUnitMatrix);
             if (i === 0) {
@@ -8967,50 +9890,45 @@ function drawScene() {
         ctx.closePath();
         ctx.stroke();
     }
-    for (const obj of objectsToDraw) {
-        /*
-        if (obj.graphics.name !== "dummy") {
-            continue
-        }
-        */
-        drawCollisionModel(obj);
-        for (const slot in obj.attachments) {
-            drawCollisionModel(obj.attachments[slot]);
-        }
-    }
     /*
-    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
-    ctx.fillStyle = "rgb(0, 255, 0)"
-    const p = debugPoint
-    ctx.beginPath()
-    ctx.arc(p[0], p[1], 0.01, 0, 9)
-    ctx.fill()
-    */
-    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5]);
-    ctx.strokeStyle = "green";
-    ctx.lineWidth = 0.01;
-    ctx.beginPath();
-    const footY = player.obj.y - FOOT_HEIGHT * player.obj.scale;
-    ctx.moveTo(player.obj.x, footY - FOOT_START * player.obj.scale);
-    ctx.lineTo(player.obj.x, footY + FOOT_FULL_HEIGHT * player.obj.scale);
-    ctx.stroke();
-    // DEBUG JUMP VISULIZATION
-    const p = 1;
-    const xh = 2.5 * p; // horizontal distance for jump
-    const h = -2.2 * p; // height for jump
-    const vx = getVelocityX(player.obj.body); // horizontal speed
-    if (player.touchingGround) {
-        const a_vx = Math.abs(vx);
+    for (const obj of objectsToDraw) {
+        drawCollisionModel(obj)
+        for (const slot in obj.attachments) {
+            drawCollisionModel(obj.attachments[slot])
+        }
     }
+
+    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
+    ctx.strokeStyle = "green"
+    ctx.lineWidth = 0.01
+    ctx.beginPath()
+    const footY = player.obj.y - FOOT_HEIGHT * player.obj.scale
+    ctx.moveTo(player.obj.x, footY - FOOT_START * player.obj.scale)
+    ctx.lineTo(player.obj.x, footY + FOOT_FULL_HEIGHT * player.obj.scale)
+    ctx.stroke()
+    */
 }
 function addToScene(obj) {
-    scene.push(obj);
+    scene.add(obj);
     objectsByID.set(obj.id, obj);
     for (const slot in obj.attachments) {
         const attachment = obj.attachments[slot];
         objectsByID.set(attachment.id, attachment);
     }
     addToPhysics(obj);
+}
+function removeFromScene(obj) {
+    scheduleToRemovePhysics(obj, () => {
+        for (const slot in obj.attachments) {
+            const attachment = obj.attachments[slot];
+            objectsByID.delete(attachment.id);
+        }
+        objectsByID.delete(obj.id);
+    });
+    scene.delete(obj);
+}
+function scheduleToRemove(obj, timeout) {
+    obj.deleteTimestamp = now() + timeout;
 }
 function getObjectByID(id) {
     const obj = objectsByID.get(id);
@@ -9025,8 +9943,8 @@ let Box2D;
 let world;
 let temp;
 let temp2;
-const PHYSICS_STEP = 1 / 600;
-const MAX_STEPS_PER_STEP = 50;
+const PHYSICS_STEP = 1 / 60;
+const MAX_STEPS_PER_STEP = 5;
 const GRAVITY = 9.8;
 let currentTime = now() / 1000;
 let worldManifold;
@@ -9036,6 +9954,8 @@ let raycastFixtureToIgnorePtr;
 const contantPoint0 = create();
 const contantPoint1 = create();
 const normal = create();
+const objectsToAdd = new Set();
+const objectsToDelete = new Map();
 function getWorldPointsAndNormalFromContact(contact) {
     contact.GetWorldManifold(worldManifold);
     const manifold = contact.GetManifold();
@@ -9064,7 +9984,17 @@ function raycast(x0, y0, x1, y1, fixtureToIgnore) {
     world.RayCast(rayCastCallback, temp, temp2);
     return !isNaN(rayCastResult[0]) ? rayCastResult : undefined;
 }
-function setVelocity(body, x, y) {
+function setVelocity(obj, x, y) {
+    if (x !== undefined) {
+        obj.vx = x;
+    }
+    if (y !== undefined) {
+        obj.vy = y;
+    }
+    const body = obj.body;
+    if (!body) {
+        return;
+    }
     const vel = body.GetLinearVelocity();
     temp.set_x(vel.get_x());
     temp.set_y(vel.get_y());
@@ -9074,16 +10004,25 @@ function setVelocity(body, x, y) {
     if (y !== undefined) {
         temp.set_y(y);
     }
-    // console.log("setVelocity", temp.get_x(), temp.get_y())
     body.SetLinearVelocity(temp);
 }
-function getVelocityX(body) {
-    return body.GetLinearVelocity().get_x();
+function getVelocityX(obj) {
+    return obj.body.GetLinearVelocity().get_x() ?? obj.vx;
 }
-function getVelocityY(body) {
-    return body.GetLinearVelocity().get_y();
+function getVelocityY(obj) {
+    return obj.body.GetLinearVelocity().get_y() ?? obj.vy;
 }
-function mulVelocity(body, x, y) {
+function mulVelocity(obj, x, y) {
+    if (x !== undefined) {
+        obj.vx *= x;
+    }
+    if (y !== undefined) {
+        obj.vy *= y;
+    }
+    const body = obj.body;
+    if (!body) {
+        return;
+    }
     const vel = body.GetLinearVelocity();
     if (x !== undefined) {
         vel.set_x(vel.get_x() * x);
@@ -9093,6 +10032,14 @@ function mulVelocity(body, x, y) {
     }
     body.SetLinearVelocity(vel);
 }
+function setGravityScale(obj, gravityScale) {
+    obj.gravityScale = gravityScale;
+    const body = obj.body;
+    if (!body) {
+        return;
+    }
+    body.SetGravityScale(obj.gravityScale);
+}
 async function initPhysics() {
     Box2D = await Box2D$1();
     temp = new Box2D.b2Vec2(0.0, 0.0);
@@ -9100,13 +10047,14 @@ async function initPhysics() {
     const gravity = new Box2D.b2Vec2(0.0, GRAVITY);
     world = new Box2D.b2World(gravity);
     worldManifold = new Box2D.b2WorldManifold();
+    const RAY_EXCLUDE_CATEGORIES = PhysicsCategoryBits.BULLET | PhysicsCategoryBits.MEAT;
     rayCastCallback = new Box2D.JSRayCastCallback();
     rayCastCallback.ReportFixture = (fixturePtr, point, _normal, fraction) => {
         if (fixturePtr === raycastFixtureToIgnorePtr) {
             return 1;
         }
         const f = Box2D.wrapPointer(fixturePtr, Box2D.b2Fixture);
-        if ((f.GetFilterData().get_categoryBits() & PhysicsCategoryBits.BULLET) !== 0) {
+        if ((f.GetFilterData().get_categoryBits() & RAY_EXCLUDE_CATEGORIES) !== 0) {
             return 1;
         }
         const p = Box2D.wrapPointer(point, Box2D.b2Vec2);
@@ -9119,9 +10067,9 @@ async function initPhysics() {
         const fixtureA = contact.GetFixtureA();
         const fixtureB = contact.GetFixtureB();
         const objA = getObjectByID(fixtureA.GetUserData());
-        objA.contactStarted(contactPtr);
         const objB = getObjectByID(fixtureB.GetUserData());
-        objB.contactStarted(contactPtr);
+        objA.contactStarted(contactPtr, objB);
+        objB.contactStarted(contactPtr, objA);
     };
     listener.EndContact = (contactPtr) => {
         const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
@@ -9154,9 +10102,9 @@ function createShape(obj) {
     let offset = 0;
     for (let i = 0; i < physicsPoints.length; i++) {
         const p = fromValues(physicsPoints[i][0], physicsPoints[i][1]);
-        add(p, p, obj.graphics.pivot);
+        add$1(p, p, obj.graphics.pivot);
         if (obj.graphics.physicsPivot) {
-            add(p, p, obj.graphics.physicsPivot);
+            add$1(p, p, obj.graphics.physicsPivot);
         }
         scale(p, p, scale$1);
         Box2D.HEAPF32[(buffer + offset) >> 2] = p[0];
@@ -9200,6 +10148,7 @@ function createFixture(obj, body) {
     const filter = fixtureDef.get_filter();
     filter.set_categoryBits(obj.graphics.physicsCategory);
     filter.set_maskBits(obj.graphics.physicsMaskBits);
+    filter.set_groupIndex(obj.physicsGroupIndex);
     const fixture = body.CreateFixture(fixtureDef);
     fixture.SetUserData(obj.id);
     obj.fixture = fixture;
@@ -9221,7 +10170,7 @@ function initPhysicsForObject(obj) {
     }
     obj.body = body;
 }
-function addToPhysics(obj) {
+function doAddToPhysics(obj) {
     initPhysicsForObject(obj);
     const body = obj.body;
     if (!body) {
@@ -9229,7 +10178,20 @@ function addToPhysics(obj) {
     }
     body.SetAwake(1);
     body.SetActive(1);
+    body.SetGravityScale(obj.gravityScale);
+    temp.set_x(obj.vx);
+    temp.set_y(obj.vy);
+    body.SetLinearVelocity(temp);
     syncPhysicsWithObj(obj);
+}
+let isInProgress = false;
+function addToPhysics(obj) {
+    if (isInProgress) {
+        objectsToAdd.add(obj);
+    }
+    else {
+        doAddToPhysics(obj);
+    }
 }
 function syncPhysicsWithObj(obj) {
     const body = obj.body;
@@ -9247,14 +10209,35 @@ function syncObjWithPhysics(obj) {
         obj.angle = body.GetAngle();
     }
 }
+function scheduleToRemovePhysics(obj, callback) {
+    objectsToDelete.set(obj, callback);
+}
+function addObjects() {
+    for (const obj of objectsToAdd) {
+        doAddToPhysics(obj);
+    }
+    objectsToAdd.clear();
+}
+function deleteObjects() {
+    for (const [obj, callback] of objectsToDelete) {
+        world.DestroyBody(obj.body);
+        obj.body = null;
+        callback();
+    }
+    objectsToDelete.clear();
+}
 function physicsStep() {
     const time = now() / 1000;
     const stepCount = Math.trunc((time - currentTime) / PHYSICS_STEP);
     const stepsToSimulate = Math.min(stepCount, MAX_STEPS_PER_STEP);
     currentTime += stepCount * PHYSICS_STEP;
+    isInProgress = true;
     for (let i = 0; i < stepsToSimulate; i++) {
         world.Step(PHYSICS_STEP, 20, 20);
     }
+    isInProgress = false;
+    deleteObjects();
+    addObjects();
 }
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -9269,6 +10252,8 @@ class GraphicsObject {
     id = GraphicsObject.NEXT_OBJ_ID++;
     x = 0;
     y = 0;
+    vx = 0;
+    vy = 0;
     angle = 0;
     scale = 1;
     z = 0;
@@ -9283,20 +10268,24 @@ class GraphicsObject {
     worldZ = 0;
     mvpMatrix = create$7();
     lastIndex = undefined;
+    deleteTimestamp = undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body = undefined;
     fixture = undefined;
     contacts = new Map();
+    physicsGroupIndex = 0;
+    gravityScale = 1;
+    character = undefined;
     onContactStart = undefined;
     onContactPresolve = undefined;
     onContactEnded = undefined;
     constructor(graphics) {
         this.graphics = graphics;
     }
-    contactStarted(contactPtr) {
+    contactStarted(contactPtr, otherObj) {
         const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact);
         this.contacts.set(contactPtr, contact);
-        this.onContactStart?.(contact);
+        this.onContactStart?.(contact, otherObj);
     }
     contactPresolve(contactPtr) {
         const contact = this.contacts.get(contactPtr);
@@ -9373,6 +10362,78 @@ class GraphicsObject {
     }
 }
 
+const r = new Random(MersenneTwister19937.seedWithArray([0x12345678, 0x90abcdef]));
+function addMeatPiece(character, x, y, graphics, z, angle = 0) {
+    const obj = new GraphicsObject(graphics);
+    obj.x = character.obj.x + x;
+    obj.y = character.obj.y + y;
+    obj.angle = character.obj.angle + angle;
+    obj.z = character.obj.z + z;
+    const velAngle = r.real(-0.5, 0.5);
+    const vel = rotate(fromValues(obj.x - (character.obj.x + 0.05), (obj.y - (character.obj.y - 1.2)) * 0.01), velAngle);
+    normalize(vel, vel);
+    scale(vel, vel, 15);
+    vel[0] += getVelocityX(character.obj);
+    vel[1] += getVelocityY(character.obj);
+    setVelocity(obj, vel[0], vel[1]);
+    addToScene(obj);
+}
+function addMeatPieceCircle(radius, objRadius, character, cx, cy, graphics, z, angle = 0) {
+    const radiusSq = radius * radius;
+    const size = Math.floor(radius / objRadius);
+    for (let offsetX = -size; offsetX <= size; offsetX++) {
+        for (let offsetY = -size; offsetY <= size; offsetY++) {
+            const x = cx + offsetX * objRadius;
+            const y = cy + offsetY * objRadius;
+            const dx = x - cx;
+            const dy = y - cy;
+            const distSq = dx * dx + dy * dy;
+            if (distSq <= radiusSq) {
+                addMeatPiece(character, x + r.real(-0.01, 0.01), y + r.real(-0.01, 0.01), graphics, z, angle);
+            }
+        }
+    }
+}
+function addMeatPieceLine(offsetX, offsetY, width, height, character, x, y, graphics, z, angle = 0) {
+    const v = rotate(fromValues(0, offsetY), angle);
+    for (let column = -Math.floor((width - 1) / 2); column < width / 2; column++) {
+        for (let i = 0; i < height; i++) {
+            addMeatPiece(character, x + column * offsetX + v[0] * i + r.real(-0.01, 0.01), y + v[1] * i + r.real(-0.01, 0.01), graphics, z, angle);
+        }
+    }
+}
+function addBloodStain(character) {
+    const blood_stain = new GraphicsObject(blood_graphics);
+    blood_stain.x = character.obj.x + r.real(-0.2, 0.2);
+    blood_stain.y = character.obj.y - 1 + r.real(-0.2, 0.2);
+    blood_stain.z = -0.01;
+    blood_stain.angle = r.real(0, Math.PI * 2);
+    addToScene(blood_stain);
+}
+function generateMeatExplosion(character) {
+    /*
+    eye_ball_graphics.physicsType = PhysicsType.NONE
+    meat_on_bone_graphics.physicsType = PhysicsType.NONE
+    meat_piece_graphics.physicsType = PhysicsType.NONE
+    small_meat_piece_graphics.physicsType = PhysicsType.NONE
+    */
+    // eyes
+    addMeatPiece(character, -0.1, -2 + 0.15, eye_ball_graphics, 0.21);
+    addMeatPiece(character, -0.1, -2 + 0.14, eye_ball_graphics, 0.22);
+    // head
+    addMeatPieceCircle(0.17, 0.05, character, 0.01, -2 + 0.2, small_meat_piece_graphics, 0.2);
+    // legs
+    addMeatPieceLine(0, 0.4, 1, 2, character, 0.05, -0.8, meat_on_bone_graphics, 0.2, 0);
+    addMeatPieceLine(0, 0.4, 1, 2, character, 0.05, -0.8, meat_on_bone_graphics, 0.2, -0.2);
+    // arms
+    addMeatPieceLine(0, 0.4, 1, 2, character, 0.05, -1.55, meat_on_bone_graphics, 0.2, 0.5);
+    addMeatPieceLine(0, 0.4, 1, 2, character, 0.05, -1.55, meat_on_bone_graphics, 0.2, 0.8);
+    // body
+    addMeatPieceLine(0.05, 0.06, 3, 11, character, 0.05, -1.55, small_meat_piece_graphics, 0.2, 0);
+    // feet
+    addMeatPieceLine(0.05, 0.06, 5, 2, character, 0.05, -0.1, small_meat_piece_graphics, 0.2, 0);
+}
+
 const TORSO_SLOT = 0;
 const ARMS_SLOT = 1;
 const HEAD_SLOT = 2;
@@ -9380,25 +10441,36 @@ const WEAPON_SLOT = 3;
 const SHOOT_LINE_SLOT = 4;
 const EYE_LINE_SLOT = 5;
 const BLAST_SLOT = 6;
+const mountains_graphics = new Graphics("mountains");
+const platform_graphics = new Graphics("platform");
+const blood_graphics = new Graphics("blood");
 const idle_torso_graphics = new Graphics("idle", "torso_legs");
 const idle_arms_graphics = new Graphics("idle", "arms");
 const run_torso_graphics = new Graphics("run", "torso_legs");
 const fall_torso_graphics = new Graphics("fall", "torso_legs");
 const jump_start_torso_graphics = new Graphics("jump_start", "torso_legs");
 const aiming_arms_graphics = new Graphics("aiming", "arms");
-const oleg_graphics = new Graphics("oleg");
-const misha_graphics = new Graphics("misha");
+const oleg_graphics = new Graphics("heads", "oleg");
+const misha_graphics = new Graphics("heads", "misha");
+const generic_head_graphics = new Graphics("heads", "generic_head");
 const blaster_graphics = new Graphics("blaster");
-const bullet_graphics = new Graphics("bullet");
+const bullet_graphics = new Graphics("bullet", "bullet");
 const blast_graphics = new Graphics("blast", "blast");
 const shoot_line_graphics = new Graphics("shoot-line");
 const eye_line_graphics = new Graphics("eye-line");
+const meat_piece_graphics = new Graphics("blood", "meat_piece");
+const small_meat_piece_graphics = new Graphics("blood", "small_meat_piece");
+const meat_on_bone_graphics = new Graphics("blood", "meat_on_bone");
+const eye_ball_graphics = new Graphics("blood", "eye_ball");
 const FOOT_START = 0.02;
 const FOOT_HEIGHT = 0.27;
 const FOOT_HEIGHT_PADDING = 0.1;
 const FOOT_FULL_HEIGHT = FOOT_HEIGHT + FOOT_HEIGHT_PADDING;
 async function loadCharacterAnimations() {
     await Promise.all([
+        mountains_graphics.load(),
+        platform_graphics.load(),
+        blood_graphics.load(),
         idle_torso_graphics.load(),
         idle_arms_graphics.load(),
         run_torso_graphics.load(),
@@ -9407,14 +10479,19 @@ async function loadCharacterAnimations() {
         aiming_arms_graphics.load(),
         oleg_graphics.load(),
         misha_graphics.load(),
+        generic_head_graphics.load(),
         blaster_graphics.load(),
         blast_graphics.load(),
         bullet_graphics.load(),
         shoot_line_graphics.load(),
         eye_line_graphics.load(),
+        meat_piece_graphics.load(),
+        small_meat_piece_graphics.load(),
+        meat_on_bone_graphics.load(),
+        eye_ball_graphics.load(),
     ]);
 }
-const characters = [];
+const characters = new Set();
 const MAX_SPEED_ON_FOOT = 7;
 const ACCELERATION_ON_FOOT = MAX_SPEED_ON_FOOT / 0.25;
 const ACCELERATION_IN_AIR = ACCELERATION_ON_FOOT * 1;
@@ -9435,6 +10512,7 @@ class Character {
     obj = new GraphicsObject(this.objGraphics);
     onBeforePhysics;
     onAfterPhysics;
+    pointToAim = undefined;
     touchingGround = false;
     isMoving = false;
     movingDirection = 0;
@@ -9443,12 +10521,15 @@ class Character {
     isJumping = false;
     gravityForJumpFall = 0;
     lastTouchgroundTimestamp = 0;
-    constructor(name, isOleg) {
+    isAlive = true;
+    constructor(name, head) {
         this.name = name;
+        this.obj.character = this;
+        this.obj.physicsGroupIndex = -this.obj.id;
         this.objGraphics.physicsType = PhysicsType.DYNAMIC;
         this.objGraphics.fixedRotation = true;
         this.objGraphics.friction = 0;
-        const WIDTH = 0.2;
+        const WIDTH = 0.1;
         this.objGraphics.physicsPoints = [
             fromValues(-WIDTH / 2, 0),
             fromValues(-WIDTH / 2, 0.5),
@@ -9457,9 +10538,10 @@ class Character {
             fromValues(WIDTH / 2, 0),
         ];
         this.objGraphics.physicsPivot = fromValues(0, -1);
+        this.objGraphics.physicsMaskBits = ALL_MASK & ~PhysicsCategoryBits.PLATFORM;
         this.obj.attach(TORSO_SLOT, this.idle_torso);
         this.aiming_arms.z = 0.2;
-        this.head = new GraphicsObject(isOleg ? oleg_graphics : misha_graphics);
+        this.head = new GraphicsObject(head);
         this.head.angle = 1.57;
         this.head.z = 0.1;
         this.obj.attach(HEAD_SLOT, this.head);
@@ -9468,7 +10550,7 @@ class Character {
         this.shootLine.z = -0.01;
         this.obj.attach(SHOOT_LINE_SLOT, this.shootLine);
         this.eyeline.z = -0.01;
-        this.obj.attach(EYE_LINE_SLOT, this.eyeline);
+        // this.obj.attach(EYE_LINE_SLOT, this.eyeline)
         this.obj.attach(ARMS_SLOT, this.aiming_arms);
         //
         this.obj.scale = 2;
@@ -9480,7 +10562,7 @@ class Character {
     changeSpeed(dstVelocity, velocityMul = 1) {
         const dstDirection = Math.sign(dstVelocity);
         this.movingDirection = dstDirection;
-        const velX = getVelocityX(this.obj.body) * velocityMul;
+        const velX = getVelocityX(this.obj) * velocityMul;
         const delta = dstVelocity - velX;
         const direction = Math.sign(delta);
         const speed = Math.abs(delta);
@@ -9489,7 +10571,7 @@ class Character {
         const velocityDiff = direction * Math.min(acceleration * dt, speed);
         const newVelocityX = velX + velocityDiff;
         const cappedVelocityX = dstDirection * Math.min(newVelocityX * dstDirection, MAX_SPEED_ON_FOOT);
-        setVelocity(this.obj.body, cappedVelocityX, undefined);
+        setVelocity(this.obj, cappedVelocityX, undefined);
     }
     updateAnimation() {
         if (this.touchingGround) {
@@ -9510,22 +10592,16 @@ class Character {
         }
     }
     setSpeed(speed) {
-        setVelocity(this.obj.body, speed, undefined);
+        setVelocity(this.obj, speed, undefined);
         this.currentSpeed = speed;
         this.updateAnimation();
     }
     steerSpeed(speed) {
-        setVelocity(this.obj.body, getVelocityX(this.obj.body) + speed, undefined);
+        setVelocity(this.obj, getVelocityX(this.obj) + speed, undefined);
         this.updateAnimation();
     }
     aimAt(p) {
-        this.obj.attach(ARMS_SLOT, this.aiming_arms);
-        aimAt(p, this.aiming_arms, "barrel");
-        const oldHeadAngle = this.head.angle;
-        aimAt(p, this.head, "eyeline");
-        if (this.head.angle < -1.1 || this.head.angle > 1.2) {
-            this.head.angle = oldHeadAngle;
-        }
+        this.pointToAim = p;
     }
     shoot() {
         const m = getAttachmentWorldMatrix(this.obj, "barrel", 1);
@@ -9539,16 +10615,31 @@ class Character {
         bullet.angle = angle;
         bullet.x = p[0];
         bullet.y = p[1];
+        bullet.physicsGroupIndex = -this.obj.id;
+        bullet.onContactPresolve = contact => {
+            contact.SetEnabled(false);
+        };
+        bullet.onContactStart = (contact, otherObj) => {
+            removeFromScene(bullet);
+            const character = otherObj.character;
+            if (character && character.isAlive) {
+                character.isAlive = false;
+                addBloodStain(character);
+                removeCharacter(character);
+                generateMeatExplosion(character);
+            }
+        };
         addToScene(bullet);
-        bullet.body.SetGravityScale(0);
-        const v = rotate(fromValues(25, 0), angle);
-        setVelocity(bullet.body, v[0], v[1]);
+        scheduleToRemove(bullet, 5000);
+        setGravityScale(bullet, 0);
+        const v = rotate(fromValues(20, 0), angle);
+        setVelocity(bullet, getVelocityX(this.obj) + v[0], getVelocityY(this.obj) + v[1]);
         this.obj.attach(BLAST_SLOT, this.blast);
         this.blast.reset();
     }
     attachToGround() {
         this.touchingGround = false;
-        if (getVelocityY(this.obj.body) >= -10e-5) {
+        if (getVelocityY(this.obj) >= -10e-5) {
             const footStart = FOOT_START * this.obj.scale;
             const footHeight = (this.touchingGround ? FOOT_FULL_HEIGHT : FOOT_HEIGHT) * this.obj.scale;
             const footY = this.obj.y - FOOT_HEIGHT * this.obj.scale;
@@ -9556,7 +10647,7 @@ class Character {
             if (p) {
                 this.obj.y = p[1];
                 syncPhysicsWithObj(this.obj);
-                setVelocity(this.obj.body, undefined, 0);
+                setVelocity(this.obj, undefined, 0);
                 this.touchingGround = true;
                 this.isJumping = false;
                 this.lastTouchgroundTimestamp = now();
@@ -9564,21 +10655,35 @@ class Character {
         }
         this.updateAnimation();
     }
+    applyAim() {
+        const p = this.pointToAim;
+        if (!p) {
+            return;
+        }
+        this.obj.attach(ARMS_SLOT, this.aiming_arms);
+        aimAt(p, this.aiming_arms, "barrel");
+        const oldHeadAngle = this.head.angle;
+        aimAt(p, this.head, "eyeline");
+        if (this.head.angle < -1.1 || this.head.angle > 1.2) {
+            this.head.angle = oldHeadAngle;
+        }
+    }
     beforePhysics() {
         this.onBeforePhysics?.();
         if (this.isJumping) {
             // is decending?
-            if (getVelocityY(this.obj.body) > 10e-4) {
-                this.obj.body.SetGravityScale(this.gravityForJumpFall / GRAVITY);
+            if (getVelocityY(this.obj) > 10e-4) {
+                setGravityScale(this.obj, this.gravityForJumpFall / GRAVITY);
             }
         }
         else {
-            this.obj.body.SetGravityScale(2);
+            setGravityScale(this.obj, 2);
         }
     }
     afterPhysics() {
         this.attachToGround();
         this.onAfterPhysics?.();
+        this.applyAim();
     }
     startJump() {
         this.preparingToJump = true;
@@ -9589,7 +10694,7 @@ class Character {
     }
     jump(jumpPower) {
         this.preparingToJump = false;
-        const velX = getVelocityX(this.obj.body);
+        const velX = getVelocityX(this.obj);
         const jumpDistance = velX * 0.5 * jumpPower; // horizontal distance for jump
         const jumpHeight = -2.2 * jumpPower; // height for jump
         let th = jumpDistance / velX;
@@ -9600,15 +10705,19 @@ class Character {
         const velocityForJump = (2 * jumpHeight) / th;
         const gravityForJump = (-2 * jumpHeight) / (th * th);
         this.gravityForJumpFall = gravityForJump * 1.2;
-        this.obj.body.SetGravityScale(gravityForJump / GRAVITY);
-        setVelocity(this.obj.body, undefined, velocityForJump);
+        setGravityScale(this.obj, gravityForJump / GRAVITY);
+        setVelocity(this.obj, undefined, velocityForJump);
         this.isJumping = true;
         this.updateAnimation();
     }
 }
 function addCharacter(character) {
     addToScene(character.obj);
-    characters.push(character);
+    characters.add(character);
+}
+function removeCharacter(character) {
+    characters.delete(character);
+    removeFromScene(character.obj);
 }
 function charactersBeforePhysics() {
     for (const char of characters) {
@@ -9621,11 +10730,101 @@ function charactersAfterPhysics() {
     }
 }
 
+let player;
+const MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME = 100;
+const JUMP_MAX_TIME = 100;
+const CAYOTE_TIME = 150;
+function playerControls() {
+    // movement
+    let dstVelocity;
+    if (isPressed("KeyD")) {
+        player.isMoving = true;
+        player.obj.mirror = false;
+        dstVelocity = MAX_SPEED_ON_FOOT;
+    }
+    else if (isPressed("KeyA")) {
+        player.isMoving = true;
+        player.obj.mirror = true;
+        dstVelocity = -MAX_SPEED_ON_FOOT;
+    }
+    else {
+        player.isMoving = false;
+        dstVelocity = 0;
+    }
+    let velocityMul;
+    const dstDirection = Math.sign(dstVelocity);
+    if (dstDirection === -player.movingDirection) {
+        velocityMul = -1;
+    }
+    else if (dstDirection === 0) {
+        velocityMul = 0;
+    }
+    else {
+        velocityMul = 1;
+    }
+    player.changeSpeed(dstVelocity, velocityMul);
+    // jump
+    if (player.touchingGround) {
+        const spacePressed = isPressed("Space");
+        if (spacePressed) {
+            player.startJump();
+        }
+    }
+    else {
+        const elapsed = now() - player.lastTouchgroundTimestamp;
+        if (elapsed > CAYOTE_TIME) {
+            const ellapsedSincePressStart = getEllapsedSincePressStart("Space");
+            if (ellapsedSincePressStart !== undefined &&
+                ellapsedSincePressStart > MAX_TIME_JUMP_PRESS_AHEAD_OF_TIME) {
+                markPressAsUsed("Space");
+            }
+        }
+    }
+    if (player.preparingToJump) {
+        const spacePressed = isPressed("Space");
+        const spacePressedDuration = getPressedDuration("Space");
+        if (spacePressedDuration !== undefined) {
+            if (!spacePressed || spacePressedDuration >= JUMP_MAX_TIME) {
+                const jumpPower = Math.min(spacePressedDuration / JUMP_MAX_TIME, 1);
+                if (jumpPower > 0.0) {
+                    player.jump(jumpPower);
+                }
+                else {
+                    player.cancelJump();
+                }
+                markPressAsUsed("Space");
+            }
+        }
+    }
+}
+function playerControlsPostPhysics() {
+    setFocusPoint(player.obj.x, player.obj.y);
+    // shoot
+    const mouseWorldSpace = screenToWorld(mouse);
+    player.aimAt(mouseWorldSpace);
+    if (isPressed("LMB")) {
+        player.shoot();
+        markPressAsUsed("LMB");
+    }
+}
+function createPlayer() {
+    player = new Character("player", generic_head_graphics);
+    player.onBeforePhysics = playerControls;
+    player.onAfterPhysics = playerControlsPostPhysics;
+}
+
 async function initScene() {
     await loadCharacterAnimations();
     createPlayer();
     addCharacter(player);
-    addCharacter(new Character("misha", false));
+    for (let i = 0; i < 10; i++) {
+        const enemy = new Character("enemy", generic_head_graphics);
+        enemy.obj.x = 3 + i * 3;
+        enemy.obj.y = 0;
+        enemy.obj.mirror = true;
+        addCharacter(enemy);
+        enemy.aimAt(fromValues(0, -2 + 0.17));
+    }
     const box = new GraphicsObject(await createGraphics("box"));
     box.x = 4;
     box.y = -0.25;
@@ -9634,21 +10833,23 @@ async function initScene() {
     box.graphics.physicsType = PhysicsType.STATIC;
     addToScene(box);
     const COUNT = 3;
-    const FLOORS_COUNT = 10;
     const dirt_graphics = await createGraphics("dirt");
     const angle = 0;
-    for (let j = 0; j < FLOORS_COUNT; j++) {
-        for (let i = -COUNT / 2; i < COUNT; i++) {
-            const l = 10 * i;
-            const dirt = new GraphicsObject(dirt_graphics);
-            dirt.scale = 10;
-            dirt.x = Math.cos(angle) * l * (j + 1);
-            dirt.y = Math.sin(angle) * l - j * 1.8;
-            dirt.z = 1;
-            dirt.angle = angle;
-            addToScene(dirt);
-        }
+    for (let i = -COUNT / 2; i < COUNT; i++) {
+        const l = 10 * i;
+        const dirt = new GraphicsObject(dirt_graphics);
+        dirt.scale = 10;
+        dirt.x = Math.cos(angle) * l;
+        dirt.y = Math.sin(angle) * l;
+        dirt.z = 1;
+        dirt.angle = angle;
+        addToScene(dirt);
     }
+    const platform = new GraphicsObject(platform_graphics);
+    platform.x = 0;
+    platform.y = -1;
+    platform.z = 1;
+    addToScene(platform);
 }
 
 function tick(time) {
@@ -9657,6 +10858,7 @@ function tick(time) {
     charactersBeforePhysics();
     physicsStep();
     syncPhysics();
+    deleteObjects$1();
     charactersAfterPhysics();
     drawScene();
     requestAnimationFrame(tick);

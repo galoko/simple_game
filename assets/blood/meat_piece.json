@@ -1,0 +1,17 @@
+{
+	"scale": 0.10,
+	"physics": "dynamic",
+	"pivot": [
+		25,
+		25
+	],
+	"physicsPoints": [
+		18, 1,
+		22, 25,
+		24, 43,
+		11, 46,
+		2, 37,
+		8, 15
+	],
+	"category": "meat"
+}

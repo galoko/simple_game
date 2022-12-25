@@ -1,7 +1,7 @@
 import { charactersAfterPhysics, charactersBeforePhysics } from "./character"
 import { handleResize } from "./init"
 import { initPhysics, physicsStep } from "./physics"
-import { drawScene, syncPhysics } from "./scene"
+import { deleteObjects, drawScene, syncPhysics } from "./scene"
 import { initScene } from "./scene-generator"
 import { setNow } from "./time"
 
@@ -13,6 +13,7 @@ function tick(time: number) {
     charactersBeforePhysics()
     physicsStep()
     syncPhysics()
+    deleteObjects()
     charactersAfterPhysics()
     drawScene()
 

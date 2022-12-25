@@ -1,16 +1,16 @@
-import { mat2d, vec2 } from "gl-matrix"
+import { mat2, mat2d, vec2 } from "gl-matrix"
 import { camera } from "./camera"
-import { FOOT_FULL_HEIGHT, FOOT_HEIGHT, FOOT_START } from "./character"
+import { FOOT_FULL_HEIGHT, FOOT_HEIGHT, FOOT_START, mountains_graphics } from "./character"
 import { GraphicsType, PhysicsType } from "./graphics"
-import { ctx } from "./init"
+import { ctx, screen } from "./init"
 import { mouse } from "./input-handler"
 import { getWorldScale, GraphicsObject } from "./object"
 import { getAttachmentInfo, getParentWorldZ } from "./object-utils"
-import { addToPhysics, getVelocityX, syncObjWithPhysics } from "./physics"
+import { addToPhysics, scheduleToRemovePhysics, syncObjWithPhysics } from "./physics"
 import { player } from "./player"
 import { now } from "./time"
 
-const scene: GraphicsObject[] = []
+const scene = new Set<GraphicsObject>()
 const objectsToDraw: GraphicsObject[] = []
 const objectsByID = new Map<number, GraphicsObject>()
 
@@ -22,7 +22,6 @@ function drawObj(obj: GraphicsObject): void {
         // pixel to units
         const unitMatrix = obj.graphics.unitMatrix
         mat2d.mul(obj.mvpMatrix, camera.m, worldMat)
-
         mat2d.mul(obj.mvpMatrix, obj.mvpMatrix, unitMatrix)
 
         const time = now() - obj.startTime
@@ -54,9 +53,73 @@ export function syncPhysics() {
     }
 }
 
+export function deleteObjects() {
+    const n = now()
+
+    for (const obj of scene) {
+        if (obj.deleteTimestamp !== undefined && n >= obj.deleteTimestamp) {
+            removeFromScene(obj)
+        }
+    }
+}
+
+function tileBackground() {
+    const background = mountains_graphics
+
+    const worldMat = mat2d.create()
+    mat2d.scale(worldMat, worldMat, vec2.fromValues(background.scale, background.scale))
+    const unitMatrix = background.unitMatrix
+    const mvpMatrix = mat2d.create()
+    mat2d.mul(mvpMatrix, camera.m, worldMat)
+    mat2d.mul(mvpMatrix, mvpMatrix, unitMatrix)
+
+    ctx.setTransform(
+        mvpMatrix[0],
+        mvpMatrix[1],
+        mvpMatrix[2],
+        mvpMatrix[3],
+        mvpMatrix[4],
+        mvpMatrix[5]
+    )
+
+    const invMVP = mat2d.create()
+    mat2d.invert(invMVP, mvpMatrix)
+
+    const p = vec2.fromValues(0, 0)
+    vec2.transformMat2d(p, p, invMVP)
+
+    const img = background.getFrame(0)
+
+    const p2 = vec2.fromValues(img.width, img.height)
+    vec2.transformMat2(p2, p2, mvpMatrix as mat2)
+
+    const w = Math.ceil(screen.width / p2[0]) + 1
+    const h = Math.ceil(screen.height / p2[1]) + 1
+
+    for (let x = 0; x < w; x++) {
+        for (let y = 0; y < h; y++) {
+            ctx.drawImage(
+                img,
+                (Math.floor(p[0] / img.width) + x) * img.width,
+                (Math.floor(p[1] / img.height) + y) * img.height
+            )
+        }
+    }
+
+    /*
+    for (let x = 0; x < wCount; x++) {
+        for (let y = 0; y < hCount; y++) {
+            ctx.drawImage(img, x * screenWidth, y * screenHeight)
+        }
+    }
+    */
+}
+
 export function drawScene() {
     ctx.resetTransform()
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
+    tileBackground()
 
     objectsToDraw.length = 0
     for (const obj of scene) {
@@ -177,26 +240,13 @@ export function drawScene() {
         ctx.stroke()
     }
 
+    /*
     for (const obj of objectsToDraw) {
-        /*
-        if (obj.graphics.name !== "dummy") {
-            continue
-        }
-        */
         drawCollisionModel(obj)
         for (const slot in obj.attachments) {
             drawCollisionModel(obj.attachments[slot])
         }
     }
-
-    /*
-    ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
-    ctx.fillStyle = "rgb(0, 255, 0)"
-    const p = debugPoint
-    ctx.beginPath()
-    ctx.arc(p[0], p[1], 0.01, 0, 9)
-    ctx.fill()
-    */
 
     ctx.setTransform(camera.m[0], camera.m[1], camera.m[2], camera.m[3], camera.m[4], camera.m[5])
     ctx.strokeStyle = "green"
@@ -206,22 +256,11 @@ export function drawScene() {
     ctx.moveTo(player.obj.x, footY - FOOT_START * player.obj.scale)
     ctx.lineTo(player.obj.x, footY + FOOT_FULL_HEIGHT * player.obj.scale)
     ctx.stroke()
-
-    // DEBUG JUMP VISULIZATION
-
-    const p = 1
-    const xh = 2.5 * p // horizontal distance for jump
-    const h = -2.2 * p // height for jump
-
-    const vx = getVelocityX(player.obj.body) // horizontal speed
-
-    if (player.touchingGround) {
-        const a_vx = Math.abs(vx)
-    }
+    */
 }
 
 export function addToScene(obj: GraphicsObject): void {
-    scene.push(obj)
+    scene.add(obj)
 
     objectsByID.set(obj.id, obj)
     for (const slot in obj.attachments) {
@@ -230,6 +269,22 @@ export function addToScene(obj: GraphicsObject): void {
     }
 
     addToPhysics(obj)
+}
+
+export function removeFromScene(obj: GraphicsObject): void {
+    scheduleToRemovePhysics(obj, () => {
+        for (const slot in obj.attachments) {
+            const attachment = obj.attachments[slot]
+            objectsByID.delete(attachment.id)
+        }
+        objectsByID.delete(obj.id)
+    })
+
+    scene.delete(obj)
+}
+
+export function scheduleToRemove(obj: GraphicsObject, timeout: number): void {
+    obj.deleteTimestamp = now() + timeout
 }
 
 export function getObjectByID(id: number): GraphicsObject {

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { mat2d, vec2 } from "gl-matrix"
+import { Character } from "./character"
 import { Graphics } from "./graphics"
 import { getAngleFromMatrix } from "./math-utils"
 import { getAttachmentInfo, getParent, getParentWorldMatrix } from "./object-utils"
@@ -13,6 +14,7 @@ export function getWorldScale(obj: GraphicsObject): number {
 }
 
 type ContactCallback = (contact: any) => void
+type ContactCallbackWithObj = (contact: any, otherObj: GraphicsObject) => void
 
 export class GraphicsObject {
     private static NEXT_OBJ_ID = 0
@@ -21,6 +23,8 @@ export class GraphicsObject {
 
     public x = 0
     public y = 0
+    public vx = 0
+    public vy = 0
     public angle = 0
     public scale = 1
     public z = 0
@@ -40,21 +44,28 @@ export class GraphicsObject {
     public mvpMatrix = mat2d.create()
     public lastIndex: number | undefined = undefined
 
+    public deleteTimestamp: number | undefined = undefined
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public body: any = undefined
     public fixture: any = undefined
     public contacts = new Map<number, any>()
+    public physicsGroupIndex = 0
 
-    public onContactStart: ContactCallback | undefined = undefined
+    public gravityScale = 1
+
+    public character: Character | undefined = undefined
+
+    public onContactStart: ContactCallbackWithObj | undefined = undefined
     public onContactPresolve: ContactCallback | undefined = undefined
     public onContactEnded: ContactCallback | undefined = undefined
 
     constructor(public graphics: Graphics) {}
 
-    contactStarted(contactPtr: number): void {
+    contactStarted(contactPtr: number, otherObj: GraphicsObject): void {
         const contact = Box2D.wrapPointer(contactPtr, Box2D.b2Contact)
         this.contacts.set(contactPtr, contact)
-        this.onContactStart?.(contact)
+        this.onContactStart?.(contact, otherObj)
     }
 
     contactPresolve(contactPtr: number): void {

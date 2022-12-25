@@ -1,7 +1,15 @@
 import { vec2 } from "gl-matrix"
 import { aimAt } from "./character-utils"
-import { createDummyGraphics, Graphics, PhysicsType } from "./graphics"
+import {
+    ALL_MASK,
+    createDummyGraphics,
+    Graphics,
+    PhysicsCategory,
+    PhysicsCategoryBits,
+    PhysicsType,
+} from "./graphics"
 import { getAngleFromMatrix, rotate } from "./math-utils"
+import { addBloodStain, generateMeatExplosion } from "./meat-explosion"
 import { GraphicsObject } from "./object"
 import { getAttachmentWorldMatrix } from "./object-utils"
 import {
@@ -9,10 +17,11 @@ import {
     getVelocityY,
     GRAVITY,
     raycast,
+    setGravityScale,
     setVelocity,
     syncPhysicsWithObj,
 } from "./physics"
-import { addToScene } from "./scene"
+import { addToScene, removeFromScene, scheduleToRemove } from "./scene"
 import { getDT, now } from "./time"
 
 export const TORSO_SLOT = 0
@@ -23,6 +32,10 @@ export const SHOOT_LINE_SLOT = 4
 export const EYE_LINE_SLOT = 5
 export const BLAST_SLOT = 6
 
+export const mountains_graphics = new Graphics("mountains")
+export const platform_graphics = new Graphics("platform")
+export const blood_graphics = new Graphics("blood")
+
 const idle_torso_graphics = new Graphics("idle", "torso_legs")
 const idle_arms_graphics = new Graphics("idle", "arms")
 const run_torso_graphics = new Graphics("run", "torso_legs")
@@ -30,14 +43,20 @@ const fall_torso_graphics = new Graphics("fall", "torso_legs")
 const jump_start_torso_graphics = new Graphics("jump_start", "torso_legs")
 const aiming_arms_graphics = new Graphics("aiming", "arms")
 
-const oleg_graphics = new Graphics("oleg")
-const misha_graphics = new Graphics("misha")
+export const oleg_graphics = new Graphics("heads", "oleg")
+export const misha_graphics = new Graphics("heads", "misha")
+export const generic_head_graphics = new Graphics("heads", "generic_head")
 
 const blaster_graphics = new Graphics("blaster")
-const bullet_graphics = new Graphics("bullet")
+const bullet_graphics = new Graphics("bullet", "bullet")
 const blast_graphics = new Graphics("blast", "blast")
 const shoot_line_graphics = new Graphics("shoot-line")
 const eye_line_graphics = new Graphics("eye-line")
+
+export const meat_piece_graphics = new Graphics("blood", "meat_piece")
+export const small_meat_piece_graphics = new Graphics("blood", "small_meat_piece")
+export const meat_on_bone_graphics = new Graphics("blood", "meat_on_bone")
+export const eye_ball_graphics = new Graphics("blood", "eye_ball")
 
 export const FOOT_START = 0.02
 export const FOOT_HEIGHT = 0.27
@@ -46,6 +65,10 @@ export const FOOT_FULL_HEIGHT = FOOT_HEIGHT + FOOT_HEIGHT_PADDING
 
 export async function loadCharacterAnimations() {
     await Promise.all([
+        mountains_graphics.load(),
+        platform_graphics.load(),
+        blood_graphics.load(),
+
         idle_torso_graphics.load(),
         idle_arms_graphics.load(),
         run_torso_graphics.load(),
@@ -55,16 +78,22 @@ export async function loadCharacterAnimations() {
 
         oleg_graphics.load(),
         misha_graphics.load(),
+        generic_head_graphics.load(),
 
         blaster_graphics.load(),
         blast_graphics.load(),
         bullet_graphics.load(),
         shoot_line_graphics.load(),
         eye_line_graphics.load(),
+
+        meat_piece_graphics.load(),
+        small_meat_piece_graphics.load(),
+        meat_on_bone_graphics.load(),
+        eye_ball_graphics.load(),
     ])
 }
 
-const characters: Character[] = []
+const characters = new Set<Character>()
 
 export const MAX_SPEED_ON_FOOT = 7
 export const ACCELERATION_ON_FOOT = MAX_SPEED_ON_FOOT / 0.25
@@ -91,6 +120,8 @@ export class Character {
     public onBeforePhysics: (() => void) | undefined
     public onAfterPhysics: (() => void) | undefined
 
+    private pointToAim: vec2 | undefined = undefined
+
     public touchingGround = false
     public isMoving = false
     public movingDirection = 0
@@ -101,12 +132,17 @@ export class Character {
     public gravityForJumpFall = 0
     public lastTouchgroundTimestamp = 0
 
-    constructor(public readonly name: string, isOleg: boolean) {
+    public isAlive = true
+
+    constructor(public readonly name: string, head: Graphics) {
+        this.obj.character = this
+        this.obj.physicsGroupIndex = -this.obj.id
+
         this.objGraphics.physicsType = PhysicsType.DYNAMIC
         this.objGraphics.fixedRotation = true
         this.objGraphics.friction = 0
 
-        const WIDTH = 0.2
+        const WIDTH = 0.1
         this.objGraphics.physicsPoints = [
             vec2.fromValues(-WIDTH / 2, 0),
             vec2.fromValues(-WIDTH / 2, 0.5),
@@ -115,12 +151,13 @@ export class Character {
             vec2.fromValues(WIDTH / 2, 0),
         ]
         this.objGraphics.physicsPivot = vec2.fromValues(0, -1)
+        this.objGraphics.physicsMaskBits = ALL_MASK & ~PhysicsCategoryBits.PLATFORM
 
         this.obj.attach(TORSO_SLOT, this.idle_torso)
 
         this.aiming_arms.z = 0.2
 
-        this.head = new GraphicsObject(isOleg ? oleg_graphics : misha_graphics)
+        this.head = new GraphicsObject(head)
         this.head.angle = 1.57
         this.head.z = 0.1
         this.obj.attach(HEAD_SLOT, this.head)
@@ -132,7 +169,7 @@ export class Character {
         this.obj.attach(SHOOT_LINE_SLOT, this.shootLine)
 
         this.eyeline.z = -0.01
-        this.obj.attach(EYE_LINE_SLOT, this.eyeline)
+        // this.obj.attach(EYE_LINE_SLOT, this.eyeline)
 
         this.obj.attach(ARMS_SLOT, this.aiming_arms)
 
@@ -150,7 +187,7 @@ export class Character {
         const dstDirection = Math.sign(dstVelocity)
         this.movingDirection = dstDirection
 
-        const velX = getVelocityX(this.obj.body) * velocityMul
+        const velX = getVelocityX(this.obj) * velocityMul
 
         const delta = dstVelocity - velX
         const direction = Math.sign(delta)
@@ -165,7 +202,7 @@ export class Character {
         const cappedVelocityX =
             dstDirection * Math.min(newVelocityX * dstDirection, MAX_SPEED_ON_FOOT)
 
-        setVelocity(this.obj.body, cappedVelocityX, undefined)
+        setVelocity(this.obj, cappedVelocityX, undefined)
     }
 
     private updateAnimation() {
@@ -185,26 +222,18 @@ export class Character {
     }
 
     setSpeed(speed: number): void {
-        setVelocity(this.obj.body, speed, undefined)
+        setVelocity(this.obj, speed, undefined)
         this.currentSpeed = speed
         this.updateAnimation()
     }
 
     steerSpeed(speed: number): void {
-        setVelocity(this.obj.body, getVelocityX(this.obj.body) + speed, undefined)
+        setVelocity(this.obj, getVelocityX(this.obj) + speed, undefined)
         this.updateAnimation()
     }
 
     aimAt(p: vec2): void {
-        this.obj.attach(ARMS_SLOT, this.aiming_arms)
-
-        aimAt(p, this.aiming_arms, "barrel")
-
-        const oldHeadAngle = this.head.angle
-        aimAt(p, this.head, "eyeline")
-        if (this.head.angle < -1.1 || this.head.angle > 1.2) {
-            this.head.angle = oldHeadAngle
-        }
+        this.pointToAim = p
     }
 
     shoot(): void {
@@ -222,13 +251,32 @@ export class Character {
         bullet.angle = angle
         bullet.x = p[0]
         bullet.y = p[1]
+        bullet.physicsGroupIndex = -this.obj.id
+
+        bullet.onContactPresolve = contact => {
+            contact.SetEnabled(false)
+        }
+
+        bullet.onContactStart = (contact, otherObj) => {
+            removeFromScene(bullet)
+
+            const character = otherObj.character
+            if (character && character.isAlive) {
+                character.isAlive = false
+                addBloodStain(character)
+                removeCharacter(character)
+                generateMeatExplosion(character)
+            }
+        }
 
         addToScene(bullet)
 
-        bullet.body.SetGravityScale(0)
+        scheduleToRemove(bullet, 5000)
 
-        const v = rotate(vec2.fromValues(25, 0), angle)
-        setVelocity(bullet.body, v[0], v[1])
+        setGravityScale(bullet, 0)
+
+        const v = rotate(vec2.fromValues(20, 0), angle)
+        setVelocity(bullet, getVelocityX(this.obj) + v[0], getVelocityY(this.obj) + v[1])
 
         this.obj.attach(BLAST_SLOT, this.blast)
         this.blast.reset()
@@ -237,7 +285,7 @@ export class Character {
     attachToGround(): void {
         this.touchingGround = false
 
-        if (getVelocityY(this.obj.body) >= -10e-5) {
+        if (getVelocityY(this.obj) >= -10e-5) {
             const footStart = FOOT_START * this.obj.scale
             const footHeight =
                 (this.touchingGround ? FOOT_FULL_HEIGHT : FOOT_HEIGHT) * this.obj.scale
@@ -254,7 +302,7 @@ export class Character {
             if (p) {
                 this.obj.y = p[1]
                 syncPhysicsWithObj(this.obj)
-                setVelocity(this.obj.body, undefined, 0)
+                setVelocity(this.obj, undefined, 0)
 
                 this.touchingGround = true
                 this.isJumping = false
@@ -265,16 +313,33 @@ export class Character {
         this.updateAnimation()
     }
 
+    applyAim() {
+        const p = this.pointToAim
+        if (!p) {
+            return
+        }
+
+        this.obj.attach(ARMS_SLOT, this.aiming_arms)
+
+        aimAt(p, this.aiming_arms, "barrel")
+
+        const oldHeadAngle = this.head.angle
+        aimAt(p, this.head, "eyeline")
+        if (this.head.angle < -1.1 || this.head.angle > 1.2) {
+            this.head.angle = oldHeadAngle
+        }
+    }
+
     beforePhysics(): void {
         this.onBeforePhysics?.()
 
         if (this.isJumping) {
             // is decending?
-            if (getVelocityY(this.obj.body) > 10e-4) {
-                this.obj.body.SetGravityScale(this.gravityForJumpFall / GRAVITY)
+            if (getVelocityY(this.obj) > 10e-4) {
+                setGravityScale(this.obj, this.gravityForJumpFall / GRAVITY)
             }
         } else {
-            this.obj.body.SetGravityScale(2)
+            setGravityScale(this.obj, 2)
         }
     }
 
@@ -282,6 +347,8 @@ export class Character {
         this.attachToGround()
 
         this.onAfterPhysics?.()
+
+        this.applyAim()
     }
 
     startJump(): void {
@@ -296,7 +363,7 @@ export class Character {
     jump(jumpPower: number): void {
         this.preparingToJump = false
 
-        const velX = getVelocityX(this.obj.body)
+        const velX = getVelocityX(this.obj)
 
         const jumpDistance = velX * 0.5 * jumpPower // horizontal distance for jump
         const jumpHeight = -2.2 * jumpPower // height for jump
@@ -311,8 +378,8 @@ export class Character {
         const gravityForJump = (-2 * jumpHeight) / (th * th)
         this.gravityForJumpFall = gravityForJump * 1.2
 
-        this.obj.body.SetGravityScale(gravityForJump / GRAVITY)
-        setVelocity(this.obj.body, undefined, velocityForJump)
+        setGravityScale(this.obj, gravityForJump / GRAVITY)
+        setVelocity(this.obj, undefined, velocityForJump)
 
         this.isJumping = true
 
@@ -322,7 +389,12 @@ export class Character {
 
 export function addCharacter(character: Character) {
     addToScene(character.obj)
-    characters.push(character)
+    characters.add(character)
+}
+
+export function removeCharacter(character: Character) {
+    characters.delete(character)
+    removeFromScene(character.obj)
 }
 
 export function charactersBeforePhysics() {

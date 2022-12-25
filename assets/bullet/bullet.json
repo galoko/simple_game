@@ -1,0 +1,18 @@
+{
+	"frames": 2,
+	"scale": 0.25,
+	"pivot": [0, 25],
+	"physics": "dynamic",
+	"bullet": true,
+	"category": "bullet",
+	"physicsPoints": [
+		10, 10,
+		40, 10,
+		40, 40,
+		10, 40
+	],
+	"duration": 150,
+	"negativeMask": [
+		"meat"
+	]
+}

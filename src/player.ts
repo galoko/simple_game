@@ -1,5 +1,5 @@
 import { screenToWorld, setFocusPoint } from "./camera"
-import { Character, MAX_SPEED_ON_FOOT } from "./character"
+import { Character, generic_head_graphics, MAX_SPEED_ON_FOOT } from "./character"
 import {
     getPressedDuration,
     isPressed,
@@ -99,7 +99,7 @@ function playerControlsPostPhysics() {
 }
 
 export function createPlayer() {
-    player = new Character("player", true)
+    player = new Character("player", generic_head_graphics)
     player.onBeforePhysics = playerControls
     player.onAfterPhysics = playerControlsPostPhysics
 }
